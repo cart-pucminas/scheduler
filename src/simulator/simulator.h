@@ -21,6 +21,15 @@
 #define _SIMULATOR_H_
 
 	/**
+	 * @brief Thread.
+	 */
+	struct thread
+	{
+		unsigned tid;      /**< Thread ID.         */
+		unsigned workload; /**< Assigned workload. */
+	};
+
+	/**
 	 * @defgroup dqueue
 	 * 
 	 * @brief Delta Queue
