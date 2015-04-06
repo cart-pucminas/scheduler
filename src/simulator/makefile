@@ -18,7 +18,8 @@
 #
 
 # Source files.
-SRC = main.c
+SRC = main.c \
+      dqueue.c
 
 # Simulator name.
 EXEC = $(BINDIR)/scheduler
