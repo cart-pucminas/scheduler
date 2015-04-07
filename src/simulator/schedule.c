@@ -24,9 +24,18 @@
 #include "simulator.h"
 
 /**
- * @brief Number of ready threads.
+ * @brief Thread.
  */
-static unsigned nready = 0;
+struct thread
+{
+	unsigned tid;      /**< Thread ID.         */
+	unsigned workload; /**< Assigned workload. */
+};
+
+/**
+ * @brief Number of threads.
+ */
+static unsigned nthreads;
 
 /**
  * @brief Threads.
@@ -34,14 +43,14 @@ static unsigned nready = 0;
 struct thread *threads = NULL;
 
 /**
+ * @brief Number of ready threads.
+ */
+static unsigned nready = 0;
+
+/**
  * @brief Pool of ready tasks.
  */
 static struct thread **ready = NULL;
-
-/**
- * @brief Loop iterations.
- */
-unsigned *tasks;
 
 /**
  * @brief Schedulers table.
@@ -68,7 +77,7 @@ static unsigned choose_thread(void)
 	tid = randnum()%nthreads;
 	while (ready[tid] != NULL)
 		tid = (tid + 1)%nthreads;
-
+	
 	nready--;
 	
 	return (tid);
@@ -79,8 +88,11 @@ static unsigned choose_thread(void)
  * 
  * @details Simulates a loop scheduler.
  */
-void schedule(unsigned scheduler)
+void schedule
+(unsigned *tasks, unsigned ntasks, unsigned _nthreads, unsigned scheduler)
 {
+	nthreads = _nthreads;
+	
 	/* Create threads. */
 	threads = smalloc(nthreads*sizeof(struct thread));
 	for (unsigned i = 0; i < nthreads; i++)
@@ -88,10 +100,6 @@ void schedule(unsigned scheduler)
 		threads[i].tid = i;
 		threads[i].workload = 0;
 	}
-
-	/* Generate loop iterations. */
-	for (unsigned i = 0; i < ntasks; i++)
-		tasks[i] = randnum();
 	
 	/* Create pool of ready threads. */
 	nready = nthreads;
@@ -109,7 +117,7 @@ void schedule(unsigned scheduler)
 		while (nready > 0)
 		{	
 			tid = choose_thread();
-			schedulers[scheduler](tid);
+			schedulers[scheduler](tasks, tid, nthreads);
 		}
 		
 		/* Put threads back into ready pool. */

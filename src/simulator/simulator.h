@@ -20,15 +20,10 @@
 #ifndef _SIMULATOR_H_
 #define _SIMULATOR_H_
 
-	/**
-	 * @brief Thread.
-	 */
-	struct thread
-	{
-		unsigned tid;      /**< Thread ID.         */
-		unsigned workload; /**< Assigned workload. */
-	};
-	
+	/*========================================================================*
+	 *                              Scheduler                                 *
+	 *========================================================================*/
+
 	/**
 	 * @name Schedulers
 	 */
@@ -42,11 +37,14 @@
 	/**
 	 * @brief Scheduling strategy.
 	 */
-	typedef void (*scheduler_t)(unsigned);
+	typedef void (*scheduler_t)(unsigned *, unsigned, unsigned);
 	
 	/* Forward definitions. */
-	extern unsigned ntasks;
-	extern unsigned nthreads;
+	void schedule(unsigned *, unsigned, unsigned, unsigned);
+
+	/*========================================================================*
+	 *                             Delta Queue                                *
+	 *========================================================================*/
 
 	/**
 	 * @defgroup dqueue

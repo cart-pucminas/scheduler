@@ -26,19 +26,21 @@
 #include "simulator.h"
 
 /**
- * @name Simulation Parameters
+ * @name Random Distribution Parameters
  */
 /**@{*/
-unsigned nthreads = 32;              /**< Number of threads.        */
-unsigned loop_size = 1024;           /**< Loop size.                */
-unsigned distribution = 0;           /**< Probability distribution. */
-unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
+#define RAND_MAX_SIZE 8192 /**< Maximum task size. */
 /**@}*/
 
 /**
- * @brief Number of tasks.
+ * @name Simulation Parameters
  */
-unsigned ntasks;
+/**@{*/
+static unsigned nthreads = 32;              /**< Number of threads.        */
+static unsigned ntasks = 1024;              /**< Number of tasks.          */
+static unsigned distribution = 0;           /**< Probability distribution. */
+static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
+/**@}*/
 
 /**
  * @brief Number of supported probability distributions.
@@ -68,7 +70,7 @@ static void usage(void)
 	printf("  workload-aware Simulate workload-aware loop scheduling");
 	printf("Options:\n");
 	printf("  --nthreads <num>       Number of threads\n");
-	printf("  --loop-size <num>      Loop size\n");
+	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --distribution <name>  Probability density function\n");
 	printf("  --help                 Display this message\n");
 }
@@ -83,7 +85,7 @@ static void readargs(int argc, const char **argv)
 	enum states{
 		STATE_READ_ARG,          /* Read argument.         */
 		STATE_SET_NTHREADS,      /* Set number of threads. */
-		STATE_SET_LOOP_SIZE,     /* Set loop size.         */
+		STATE_SET_NTASKS,        /* Set number of tasks.   */
 		STATE_SET_DISTRIBUTION}; /* Set distribution.      */
 	
 	unsigned state;                /* Current state.     */
@@ -107,8 +109,8 @@ static void readargs(int argc, const char **argv)
 					state = STATE_READ_ARG;
 					break;
 				
-				case STATE_SET_LOOP_SIZE:
-					loop_size = atoi(arg);
+				case STATE_SET_NTASKS:
+					ntasks = atoi(arg);
 					state = STATE_READ_ARG;
 					break;
 				
@@ -124,8 +126,8 @@ static void readargs(int argc, const char **argv)
 		/* Parse command. */
 		if (!strcmp(arg, "--nthreads"))
 			state = STATE_SET_NTHREADS;
-		else if (!strcmp(arg, "--loop-size"))
-			state = STATE_SET_LOOP_SIZE;
+		else if (!strcmp(arg, "--ntasks"))
+			state = STATE_SET_NTASKS;
 		else if (!strcmp(arg, "--distribution"))
 			state = STATE_SET_DISTRIBUTION;
 		else if (!strcmp(arg, "--help"))
@@ -143,8 +145,10 @@ static void readargs(int argc, const char **argv)
 	/* Check parameters. */
 	if (nthreads == 0)
 		error("invalid number of threads");
-	else if (loop_size == 0)
-		error("invalid loop size");
+	else if (ntasks == 0)
+		error("invalid number of tasks");
+	else if (scheduler == SCHEDULER_NONE)
+		error("invalid scheduler");
 	if (distribution_name != NULL)
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
@@ -162,15 +166,21 @@ out:
 	return;
 }
 
-
 /**
  * @brief Loop scheduler simulator.
  */
 int main(int argc, const const char **argv)
 {
+	unsigned *tasks;
+	
 	readargs(argc, argv);
 
-	ntasks = loop_size;
+	/* Create tasks. */
+	tasks = smalloc(ntasks*sizeof(unsigned));
+	for (unsigned i = 0; i < ntasks; i++)
+		tasks[i] = randnum()%RAND_MAX_SIZE;
+		
+	schedule(tasks, ntasks, nthreads, scheduler);
 	
 	return (EXIT_SUCCESS);
 }
