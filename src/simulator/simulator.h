@@ -28,6 +28,25 @@
 		unsigned tid;      /**< Thread ID.         */
 		unsigned workload; /**< Assigned workload. */
 	};
+	
+	/**
+	 * @name Schedulers
+	 */
+	/**@{*/
+	#define SCHEDULER_NONE           0 /**< Null scheduler.    */
+	#define SCHEDULER_STATIC         1 /**< Static scheduler.  */
+	#define SCHEDULER_DYNAMIC        2 /**< Dynamic scheduler. */
+	#define SCHEDULER_WORKLOAD_AWARE 3 /**< Null scheduler.    */
+	/**@}*/
+	
+	/**
+	 * @brief Scheduling strategy.
+	 */
+	typedef void (*scheduler_t)(unsigned);
+	
+	/* Forward definitions. */
+	extern unsigned ntasks;
+	extern unsigned nthreads;
 
 	/**
 	 * @defgroup dqueue

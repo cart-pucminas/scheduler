@@ -17,15 +17,69 @@
  * MA 02110-1301, USA.
  */
 
+#include <assert.h>
+
+#include <mylib/util.h>
+
 #include "simulator.h"
 
+/**
+ * @brief Number of ready threads.
+ */
+static unsigned nready = 0;
 
 /**
- * @brief Static scheduler.
- * 
- * @details Simulates a static loop scheduler.
+ * @brief Threads.
  */
-void scheduler_static(void)
+struct thread *threads = NULL;
+
+/**
+ * @brief Pool of ready tasks.
+ */
+static struct thread **ready = NULL;
+
+/**
+ * @brief Loop iterations.
+ */
+unsigned *tasks;
+
+/**
+ * @brief Schedulers table.
+ */
+scheduler_t schedulers[4] = {
+	NULL, /* SCHEDULER_NONE           */
+	NULL, /* SCHEDULER_STATIC         */
+	NULL, /* SCHEDULER_DYNAMIC        */
+	NULL  /* SCHEDULER_WORKLOAD_AWARE */
+};
+
+/**
+ * @brief Chooses a thread to run next.
+ * 
+ * @details Choses a thread to run from the ready pool.
+ * 
+ * @returns The ID of the chosen thread.
+ */
+static unsigned choose_thread(void)
+{
+	unsigned tid;
+		
+	/* Choose thread. */
+	tid = randnum()%nthreads;
+	while (ready[tid] != NULL)
+		tid = (tid + 1)%nthreads;
+
+	nready--;
+	
+	return (tid);
+}
+
+/**
+ * @brief Loop scheduler.
+ * 
+ * @details Simulates a loop scheduler.
+ */
+void schedule(unsigned scheduler)
 {
 	/* Create threads. */
 	threads = smalloc(nthreads*sizeof(struct thread));
@@ -34,10 +88,10 @@ void scheduler_static(void)
 		threads[i].tid = i;
 		threads[i].workload = 0;
 	}
-	
+
 	/* Generate loop iterations. */
-	for (unsigned i = 0; i < loop_size; i++)
-		/* TODO */ ;
+	for (unsigned i = 0; i < ntasks; i++)
+		tasks[i] = randnum();
 	
 	/* Create pool of ready threads. */
 	nready = nthreads;
@@ -46,21 +100,25 @@ void scheduler_static(void)
 		ready[i] = &threads[i];
 	
 	/* Schedule. */
-	while (1)
+	while (ntasks > 0)
 	{
+		unsigned tid;
+		unsigned timestamp;
 		
 		/* Pick a thread to run. */
 		while (nready > 0)
 		{	
-			unsigned i;
-		
-			i = randnum()%nthreads;
-			
-			while (read[i] != NULL)
-				i = (i + 1)%nthreads;
-			nready--;
+			tid = choose_thread();
+			schedulers[scheduler](tid);
 		}
 		
+		/* Put threads back into ready pool. */
+		do
+		{
+			timestamp = dqueue_next_timestamp();
+			tid = dqueue_remove();
+			ready[nready++] = &threads[tid];
+		} while (timestamp == dqueue_next_timestamp());
 	}
 	
 	/* Print statistics. */

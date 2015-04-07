@@ -23,15 +23,7 @@
 
 #include <mylib/util.h>
 
-/**
- * @name Schedulers
- */
-/**@{*/
-#define SCHEDULER_NONE           0 /**< Null scheduler.    */
-#define SCHEDULER_STATIC         1 /**< Static scheduler.  */
-#define SCHEDULER_DYNAMIC        2 /**< Dynamic scheduler. */
-#define SCHEDULER_WORKLOAD_AWARE 3 /**< Null scheduler.    */
-/**@}*/
+#include "simulator.h"
 
 /**
  * @name Simulation Parameters
@@ -42,6 +34,11 @@ unsigned loop_size = 1024;           /**< Loop size.                */
 unsigned distribution = 0;           /**< Probability distribution. */
 unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
 /**@}*/
+
+/**
+ * @brief Number of tasks.
+ */
+unsigned ntasks;
 
 /**
  * @brief Number of supported probability distributions.
@@ -172,6 +169,8 @@ out:
 int main(int argc, const const char **argv)
 {
 	readargs(argc, argv);
+
+	ntasks = loop_size;
 	
 	return (EXIT_SUCCESS);
 }
