@@ -176,9 +176,10 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 
 	/* Create tasks. */
+	info("creating tasks...", VERBOSE_INFO);
 	tasks = smalloc(ntasks*sizeof(unsigned));
 	for (unsigned i = 0; i < ntasks; i++)
-		tasks[i] = randnum()%RAND_MAX_SIZE;
+		tasks[i] = randnum()%RAND_MAX_SIZE + 1;
 		
 	schedule(tasks, ntasks, nthreads, scheduler);
 	

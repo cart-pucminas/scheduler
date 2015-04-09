@@ -25,6 +25,15 @@
 	 *========================================================================*/
 
 	/**
+	 * @brief Thread.
+	 */
+	struct thread
+	{
+		unsigned tid;      /**< Thread ID.         */
+		unsigned workload; /**< Assigned workload. */
+	};
+
+	/**
 	 * @name Schedulers
 	 */
 	/**@{*/
@@ -35,12 +44,26 @@
 	/**@}*/
 	
 	/**
+	 * @brief Initializes the scheduling strategy.
+	 */
+	typedef void (*scheduler_init_t)(unsigned *, unsigned, unsigned);
+	
+	/**
 	 * @brief Scheduling strategy.
 	 */
-	typedef void (*scheduler_t)(unsigned *, unsigned, unsigned);
+	typedef unsigned (*scheduler_sched_t)(unsigned);
+	
+	/**
+	 * @brief Finalizes the scheduling strategy.
+	 */
+	typedef void (*scheduler_end_t)(void);
 	
 	/* Forward definitions. */
-	void schedule(unsigned *, unsigned, unsigned, unsigned);
+	extern struct thread *threads;
+	extern void schedule(unsigned *, unsigned, unsigned, unsigned);
+	extern void scheduler_static_init(unsigned *, unsigned, unsigned);
+	extern unsigned scheduler_static_sched(unsigned);
+	extern void scheduler_static_end(void);
 
 	/*========================================================================*
 	 *                             Delta Queue                                *

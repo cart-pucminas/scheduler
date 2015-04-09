@@ -24,15 +24,6 @@
 #include "simulator.h"
 
 /**
- * @brief Thread.
- */
-struct thread
-{
-	unsigned tid;      /**< Thread ID.         */
-	unsigned workload; /**< Assigned workload. */
-};
-
-/**
  * @brief Number of threads.
  */
 static unsigned nthreads;
@@ -53,13 +44,33 @@ static unsigned nready = 0;
 static struct thread **ready = NULL;
 
 /**
- * @brief Schedulers table.
+ * @brief Schedulers init() table.
  */
-scheduler_t schedulers[4] = {
-	NULL, /* SCHEDULER_NONE           */
-	NULL, /* SCHEDULER_STATIC         */
-	NULL, /* SCHEDULER_DYNAMIC        */
-	NULL  /* SCHEDULER_WORKLOAD_AWARE */
+scheduler_init_t schedulers_init[4] = {
+	NULL,                   /* SCHEDULER_NONE           */
+	&scheduler_static_init, /* SCHEDULER_STATIC         */
+	NULL,                   /* SCHEDULER_DYNAMIC        */
+	NULL                    /* SCHEDULER_WORKLOAD_AWARE */
+};
+
+/**
+ * @brief Schedulers sched() table.
+ */
+scheduler_sched_t schedulers_sched[4] = {
+	NULL,                    /* SCHEDULER_NONE           */
+	&scheduler_static_sched, /* SCHEDULER_STATIC         */
+	NULL,                    /* SCHEDULER_DYNAMIC        */
+	NULL                     /* SCHEDULER_WORKLOAD_AWARE */
+};
+
+/**
+ * @brief Schedulers end() table.
+ */
+scheduler_end_t schedulers_end[4] = {
+	NULL,                  /* SCHEDULER_NONE           */
+	&scheduler_static_end, /* SCHEDULER_STATIC         */
+	NULL,                  /* SCHEDULER_DYNAMIC        */
+	NULL                   /* SCHEDULER_WORKLOAD_AWARE */
 };
 
 /**
@@ -75,10 +86,14 @@ static unsigned choose_thread(void)
 		
 	/* Choose thread. */
 	tid = randnum()%nthreads;
-	while (ready[tid] != NULL)
+	while (ready[tid] == NULL)
+	{
 		tid = (tid + 1)%nthreads;
+	}
 	
+	/* Remove thread from ready pool. */
 	nready--;
+	ready[tid] = NULL;
 	
 	return (tid);
 }
@@ -91,9 +106,12 @@ static unsigned choose_thread(void)
 void schedule
 (unsigned *tasks, unsigned ntasks, unsigned _nthreads, unsigned scheduler)
 {
+	unsigned n;
+	
 	nthreads = _nthreads;
 	
 	/* Create threads. */
+	info("creating threads...", VERBOSE_INFO);
 	threads = smalloc(nthreads*sizeof(struct thread));
 	for (unsigned i = 0; i < nthreads; i++)
 	{
@@ -102,22 +120,25 @@ void schedule
 	}
 	
 	/* Create pool of ready threads. */
+	info("creating pool of ready threads...", VERBOSE_INFO);
 	nready = nthreads;
 	ready = smalloc(nthreads*sizeof(struct thread *));
 	for (unsigned i = 0; i < nthreads; i++)
 		ready[i] = &threads[i];
 	
 	/* Schedule. */
-	while (ntasks > 0)
+	info("scheduling...", VERBOSE_INFO);
+	schedulers_init[scheduler](tasks, ntasks, nthreads);
+	for (n = ntasks; n > 0; /* loop*/ )
 	{
-		unsigned tid;
-		unsigned timestamp;
+		unsigned tid;       /* Threads ID.      */
+		unsigned timestamp; /* Next time stamp. */
 		
 		/* Pick a thread to run. */
 		while (nready > 0)
 		{	
 			tid = choose_thread();
-			schedulers[scheduler](tasks, tid, nthreads);
+			n -= schedulers_sched[scheduler](tid);
 		}
 		
 		/* Put threads back into ready pool. */
@@ -128,6 +149,7 @@ void schedule
 			ready[nready++] = &threads[tid];
 		} while (timestamp == dqueue_next_timestamp());
 	}
+	schedulers_end[scheduler]();
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
