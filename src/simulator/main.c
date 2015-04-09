@@ -183,5 +183,8 @@ int main(int argc, const const char **argv)
 		
 	schedule(tasks, ntasks, nthreads, scheduler);
 	
+	/* House keeping. */
+	free(tasks);
+	
 	return (EXIT_SUCCESS);
 }

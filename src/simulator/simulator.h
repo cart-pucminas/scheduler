@@ -91,7 +91,7 @@
 	 */
 	/**@{*/
 	extern void dqueue_create(void);
-	extern void dqueue_detroy(void);
+	extern void dqueue_destroy(void);
 	extern void dqueue_insert(unsigned, unsigned);
 	extern unsigned dqueue_remove(void);
 	extern unsigned dqueue_next_timestamp(void);

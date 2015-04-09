@@ -158,4 +158,5 @@ void schedule
 	/* House keeping. */
 	free(ready);
 	free(threads);
+	dqueue_destroy();
 }
