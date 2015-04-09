@@ -152,6 +152,7 @@ void schedule
 	schedulers_end[scheduler]();
 	
 	/* Print statistics. */
+	printf("thread ID;workload\n");
 	for (unsigned i = 0; i < nthreads; i++)
 		printf("%u;%u\n", threads[i].tid, threads[i].workload);
 	

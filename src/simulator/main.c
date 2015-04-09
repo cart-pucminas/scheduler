@@ -30,16 +30,17 @@
  * @name Random Distribution Parameters
  */
 /**@{*/
-#define RAND_MAX_SIZE 8192 /**< Maximum task size. */
+#define RAND_MAX_SIZE 2048 /**< Maximum task size. */
 /**@}*/
 
 /**
  * @name Normal Distribution Parameters.
  */
 /**@{*/
-#define NORMAL_MAX_SIZE 8192 /**< Maximum task size. */
-#define NORMAL_MEAN     4096 /**< Mean value.        */
-#define NORMAL_STD      1.0  /**< Mean value.        */
+#define NORMAL_MAX_SIZE 2048 /**< Maximum task size. */
+#define NORMAL_ZERO     1024 /**< Zero value.        */
+#define NORMAL_MEAN     512 /**< Mean value.        */
+#define NORMAL_STD      2.0  /**< Mean value.        */
 /**@}*/
 
 /**
@@ -206,10 +207,10 @@ int main(int argc, const const char **argv)
 				
 				do
 				{
-					num = normalnum(NORMAL_MEAN, NORMAL_STD);
-				} while ((num < 0) || (num > NORMAL_MAX_SIZE));
+					num = NORMAL_ZERO + normalnum(NORMAL_MEAN, NORMAL_STD);
+				} while ((num < 1) || (num > NORMAL_MAX_SIZE));
 				
-				tasks[i] = (unsigned) floor(tasks[i]);
+				tasks[i] = (unsigned) floor(num);
 			}
 		} break;
 	}
