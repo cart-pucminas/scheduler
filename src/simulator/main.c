@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <mylib/util.h>
 
@@ -30,6 +31,15 @@
  */
 /**@{*/
 #define RAND_MAX_SIZE 8192 /**< Maximum task size. */
+/**@}*/
+
+/**
+ * @name Normal Distribution Parameters.
+ */
+/**@{*/
+#define NORMAL_MAX_SIZE 8192 /**< Maximum task size. */
+#define NORMAL_MEAN     4096 /**< Mean value.        */
+#define NORMAL_STD      1.0  /**< Mean value.        */
 /**@}*/
 
 /**
@@ -178,10 +188,34 @@ int main(int argc, const const char **argv)
 	/* Create tasks. */
 	info("creating tasks...", VERBOSE_INFO);
 	tasks = smalloc(ntasks*sizeof(unsigned));
-	for (unsigned i = 0; i < ntasks; i++)
-		tasks[i] = randnum()%RAND_MAX_SIZE + 1;
+	switch (distribution)
+	{
+		/* Random distribution. */
+		case DISTRIBUTION_RANDOM:
+		{
+			for (unsigned i = 0; i < ntasks; i++)
+				tasks[i] = randnum()%RAND_MAX_SIZE + 1;
+		} break;
 		
+		/* Normal distribution. */
+		case DISTRIBUTION_NORMAL:
+		{
+			for (unsigned i = 0; i < ntasks; i++)
+			{
+				double num;
+				
+				do
+				{
+					num = normalnum(NORMAL_MEAN, NORMAL_STD);
+				} while ((num < 0) || (num > NORMAL_MAX_SIZE));
+				
+				tasks[i] = (unsigned) floor(tasks[i]);
+			}
+		} break;
+	}
+	
 	schedule(tasks, ntasks, nthreads, scheduler);
+	
 	
 	/* House keeping. */
 	free(tasks);
