@@ -34,16 +34,6 @@
 /**@}*/
 
 /**
- * @name Normal Distribution Parameters.
- */
-/**@{*/
-#define NORMAL_MAX_SIZE 2048 /**< Maximum task size. */
-#define NORMAL_ZERO     1024 /**< Zero value.        */
-#define NORMAL_MEAN     512 /**< Mean value.        */
-#define NORMAL_STD      2.0  /**< Mean value.        */
-/**@}*/
-
-/**
  * @name Simulation Parameters
  */
 /**@{*/
@@ -178,6 +168,19 @@ out:
 }
 
 /**
+ * @brief Compares two unsigned integers.
+ * 
+ * @details Compares the unsigned integer pointed to by @p a with the unsigned
+ *          integer pointed to by @p b.
+ * 
+ * @returns The difference between @p a and @p b.
+ */
+static int cmp(const void *a, const void *b)
+{
+	return ((*(unsigned *)a) - (*(unsigned *)b));
+}
+
+/**
  * @brief Loop scheduler simulator.
  */
 int main(int argc, const const char **argv)
@@ -187,7 +190,6 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 
 	/* Create tasks. */
-	info("creating tasks...", VERBOSE_INFO);
 	tasks = smalloc(ntasks*sizeof(unsigned));
 	switch (distribution)
 	{
@@ -201,22 +203,33 @@ int main(int argc, const const char **argv)
 		/* Normal distribution. */
 		case DISTRIBUTION_NORMAL:
 		{
+			unsigned base;
+			unsigned mean;
+			
+			base = ntasks/2;
+			mean = ntasks/4;
+			
 			for (unsigned i = 0; i < ntasks; i++)
 			{
 				double num;
 				
 				do
 				{
-					num = NORMAL_ZERO + normalnum(NORMAL_MEAN, NORMAL_STD);
-				} while ((num < 1) || (num > NORMAL_MAX_SIZE));
+					num = base + normalnum(mean, 2.0);
+				} while ((num < 1) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
 			}
 		} break;
 	}
 	
-	schedule(tasks, ntasks, nthreads, scheduler);
+	qsort(tasks, ntasks, sizeof(unsigned), cmp);
 	
+	/* Print tasks. */
+	for (unsigned i = 0; i < ntasks; i++)
+		fprintf(stderr, "%u\n", tasks[i]);
+	
+	schedule(tasks, ntasks, nthreads, scheduler);
 	
 	/* House keeping. */
 	free(tasks);

@@ -30,16 +30,23 @@ OUTDIR=results
 #
 function run {
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 \
-	1>> $OUTDIR/scheduler-$1-$2-$3-$4.out 2>> $OUTDIR/scheduler-$1-$2-$3-$4.err
+	1>> $OUTDIR/taskmap-$1-$2-$3-$4.out 2>> $OUTDIR/task-$1-$2-$3-$4.err
+	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-${4}.err';\
+				outputname='${OUTDIR}/task-${1}-${2}-${3}-${4}.eps'"\
+				scripts/task.gp
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.eps'"\
+				scripts/taskmap.gp
 }
 
-rm -fr $OUTDIR
 mkdir -p $OUTDIR
+rm -f $OUTDIR/*
 
 for strategy in static; do
 	for distribution in random normal; do
-		for nthreads in 2 4 8 16 32 64 128 256; do
-			for ntasks in 1024 2048 4096 8192; do
+		for nthreads in 32; do
+			for ntasks in 8192 16384 32768; do
+				echo $nthreads $ntasks $distribution $strategy
 				run $nthreads $ntasks $distribution $strategy
 			done
 		done

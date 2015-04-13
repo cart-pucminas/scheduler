@@ -63,8 +63,6 @@ void scheduler_static_init
 	scheduler_data.tasks = tasks;
 	scheduler_data.nthreads = nthreads;
 		
-	info("initializing static scheduler...", VERBOSE_INFO);
-		
 	/* Assign tasks to threads. */
 	tasks_per_thread = ntasks/nthreads;
 	for (unsigned i = 0; i < ntasks; i++)

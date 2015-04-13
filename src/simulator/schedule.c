@@ -111,7 +111,6 @@ void schedule
 	nthreads = _nthreads;
 	
 	/* Create threads. */
-	info("creating threads...", VERBOSE_INFO);
 	threads = smalloc(nthreads*sizeof(struct thread));
 	for (unsigned i = 0; i < nthreads; i++)
 	{
@@ -120,14 +119,12 @@ void schedule
 	}
 	
 	/* Create pool of ready threads. */
-	info("creating pool of ready threads...", VERBOSE_INFO);
 	nready = nthreads;
 	ready = smalloc(nthreads*sizeof(struct thread *));
 	for (unsigned i = 0; i < nthreads; i++)
 		ready[i] = &threads[i];
 	
 	/* Schedule. */
-	info("scheduling...", VERBOSE_INFO);
 	schedulers_init[scheduler](tasks, ntasks, nthreads);
 	for (n = ntasks; n > 0; /* loop*/ )
 	{
@@ -152,7 +149,6 @@ void schedule
 	schedulers_end[scheduler]();
 	
 	/* Print statistics. */
-	printf("thread ID;workload\n");
 	for (unsigned i = 0; i < nthreads; i++)
 		printf("%u;%u\n", threads[i].tid, threads[i].workload);
 	
