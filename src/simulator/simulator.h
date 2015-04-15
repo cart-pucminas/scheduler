@@ -72,6 +72,9 @@
 	extern void scheduler_static_init(unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_static_sched(unsigned);
 	extern void scheduler_static_end(void);
+	extern void scheduler_dynamic_init(unsigned *, unsigned, unsigned);
+	extern unsigned scheduler_dynamic_sched(unsigned);
+	extern void scheduler_dynamic_end(void);
 
 	/*========================================================================*
 	 *                             Delta Queue                                *
