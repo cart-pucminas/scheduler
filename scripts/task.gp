@@ -3,10 +3,10 @@ reset
 
 stats inputname using 1 nooutput
 
-n=16                           # number of intervals
-max=STATS_max                  # max value
-min=STATS_min                  # min value
-width=(max-min)/n              # interval width
+n=16               # number of intervals
+max=STATS_max      # max value
+min=STATS_min      # min value
+width=(max-min)/n  # interval width
 
 # Function used to map a value to the intervals
 hist(x,width)=width*floor(x/width)+width/2.0

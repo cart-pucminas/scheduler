@@ -43,14 +43,13 @@ function run {
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-for it in {1..30}; do
-	for strategy in static; do
-		for distribution in random normal; do
-			for nthreads in 32; do
-				for ntasks in 8192 16384 32768; do
-					echo $nthreads $ntasks $distribution $strategy
-					run $nthreads $ntasks $distribution $strategy
-				done
+
+for strategy in static; do
+	for distribution in random normal; do
+		for nthreads in 32; do
+			for ntasks in 8192 16384 32768; do
+				echo $nthreads $ntasks $distribution $strategy
+				run $nthreads $ntasks $distribution $strategy
 			done
 		done
 	done
