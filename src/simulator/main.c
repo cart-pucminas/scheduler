@@ -46,14 +46,25 @@ static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
 /**
  * @brief Number of supported probability distributions.
  */
-#define NDISTRIBUTIONS 2
+#define NDISTRIBUTIONS 3
+
+/**
+ * @name Probability Distributions.
+ */
+/**@{*/
+#define DISTRIBUTION_RANDOM  0 /**< Random distribution.  */
+#define DISTRIBUTION_NORMAL  1 /**< Normal distribution.  */
+#define DISTRIBUTION_POISSON 2 /**< Poisson distribution. */
+/**@}*/
+	
 
 /**
  * @brief Supported probability distributions.
  */
 static char *distributions[NDISTRIBUTIONS] = {
-	"random", /* Random. */
-	"normal"  /* Normal. */
+	"random", /* Random.  */
+	"normal", /* Normal.  */
+	"poisson" /* Poisson. */
 };
 
 /**
@@ -216,6 +227,26 @@ int main(int argc, const const char **argv)
 				do
 				{
 					num = base + normalnum(mean, 2.0);
+				} while ((num < 1) || (num > ntasks));
+				
+				tasks[i] = (unsigned) floor(num);
+			}
+		} break;
+		
+		/* Poisson Distribution. */
+		case DISTRIBUTION_POISSON:
+		{
+			unsigned lambda;
+			
+			lambda = 16;
+			
+			for (unsigned i = 0; i < ntasks; i++)
+			{
+				double num;
+				
+				do
+				{
+					num = poissonnum(lambda);
 				} while ((num < 1) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);

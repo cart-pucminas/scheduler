@@ -44,14 +44,6 @@
 	/**@}*/
 	
 	/**
-	 * @name Probability Distributions.
-	 */
-	/**@{*/
-	#define DISTRIBUTION_RANDOM 0 /**< Random distribution. */
-	#define DISTRIBUTION_NORMAL 1 /**< Normal distribution. */
-	/**@}*/
-	
-	/**
 	 * @brief Initializes the scheduling strategy.
 	 */
 	typedef void (*scheduler_init_t)(unsigned *, unsigned, unsigned);
