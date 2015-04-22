@@ -1,5 +1,6 @@
 set terminal postscript eps enhanced 12
 set output outputname
+set yrange [0:]
 
 set datafile separator ";"
 
