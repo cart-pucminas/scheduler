@@ -153,11 +153,7 @@ void schedule
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-	{
 		printf("%u;%u\n", threads[i].tid, threads[i].workload);
-		fprintf(stderr, "%2u\t%2u\t%10.2lf\t%4u\t%4u\n", threads[i].tid,
-			threads[i].ntasks, threads[i].avg, threads[i].min, threads[i].max);
-	}
 	
 	/* House keeping. */
 	free(ready);
