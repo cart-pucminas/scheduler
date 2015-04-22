@@ -29,8 +29,12 @@
 	 */
 	struct thread
 	{
-		unsigned tid;      /**< Thread ID.         */
-		unsigned workload; /**< Assigned workload. */
+		unsigned tid;      /**< Thread ID.                  */
+		unsigned workload; /**< Total assigned workload.    */
+		unsigned ntasks;   /**< Number of assigned tasks.   */
+		double avg;        /**< Average task size.          */
+		unsigned max;      /**< Maximum assigned task size. */
+		unsigned min;      /**< Minimum assigned task size. */
 	};
 
 	/**

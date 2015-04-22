@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+#include <limits.h>
 #include <assert.h>
 
 #include <mylib/util.h>
@@ -116,6 +117,10 @@ void schedule
 	{
 		threads[i].tid = i;
 		threads[i].workload = 0;
+		threads[i].ntasks = 0;
+		threads[i].avg = 0;
+		threads[i].max = 0;
+		threads[i].min = UINT_MAX;
 	}
 	
 	/* Create pool of ready threads. */
@@ -148,7 +153,11 @@ void schedule
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
+	{
 		printf("%u;%u\n", threads[i].tid, threads[i].workload);
+		fprintf(stderr, "%2u\t%2u\t%10.2lf\t%4u\t%4u\n", threads[i].tid,
+			threads[i].ntasks, threads[i].avg, threads[i].min, threads[i].max);
+	}
 	
 	/* House keeping. */
 	free(ready);

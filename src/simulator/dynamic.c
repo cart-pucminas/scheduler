@@ -73,6 +73,13 @@ void scheduler_dynamic_init
  */
 void scheduler_dynamic_end(void)
 {
+	/* Compute average task size. */
+	for (unsigned i = 0; i < scheduler_data.nthreads; i++)
+	{
+		threads[i].avg = (threads[i].ntasks > 0) ?
+			((double) threads[i].workload)/threads[i].ntasks : 0;
+	}
+	
 	free(scheduler_data.taskmap);
 }
 
@@ -102,6 +109,11 @@ unsigned scheduler_dynamic_sched(unsigned tid)
 			n++;
 			workload += scheduler_data.tasks[i];
 			threads[tid].workload += workload;
+			threads[tid].ntasks++;
+			if (workload < threads[tid].min)
+				threads[tid].min = workload;
+			if (workload > threads[tid].max)
+				threads[tid].max = workload;
 			scheduler_data.taskmap[i] = tid;
 			i0 = i;
 			break;
