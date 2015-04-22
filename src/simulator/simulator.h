@@ -50,7 +50,7 @@
 	/**
 	 * @brief Initializes the scheduling strategy.
 	 */
-	typedef void (*scheduler_init_t)(unsigned *, unsigned, unsigned);
+	typedef void (*scheduler_init_t)(const unsigned *, unsigned, unsigned);
 	
 	/**
 	 * @brief Scheduling strategy.
@@ -64,11 +64,11 @@
 	
 	/* Forward definitions. */
 	extern struct thread *threads;
-	extern void schedule(unsigned *, unsigned, unsigned, unsigned);
-	extern void scheduler_static_init(unsigned *, unsigned, unsigned);
+	extern void schedule(const unsigned *, unsigned, unsigned, unsigned);
+	extern void scheduler_static_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_static_sched(unsigned);
 	extern void scheduler_static_end(void);
-	extern void scheduler_dynamic_init(unsigned *, unsigned, unsigned);
+	extern void scheduler_dynamic_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_dynamic_sched(unsigned);
 	extern void scheduler_dynamic_end(void);
 

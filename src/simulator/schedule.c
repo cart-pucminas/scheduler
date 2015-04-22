@@ -105,7 +105,7 @@ static unsigned choose_thread(void)
  * @details Simulates a loop scheduler.
  */
 void schedule
-(unsigned *tasks, unsigned ntasks, unsigned _nthreads, unsigned scheduler)
+(const unsigned *tasks, unsigned ntasks, unsigned _nthreads, unsigned scheduler)
 {
 	unsigned n;
 	

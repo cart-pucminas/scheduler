@@ -49,7 +49,7 @@ static struct
  * @param nthreads Number of threads.
  */
 void scheduler_dynamic_init
-(unsigned *tasks, unsigned ntasks, unsigned nthreads)
+(const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
