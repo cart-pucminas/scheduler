@@ -70,7 +70,7 @@ void dqueue_insert(unsigned tid, unsigned time)
 	node = &head;
 	
 	/* Search insertion point. */
-	while ((node->next != NULL) && (time >= node->next->remaining))
+	while ((node->next != NULL) && (time > node->next->remaining))
 	{
 		time -= node->next->remaining;
 		node = node->next;
@@ -92,6 +92,7 @@ void dqueue_insert(unsigned tid, unsigned time)
 			continue;
 		
 		node->remaining -= time;
+		break;
 	}
 }
 
