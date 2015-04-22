@@ -70,7 +70,7 @@ void dqueue_insert(unsigned tid, unsigned time)
 	node = &head;
 	
 	/* Search insertion point. */
-	while ((node->next != NULL) && (time > node->next->remaining))
+	while ((node->next != NULL) && (time >= node->next->remaining))
 	{
 		time -= node->next->remaining;
 		node = node->next;
@@ -84,6 +84,15 @@ void dqueue_insert(unsigned tid, unsigned time)
 	
 	/* Insert node in the delta queue. */
 	node->next = tmp;
+	
+	/* Update remaining time. */
+	for (node = tmp->next; node != NULL; node = node->next)
+	{
+		if (node->remaining == 0)
+			continue;
+		
+		node->remaining -= time;
+	}
 }
 
 /**

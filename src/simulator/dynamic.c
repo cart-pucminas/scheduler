@@ -28,10 +28,10 @@
  */
 static struct
 {
-	unsigned ntasks;   /**< Number of tasks.   */
-	unsigned *taskmap; /**< Task map.          */
-	unsigned *tasks;   /**< Tasks.             */
-	unsigned nthreads; /**< Number of threads. */
+	unsigned ntasks;       /**< Number of tasks.   */
+	unsigned *taskmap;     /**< Task map.          */
+	const unsigned *tasks; /**< Tasks.             */
+	unsigned nthreads;     /**< Number of threads. */
 } scheduler_data = {
 	0,
 	NULL,
@@ -102,7 +102,7 @@ unsigned scheduler_dynamic_sched(unsigned tid)
 			n++;
 			workload += scheduler_data.tasks[i];
 			threads[tid].workload += workload;
-			scheduler_data.tasks[i] = tid;
+			scheduler_data.taskmap[i] = tid;
 			i0 = i;
 			break;
 		}

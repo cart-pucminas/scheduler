@@ -82,18 +82,18 @@ scheduler_end_t schedulers_end[4] = {
  */
 static unsigned choose_thread(void)
 {
-	unsigned tid;
+	unsigned i;   /* Working index.       */
+	unsigned tid; /* ID of chosen thread. */
 		
 	/* Choose thread. */
-	tid = randnum()%nthreads;
-	while (ready[tid] == NULL)
-	{
-		tid = (tid + 1)%nthreads;
-	}
+	i = randnum()%nthreads;
+	while (ready[i] == NULL)
+		i = (i + 1)%nthreads;
 	
 	/* Remove thread from ready pool. */
 	nready--;
-	ready[tid] = NULL;
+	tid = ready[i]->tid;
+	ready[i] = NULL;
 	
 	return (tid);
 }
@@ -128,8 +128,7 @@ void schedule
 	schedulers_init[scheduler](tasks, ntasks, nthreads);
 	for (n = ntasks; n > 0; /* loop*/ )
 	{
-		unsigned tid;       /* Threads ID.      */
-		unsigned timestamp; /* Next time stamp. */
+		unsigned tid;
 		
 		/* Pick a thread to run. */
 		while (nready > 0)
@@ -141,10 +140,9 @@ void schedule
 		/* Put threads back into ready pool. */
 		do
 		{
-			timestamp = dqueue_next_timestamp();
 			tid = dqueue_remove();
 			ready[nready++] = &threads[tid];
-		} while (timestamp == dqueue_next_timestamp());
+		} while (dqueue_next_timestamp() == 0);
 	}
 	schedulers_end[scheduler]();
 	
