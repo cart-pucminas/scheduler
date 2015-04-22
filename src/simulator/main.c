@@ -26,6 +26,8 @@
 
 #include "simulator.h"
 
+#define _SORT_
+
 /**
  * @name Random Distribution Parameters
  */
@@ -178,6 +180,8 @@ out:
 	return;
 }
 
+#ifdef _SORT_
+
 /**
  * @brief Compares two unsigned integers.
  * 
@@ -190,6 +194,8 @@ static int cmp(const void *a, const void *b)
 {
 	return ((*(unsigned *)a) - (*(unsigned *)b));
 }
+
+#endif
 
 /**
  * @brief Loop scheduler simulator.
@@ -254,12 +260,14 @@ int main(int argc, const const char **argv)
 		} break;
 	}
 	
+#ifdef _SORT_	
 	qsort(tasks, ntasks, sizeof(unsigned), cmp);
-	
+#endif
+
 	/* Print tasks. */
 	for (unsigned i = 0; i < ntasks; i++)
 		fprintf(stderr, "%u\n", tasks[i]);
-	
+
 	schedule(tasks, ntasks, nthreads, scheduler);
 	
 	/* House keeping. */
