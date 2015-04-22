@@ -107,6 +107,11 @@ unsigned scheduler_static_sched(unsigned tid)
 			n++;
 			workload += scheduler_data.tasks[i];
 			threads[tid].workload += workload;
+			threads[tid].ntasks++;
+			if (workload < threads[tid].min)
+				threads[tid].min = workload;
+			if (workload > threads[tid].max)
+				threads[tid].max = workload;
 			scheduler_data.tasks[i] = scheduler_data.nthreads;
 		}
 	}
