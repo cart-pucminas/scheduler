@@ -29,7 +29,7 @@
 
 #define _STEP_TRESHOLD 75
 
-#define STEP() ((randnum()%100) < _STEP_TRESHOLD)
+#define STEP() ((randnum()%100 + 1) < _STEP_TRESHOLD)
 
 #define _SORT_
 
@@ -261,7 +261,7 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				{
 					num = ((!use_step_distribution) || (STEP())) ? 
 							base + normalnum(mean, 2.0) : 0;
-				} while ((num < 1) || (num > ntasks));
+				} while ((num < 0.0) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
 			}
@@ -282,7 +282,7 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				{
 					num = ((!use_step_distribution) || (STEP())) ? 
 							poissonnum(lambda) : 0;
-				} while ((num < 1) || (num > ntasks));
+				} while ((num < 0.0) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
 			}
