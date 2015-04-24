@@ -27,8 +27,6 @@
 
 #include "simulator.h"
 
-#define NUM_IT 10
-
 #define _SORT_
 
 /**
@@ -51,6 +49,7 @@ static unsigned nthreads = 32;              /**< Number of threads.        */
 static unsigned ntasks = 1024;              /**< Number of tasks.          */
 static unsigned distribution = 0;           /**< Probability distribution. */
 static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
+static unsigned niterations = 1;            /**< Number of iterations.     */
 /**@}*/
 
 /**
@@ -91,6 +90,7 @@ static void usage(void)
 	printf("  dynamic        Simulate dynamic loop scheduling");
 	printf("  workload-aware Simulate workload-aware loop scheduling");
 	printf("Options:\n");
+	printf("  --iterations           Number of iterations\n");
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --distribution <name>  Probability density function\n");
@@ -105,10 +105,11 @@ static void usage(void)
 static void readargs(int argc, const char **argv)
 {
 	enum states{
-		STATE_READ_ARG,          /* Read argument.         */
-		STATE_SET_NTHREADS,      /* Set number of threads. */
-		STATE_SET_NTASKS,        /* Set number of tasks.   */
-		STATE_SET_DISTRIBUTION}; /* Set distribution.      */
+		STATE_READ_ARG,          /* Read argument.            */
+		STATE_SET_NTHREADS,      /* Set number of threads.    */
+		STATE_SET_NTASKS,        /* Set number of tasks.      */
+		STATE_SET_NITERATIONS,   /* Set number of iterations. */
+		STATE_SET_DISTRIBUTION}; /* Set distribution.         */
 	
 	unsigned state;                /* Current state.     */
 	const char *distribution_name; /* Distribution name. */
@@ -140,6 +141,10 @@ static void readargs(int argc, const char **argv)
 					distribution_name = arg;
 					state = STATE_READ_ARG;
 					break;
+
+				case STATE_SET_NITERATIONS:
+					niterations = atoi(arg);
+					break;
 			}
 			
 			continue;
@@ -148,6 +153,8 @@ static void readargs(int argc, const char **argv)
 		/* Parse command. */
 		if (!strcmp(arg, "--nthreads"))
 			state = STATE_SET_NTHREADS;
+		else if (!strcmp(arg, "--niterations"))
+			state = STATE_SET_NITERATIONS;
 		else if (!strcmp(arg, "--ntasks"))
 			state = STATE_SET_NTASKS;
 		else if (!strcmp(arg, "--distribution"))
@@ -167,6 +174,8 @@ static void readargs(int argc, const char **argv)
 	/* Check parameters. */
 	if (nthreads == 0)
 		error("invalid number of threads");
+	else if (niterations == 0)
+		error("invalid number of iterations");
 	else if (ntasks == 0)
 		error("invalid number of tasks");
 	else if (scheduler == SCHEDULER_NONE)
@@ -306,15 +315,13 @@ int main(int argc, const const char **argv)
 	
 	threads_spawn();
 
-	for (unsigned i = 0; i < NUM_IT; i++)
+	for (unsigned i = 0; i < niterations; i++)
 	{
-
 		tasks = create_tasks(distribution, ntasks);
 		
 #ifdef _SORT_	
 		qsort(tasks, ntasks, sizeof(unsigned), cmp);
 #endif
-
 		schedule(tasks, ntasks, nthreads, scheduler);
 		
 		/* House keeping. */
