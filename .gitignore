@@ -3,3 +3,4 @@ doc/*
 lib/*
 include/mylib/*
 results/*
+*.swp
