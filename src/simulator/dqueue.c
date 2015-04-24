@@ -124,6 +124,18 @@ unsigned dqueue_remove(void)
 	return (tid);
 }
 
+/*
+ * @brief Asserts if the delta queue is empty.
+ *
+ * @details Asserts if the delta queue is empty.
+ * 
+ * @returns True if the delta queue is empty, and false otherwise.
+ */
+bool dqueue_empty(void)
+{
+	return (head.next == NULL);
+}
+
 /**
  * @brief Returns the next remaining time.
  * 

@@ -131,7 +131,7 @@ void schedule
 		{
 			tid = dqueue_remove();
 			ready[nready++] = &threads[tid];
-		} while (dqueue_next_timestamp() == 0);
+		} while ((!dqueue_empty()) && (dqueue_next_timestamp() == 0));
 	}
 	schedulers_end[scheduler]();
 	

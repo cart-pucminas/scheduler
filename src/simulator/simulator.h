@@ -20,6 +20,8 @@
 #ifndef _SIMULATOR_H_
 #define _SIMULATOR_H_
 
+	#include <stdbool.h>
+
 	/*========================================================================*
 	 *                              Scheduler                                 *
 	 *========================================================================*/
@@ -102,6 +104,7 @@
 	extern void dqueue_insert(unsigned, unsigned);
 	extern unsigned dqueue_remove(void);
 	extern unsigned dqueue_next_timestamp(void);
+	extern bool dqueue_empty(void);
 	/**@}*/
 	
 	/**@}*/
