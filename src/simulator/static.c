@@ -80,6 +80,7 @@ void scheduler_static_init
 void scheduler_static_end(void)
 {
 	free(scheduler_data.taskmap);
+	scheduler_data.taskmap = NULL;
 }
 
 /**

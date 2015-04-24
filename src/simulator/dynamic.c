@@ -81,6 +81,7 @@ void scheduler_dynamic_end(void)
 	}
 	
 	free(scheduler_data.taskmap);
+	scheduler_data.taskmap = NULL;
 }
 
 /**

@@ -27,7 +27,7 @@
 
 #include "simulator.h"
 
-#define NUM_IT 100
+#define NUM_IT 10
 
 #define _SORT_
 
