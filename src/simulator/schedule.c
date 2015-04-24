@@ -17,7 +17,6 @@
  * MA 02110-1301, USA.
  */
 
-#include <limits.h>
 #include <assert.h>
 
 #include <mylib/util.h>
@@ -28,11 +27,6 @@
  * @brief Number of threads.
  */
 static unsigned nthreads;
-
-/**
- * @brief Threads.
- */
-struct thread *threads = NULL;
 
 /**
  * @brief Number of ready threads.
@@ -110,18 +104,7 @@ void schedule
 	unsigned n;
 	
 	nthreads = _nthreads;
-	
-	/* Create threads. */
-	threads = smalloc(nthreads*sizeof(struct thread));
-	for (unsigned i = 0; i < nthreads; i++)
-	{
-		threads[i].tid = i;
-		threads[i].workload = 0;
-		threads[i].ntasks = 0;
-		threads[i].avg = 0;
-		threads[i].max = 0;
-		threads[i].min = UINT_MAX;
-	}
+	dqueue_create();
 	
 	/* Create pool of ready threads. */
 	nready = nthreads;
@@ -129,6 +112,7 @@ void schedule
 	for (unsigned i = 0; i < nthreads; i++)
 		ready[i] = &threads[i];
 	
+		
 	/* Schedule. */
 	schedulers_init[scheduler](tasks, ntasks, nthreads);
 	for (n = ntasks; n > 0; /* loop*/ )
@@ -151,12 +135,7 @@ void schedule
 	}
 	schedulers_end[scheduler]();
 	
-	/* Print statistics. */
-	for (unsigned i = 0; i < nthreads; i++)
-		printf("%u;%u\n", threads[i].tid, threads[i].workload);
-	
 	/* House keeping. */
 	free(ready);
-	free(threads);
 	dqueue_destroy();
 }

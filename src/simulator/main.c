@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,7 +27,14 @@
 
 #include "simulator.h"
 
+#define NUM_IT 100
+
 #define _SORT_
+
+/**
+ * @brief Threads.
+ */
+struct thread *threads = NULL;
 
 /**
  * @name Random Distribution Parameters
@@ -198,14 +206,12 @@ static int cmp(const void *a, const void *b)
 #endif
 
 /**
- * @brief Loop scheduler simulator.
+ * @brief Generates tasks.
  */
-int main(int argc, const const char **argv)
+static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 {
 	unsigned *tasks;
 	
-	readargs(argc, argv);
-
 	/* Create tasks. */
 	tasks = smalloc(ntasks*sizeof(unsigned));
 	switch (distribution)
@@ -260,18 +266,66 @@ int main(int argc, const const char **argv)
 		} break;
 	}
 	
+	return (tasks);
+}
+
+/**
+ * @brief Spawn threads.
+ */
+static void threads_spawn(void)
+{
+	/* Create threads. */
+	threads = smalloc(nthreads*sizeof(struct thread));
+	for (unsigned i = 0; i < nthreads; i++)
+	{
+		threads[i].tid = i;
+		threads[i].workload = 0;
+		threads[i].ntasks = 0;
+		threads[i].avg = 0;
+		threads[i].max = 0;
+		threads[i].min = UINT_MAX;
+	}
+}
+
+/**
+ * @brief Joins threads.
+ */
+static void threads_join(void)
+{
+	free(threads);
+}
+
+/**
+ * @brief Loop scheduler simulator.
+ */
+int main(int argc, const const char **argv)
+{
+	unsigned *tasks;
+	
+	readargs(argc, argv);
+	
+	threads_spawn();
+
+	for (unsigned i = 0; i < NUM_IT; i++)
+	{
+
+		tasks = create_tasks(distribution, ntasks);
+		
 #ifdef _SORT_	
-	qsort(tasks, ntasks, sizeof(unsigned), cmp);
+		qsort(tasks, ntasks, sizeof(unsigned), cmp);
 #endif
 
-	/* Print tasks. */
-	for (unsigned i = 0; i < ntasks; i++)
-		fprintf(stderr, "%u\n", tasks[i]);
-
-	schedule(tasks, ntasks, nthreads, scheduler);
+		schedule(tasks, ntasks, nthreads, scheduler);
+		
+		/* House keeping. */
+		free(tasks);
+	}
 	
-	/* House keeping. */
-	free(tasks);
+	/* Print statistics. */
+	for (unsigned i = 0; i < nthreads; i++)
+		printf("%u;%u\n", threads[i].tid, threads[i].workload);
+	
+	threads_join();
 	
 	return (EXIT_SUCCESS);
 }
