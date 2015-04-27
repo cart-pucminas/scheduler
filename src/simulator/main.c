@@ -235,7 +235,7 @@ static double *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = normalnum(64.0, 3.0);
+					num = normalnum(32.0, 1.0);
 				} while (num < 0.0);
 				
 				tasks[i] = num;
@@ -293,6 +293,7 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
+	double m;
 	double *tasks;
 	
 	readargs(argc, argv);
@@ -319,9 +320,15 @@ int main(int argc, const const char **argv)
 		free(tasks);
 	}
 	
+	/* Compute total workload. */
+	m = 0.0;
+	for (unsigned i = 0; i < nthreads; i++)
+		m += threads[i].workload;
+	m = 100/m;
+	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-		printf("%u;%lf\n", threads[i].tid, threads[i].workload);
+		printf("%u;%lf\n", threads[i].tid, threads[i].workload*m);
 	
 	threads_join();
 	
