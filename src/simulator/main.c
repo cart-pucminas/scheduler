@@ -35,13 +35,6 @@
 struct thread *threads = NULL;
 
 /**
- * @name Random Distribution Parameters
- */
-/**@{*/
-#define RAND_MAX_SIZE 2048 /**< Maximum task size. */
-/**@}*/
-
-/**
  * @name Simulation Parameters
  */
 /**@{*/
@@ -230,26 +223,20 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_RANDOM:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = randnum()%RAND_MAX_SIZE;
+				tasks[i] = randnum()%ntasks;
 		} break;
 		
 		/* Normal distribution. */
 		case DISTRIBUTION_NORMAL:
 		{
-			unsigned base;
-			unsigned mean;
-			
-			base = ntasks/2;
-			mean = ntasks/4;
-			
 			for (unsigned i = 0; i < ntasks; i++)
 			{
 				double num;
 				
 				do
 				{
-					num = base + normalnum(mean, 2.0);
-				} while ((num < 0.0) || (num > ntasks));
+					num = normalnum(64, 3.0);
+				} while ((num < 0.0));
 				
 				tasks[i] = (unsigned) floor(num);
 			}
@@ -258,18 +245,14 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 		/* Poisson Distribution. */
 		case DISTRIBUTION_POISSON:
 		{
-			unsigned lambda;
-			
-			lambda = 16;
-			
 			for (unsigned i = 0; i < ntasks; i++)
 			{
 				double num;
 				
 				do
 				{
-					num = poissonnum(lambda);
-				} while ((num < 0.0) || (num > ntasks));
+					num = poissonnum(8.0);
+				} while ((num < 0.0) || (num >= ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
 			}
@@ -324,6 +307,13 @@ int main(int argc, const const char **argv)
 		qsort(tasks, ntasks, sizeof(unsigned), cmp);
 #endif
 		schedule(tasks, ntasks, nthreads, scheduler);
+		
+		/* Print statistics. */
+		if (niterations == 1)
+		{
+			for (unsigned i = 0; i < ntasks; i++)
+				fprintf(stderr, "%u\n", tasks[i]);
+		}
 		
 		/* House keeping. */
 		free(tasks);
