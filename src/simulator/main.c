@@ -27,10 +27,6 @@
 
 #include "simulator.h"
 
-#define _STEP_TRESHOLD 75
-
-#define STEP() ((randnum()%100 + 1) < _STEP_TRESHOLD)
-
 #define _SORT_
 
 /**
@@ -54,7 +50,6 @@ static unsigned ntasks = 1024;              /**< Number of tasks.          */
 static unsigned distribution = 0;           /**< Probability distribution. */
 static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
 static unsigned niterations = 1;            /**< Number of iterations.     */
-static bool use_step_distribution = false;  /**< Use step distribution.    */
 /**@}*/
 
 /**
@@ -95,7 +90,6 @@ static void usage(void)
 	printf("  dynamic        Simulate dynamic loop scheduling\n");
 	printf("  workload-aware Simulate workload-aware loop scheduling\n");
 	printf("Options:\n");
-	printf("  --use-step-distribution Use step distribution\n");
 	printf("  --iterations            Number of iterations\n");
 	printf("  --nthreads <num>        Number of threads\n");
 	printf("  --ntasks <num>          Number of tasks\n");
@@ -176,8 +170,6 @@ static void readargs(int argc, const char **argv)
 			scheduler = SCHEDULER_DYNAMIC;
 		else if (!strcmp(arg, "workload-aware"))
 			scheduler = SCHEDULER_WORKLOAD_AWARE;
-		else if (!strcmp(arg, "--use-step-distribution"))
-			use_step_distribution = true;
 	}
 	
 	/* Check parameters. */
@@ -238,11 +230,8 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_RANDOM:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-			{
-				tasks[i] = ((!use_step_distribution) || (STEP())) ?
-						randnum()%RAND_MAX_SIZE + 1 : 0;
-			}
-			} break;
+				tasks[i] = randnum()%RAND_MAX_SIZE;
+		} break;
 		
 		/* Normal distribution. */
 		case DISTRIBUTION_NORMAL:
@@ -259,8 +248,7 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = ((!use_step_distribution) || (STEP())) ? 
-							base + normalnum(mean, 2.0) : 0;
+					num = base + normalnum(mean, 2.0);
 				} while ((num < 0.0) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
@@ -280,8 +268,7 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = ((!use_step_distribution) || (STEP())) ? 
-							poissonnum(lambda) : 0;
+					num = poissonnum(lambda);
 				} while ((num < 0.0) || (num > ntasks));
 				
 				tasks[i] = (unsigned) floor(num);
