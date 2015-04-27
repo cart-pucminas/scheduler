@@ -17,7 +17,7 @@
  * MA 02110-1301, USA.
  */
 
-#include <limits.h>
+#include <float.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -203,7 +203,7 @@ out:
  */
 static int cmp(const void *a, const void *b)
 {
-	return ((*(unsigned *)a) - (*(unsigned *)b));
+	return ((*(double *)a) - (*(double *)b));
 }
 
 #endif
@@ -211,12 +211,12 @@ static int cmp(const void *a, const void *b)
 /**
  * @brief Generates tasks.
  */
-static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
+static double *create_tasks(unsigned distribution, unsigned ntasks)
 {
-	unsigned *tasks;
+	double *tasks;
 	
 	/* Create tasks. */
-	tasks = smalloc(ntasks*sizeof(unsigned));
+	tasks = smalloc(ntasks*sizeof(double));
 	switch (distribution)
 	{
 		/* Random distribution. */
@@ -235,10 +235,10 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = normalnum(64, 3.0);
-				} while ((num < 0.0));
+					num = normalnum(64.0, 3.0);
+				} while (num < 0.0);
 				
-				tasks[i] = (unsigned) floor(num);
+				tasks[i] = num;
 			}
 		} break;
 		
@@ -252,9 +252,9 @@ static unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				do
 				{
 					num = poissonnum(8.0);
-				} while ((num < 0.0) || (num >= ntasks));
+				} while (num < 0.0);
 				
-				tasks[i] = (unsigned) floor(num);
+				tasks[i] = num;
 			}
 		} break;
 	}
@@ -276,7 +276,7 @@ static void threads_spawn(void)
 		threads[i].ntasks = 0;
 		threads[i].avg = 0;
 		threads[i].max = 0;
-		threads[i].min = UINT_MAX;
+		threads[i].min = DBL_MAX;
 	}
 }
 
@@ -293,7 +293,7 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
-	unsigned *tasks;
+	double *tasks;
 	
 	readargs(argc, argv);
 	
@@ -304,7 +304,7 @@ int main(int argc, const const char **argv)
 		tasks = create_tasks(distribution, ntasks);
 		
 #ifdef _SORT_	
-		qsort(tasks, ntasks, sizeof(unsigned), cmp);
+		qsort(tasks, ntasks, sizeof(double), cmp);
 #endif
 		schedule(tasks, ntasks, nthreads, scheduler);
 		
@@ -312,7 +312,7 @@ int main(int argc, const const char **argv)
 		if (niterations == 1)
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				fprintf(stderr, "%u\n", tasks[i]);
+				fprintf(stderr, "%lf\n", tasks[i]);
 		}
 		
 		/* House keeping. */
@@ -321,7 +321,7 @@ int main(int argc, const const char **argv)
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-		printf("%u;%u\n", threads[i].tid, threads[i].workload);
+		printf("%u;%lf\n", threads[i].tid, threads[i].workload);
 	
 	threads_join();
 	
