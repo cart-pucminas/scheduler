@@ -38,7 +38,7 @@ function run {
 				
 	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.out';\
 				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.eps';\
-				titlename='${4} - $3'"\
+				titlename='${4} strategy - ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
 }
 
