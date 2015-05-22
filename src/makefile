@@ -18,15 +18,17 @@
 #
 
 # Conflicts.
-.PHONY: simulator
-
-# Simulator name.
-EXEC = $(BINDIR)/scheduler
+.PHONY: simulator searcher
 
 # Builds simulator.
 simulator: simulator/*.c common/*.c
-	$(CC) $(CFLAGS) $^ -o $(EXEC) $(LIBS)
+	$(CC) $(CFLAGS) $^ -o $(BINDIR)/scheduler $(LIBS)
+	
+# Builds searcher.
+searcher: searcher/*.c common/*.c
+	$(CC) $(CFLAGS) $^ -o $(BINDIR)/searcher $(LIBS)
 
 # Cleans compilation files.
 clean:
-	@rm -f $(BINDIR)/scheduler
+	@rm -f $(BINDIR)/simulator
+	@rm -f $(BINDIR)/searcher
