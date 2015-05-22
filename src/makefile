@@ -17,14 +17,16 @@
 # MA 02110-1301, USA.
 #
 
-# Phony list.
+# Conflicts.
 .PHONY: simulator
 
-# Builds the simulator.
-simulator:
-	cd simulator && $(MAKE) all
+# Simulator name.
+EXEC = $(BINDIR)/scheduler
+
+# Builds simulator.
+simulator: simulator/*.c
+	$(CC) $(CFLAGS) $^ -o $(EXEC) $(LIBS)
 
 # Cleans compilation files.
 clean:
-	cd simulator && $(MAKE) clean
-
+	@rm -f $(BINDIR)/scheduler
