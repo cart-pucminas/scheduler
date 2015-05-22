@@ -24,7 +24,7 @@
 EXEC = $(BINDIR)/scheduler
 
 # Builds simulator.
-simulator: simulator/*.c
+simulator: simulator/*.c common/*.c
 	$(CC) $(CFLAGS) $^ -o $(EXEC) $(LIBS)
 
 # Cleans compilation files.

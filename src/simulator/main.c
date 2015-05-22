@@ -24,10 +24,8 @@
 #include <math.h>
 
 #include <mylib/util.h>
-
+#include <common.h>
 #include "simulator.h"
-
-#define _SORT_
 
 /**
  * @brief Threads.
@@ -44,30 +42,6 @@ static unsigned distribution = 0;           /**< Probability distribution. */
 static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
 static unsigned niterations = 1;            /**< Number of iterations.     */
 /**@}*/
-
-/**
- * @brief Number of supported probability distributions.
- */
-#define NDISTRIBUTIONS 3
-
-/**
- * @name Probability Distributions.
- */
-/**@{*/
-#define DISTRIBUTION_RANDOM  0 /**< Random distribution.  */
-#define DISTRIBUTION_NORMAL  1 /**< Normal distribution.  */
-#define DISTRIBUTION_POISSON 2 /**< Poisson distribution. */
-/**@}*/
-	
-
-/**
- * @brief Supported probability distributions.
- */
-static char *distributions[NDISTRIBUTIONS] = {
-	"random", /* Random.  */
-	"normal", /* Normal.  */
-	"poisson" /* Poisson. */
-};
 
 /**
  * @brief Prints program usage and exits.
@@ -191,77 +165,6 @@ out:
 	return;
 }
 
-#ifdef _SORT_
-
-/**
- * @brief Compares two unsigned integers.
- * 
- * @details Compares the unsigned integer pointed to by @p a with the unsigned
- *          integer pointed to by @p b.
- * 
- * @returns The difference between @p a and @p b.
- */
-static int cmp(const void *a, const void *b)
-{
-	return ((*(double *)a) - (*(double *)b));
-}
-
-#endif
-
-/**
- * @brief Generates tasks.
- */
-static double *create_tasks(unsigned distribution, unsigned ntasks)
-{
-	double *tasks;
-	
-	/* Create tasks. */
-	tasks = smalloc(ntasks*sizeof(double));
-	switch (distribution)
-	{
-		/* Random distribution. */
-		case DISTRIBUTION_RANDOM:
-		{
-			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = randnum()%ntasks;
-		} break;
-		
-		/* Normal distribution. */
-		case DISTRIBUTION_NORMAL:
-		{
-			for (unsigned i = 0; i < ntasks; i++)
-			{
-				double num;
-				
-				do
-				{
-					num = normalnum(32.0, 1.0);
-				} while (num < 0.0);
-				
-				tasks[i] = num;
-			}
-		} break;
-		
-		/* Poisson Distribution. */
-		case DISTRIBUTION_POISSON:
-		{
-			for (unsigned i = 0; i < ntasks; i++)
-			{
-				double num;
-				
-				do
-				{
-					num = poissonnum(8.0);
-				} while (num < 0.0);
-				
-				tasks[i] = num;
-			}
-		} break;
-	}
-	
-	return (tasks);
-}
-
 /**
  * @brief Spawn threads.
  */
@@ -303,10 +206,7 @@ int main(int argc, const const char **argv)
 	for (unsigned i = 0; i < niterations; i++)
 	{
 		tasks = create_tasks(distribution, ntasks);
-		
-#ifdef _SORT_	
-		qsort(tasks, ntasks, sizeof(double), cmp);
-#endif
+	
 		schedule(tasks, ntasks, nthreads, scheduler);
 		
 		/* Print statistics. */
