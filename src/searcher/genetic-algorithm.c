@@ -132,15 +132,17 @@ static gene_t gene_crossover(gene_t gen0, gene_t gen1, int child)
 	/* First child. */
 	if (child == 0)
 	{
-		memcpy(&gen[0], &GENE(gen0)[0], crosspoint);
-		memcpy(&gen[crosspoint], &GENE(gen1)[crosspoint], ntasks - crosspoint);
+		memcpy(&gen[0], &GENE(gen0)[0], crosspoint*sizeof(unsigned));
+		memcpy(&gen[crosspoint], &GENE(gen1)[crosspoint], 
+										(ntasks - crosspoint)*sizeof(unsigned));
 	}
 	
 	/* Second child. */
 	else
 	{
-		memcpy(&gen[0], &GENE(gen1)[0], crosspoint);
-		memcpy(&gen[crosspoint], &GENE(gen0)[crosspoint], ntasks - crosspoint);
+		memcpy(&gen[0], &GENE(gen1)[0], crosspoint*sizeof(unsigned));
+		memcpy(&gen[crosspoint], &GENE(gen0)[crosspoint],
+										(ntasks - crosspoint)*sizeof(unsigned));
 		
 		/* Reset crossover point. */
 		crosspoint = 0;
