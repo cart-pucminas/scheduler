@@ -23,13 +23,22 @@
 
 #include <mylib/util.h>
 #include <common.h>
+#include "searcher.h"
 
 /**
- * @name Simulation Parameters
+ * @brief GA Parameters
  */
 /**@{*/
-static unsigned nthreads = 32;    /**< Number of threads.        */
-static unsigned ntasks = 1024;    /**< Number of tasks.          */
+#define POPSIZE 10000 /**< Population size.       */
+#define NGEN      500 /**< Number of generations. */
+/**@}*/
+
+/**
+ * @name Searching Parameters
+ */
+/**@{*/
+unsigned nthreads = 32;           /**< Number of threads.        */
+unsigned ntasks = 1024;           /**< Number of tasks.          */
 static unsigned distribution = 0; /**< Probability distribution. */
 /**@}*/
 
@@ -142,6 +151,8 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 	
 	tasks = create_tasks(distribution, ntasks);
+	
+	ga(tasks, POPSIZE, NGEN);
 		
 	/* House keeping. */
 	free(tasks);
