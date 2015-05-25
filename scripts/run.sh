@@ -28,7 +28,7 @@ OUTDIR=results
 # $3 Probability distribution.
 # $4 Scheduling strategy.
 #
-function run {
+function run1 {
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 \
 	1> $OUTDIR/taskmap-$1-$2-$3-$4.out 2> $OUTDIR/task-$1-$2-$3-$4.err
 
@@ -41,18 +41,28 @@ function run {
 				titlename='${4} strategy - ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
 }
+#
+function run2 {
+	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
+	1> $OUTDIR/goodmap-$1-$2-$3.out
+
+	gnuplot -e "inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
+				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
+				titlename='${3} distribution - ${2} tasks'"\
+				scripts/goodmap.gp
+}
 
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-
-for strategy in static dynamic; do
-	for distribution in random normal poisson; do
-		for nthreads in 32; do
-			for ntasks in 128 256 512; do
-				echo $nthreads $ntasks $distribution $strategy
-				run $nthreads $ntasks $distribution $strategy
+for distribution in random normal poisson; do
+	for nthreads in 32; do
+		for ntasks in 128 256 512; do	
+			echo $nthreads $ntasks $distribution
+			for strategy in static dynamic; do
+				run1 $nthreads $ntasks $distribution $strategy
 			done
+			run2 $nthreads $ntasks $distribution
 		done
 	done
 done
