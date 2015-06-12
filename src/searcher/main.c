@@ -26,13 +26,6 @@
 #include "searcher.h"
 
 /**
- * @brief GA Parameters
- */
-/**@{*/
-#define POPSIZE 10000 /**< Population size.       */
-/**@}*/
-
-/**
  * @name Searching Parameters
  */
 /**@{*/
@@ -40,6 +33,7 @@ unsigned nthreads = 32;           /**< Number of threads.        */
 unsigned ntasks = 1024;           /**< Number of tasks.          */
 static unsigned distribution = 0; /**< Probability distribution. */
 static unsigned ngen = 0;         /**< Number of generations.    */
+static unsigned popsize = 0;      /**< Population size.          */
 /**@}*/
 
 /**
@@ -56,6 +50,7 @@ static void usage(void)
 	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --distribution <name>  Input probability density function\n");
 	printf("  --ngen <num>           Number of generations\n");
+	printf("  --popsize <num>        Population size\n");
 	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
@@ -73,7 +68,8 @@ static void readargs(int argc, const char **argv)
 		STATE_SET_NTHREADS,     /* Set number of threads.     */
 		STATE_SET_NTASKS,       /* Set number of tasks.       */
 		STATE_SET_DISTRIBUTION, /* Set distribution.          */
-		STATE_SET_NGEN};        /* Set number of generations. */
+		STATE_SET_NGEN,         /* Set number of generations. */
+		STATE_SET_POPSIZE};     /* Population size.           */
 	
 	unsigned state;                /* Current state.     */
 	const char *distribution_name; /* Distribution name. */
@@ -110,6 +106,11 @@ static void readargs(int argc, const char **argv)
 					ngen = atoi(arg);
 					state = STATE_READ_ARG;
 					break;
+				
+				case STATE_SET_POPSIZE:
+					popsize = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
 			}
 			
 			continue;
@@ -124,6 +125,8 @@ static void readargs(int argc, const char **argv)
 			state = STATE_SET_DISTRIBUTION;
 		else if (!strcmp(arg, "--ngen"))
 			state = STATE_SET_NGEN;
+		else if (!strcmp(arg, "--popsize"))
+			state = STATE_SET_POPSIZE;
 		else if (!strcmp(arg, "--help"))
 			usage();
 	}
@@ -135,6 +138,8 @@ static void readargs(int argc, const char **argv)
 		error("invalid number of tasks");
 	else if (ngen == 0)
 		error("invalid number of generations");
+	else if (popsize == 0)
+		error("invalid population size");
 	if (distribution_name != NULL)
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
@@ -163,7 +168,7 @@ int main(int argc, const const char **argv)
 	
 	tasks = create_tasks(distribution, ntasks);
 	
-	ga(tasks, POPSIZE, ngen);
+	ga(tasks, popsize, ngen);
 		
 	/* House keeping. */
 	free(tasks);
