@@ -30,7 +30,6 @@
  */
 /**@{*/
 #define POPSIZE 10000 /**< Population size.       */
-#define NGEN     1000 /**< Number of generations. */
 /**@}*/
 
 /**
@@ -40,6 +39,7 @@
 unsigned nthreads = 32;           /**< Number of threads.        */
 unsigned ntasks = 1024;           /**< Number of tasks.          */
 static unsigned distribution = 0; /**< Probability distribution. */
+static unsigned ngen = 0;         /**< Number of generations.    */
 /**@}*/
 
 /**
@@ -55,6 +55,7 @@ static void usage(void)
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --distribution <name>  Input probability density function\n");
+	printf("  --ngen <num>           Number of generations\n");
 	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
@@ -68,10 +69,11 @@ static void usage(void)
 static void readargs(int argc, const char **argv)
 {
 	enum states{
-		STATE_READ_ARG,          /* Read argument.            */
-		STATE_SET_NTHREADS,      /* Set number of threads.    */
-		STATE_SET_NTASKS,        /* Set number of tasks.      */
-		STATE_SET_DISTRIBUTION}; /* Set distribution.         */
+		STATE_READ_ARG,         /* Read argument.             */
+		STATE_SET_NTHREADS,     /* Set number of threads.     */
+		STATE_SET_NTASKS,       /* Set number of tasks.       */
+		STATE_SET_DISTRIBUTION, /* Set distribution.          */
+		STATE_SET_NGEN};        /* Set number of generations. */
 	
 	unsigned state;                /* Current state.     */
 	const char *distribution_name; /* Distribution name. */
@@ -103,6 +105,11 @@ static void readargs(int argc, const char **argv)
 					distribution_name = arg;
 					state = STATE_READ_ARG;
 					break;
+					
+				case STATE_SET_NGEN:
+					ngen = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
 			}
 			
 			continue;
@@ -115,6 +122,8 @@ static void readargs(int argc, const char **argv)
 			state = STATE_SET_NTASKS;
 		else if (!strcmp(arg, "--distribution"))
 			state = STATE_SET_DISTRIBUTION;
+		else if (!strcmp(arg, "--ngen"))
+			state = STATE_SET_NGEN;
 		else if (!strcmp(arg, "--help"))
 			usage();
 	}
@@ -124,6 +133,8 @@ static void readargs(int argc, const char **argv)
 		error("invalid number of threads");
 	else if (ntasks == 0)
 		error("invalid number of tasks");
+	else if (ngen == 0)
+		error("invalid number of generations");
 	if (distribution_name != NULL)
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
@@ -152,7 +163,7 @@ int main(int argc, const const char **argv)
 	
 	tasks = create_tasks(distribution, ntasks);
 	
-	ga(tasks, POPSIZE, NGEN);
+	ga(tasks, POPSIZE, ngen);
 		
 	/* House keeping. */
 	free(tasks);
