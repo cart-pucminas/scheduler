@@ -30,7 +30,7 @@
  */
 /**@{*/
 #define POPSIZE 10000 /**< Population size.       */
-#define NGEN      500 /**< Number of generations. */
+#define NGEN     1000 /**< Number of generations. */
 /**@}*/
 
 /**
