@@ -19,6 +19,8 @@
 
 BINDIR=bin
 OUTDIR=results
+NGEN=1000
+POPSIZE=1000
 
 #
 # Runs the scheduler.
@@ -51,14 +53,17 @@ function run1 {
 #
 function run2 {
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
-	1> $OUTDIR/goodmap-$1-$2-$3.out
+	--ngen $NGEN --popsize $POPSIZE 1> $OUTDIR/goodmap-$1-$2-$3.out
 	
-	gnuplot -e "inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
+	gnuplot -e "titlename='${2} ${3}';\
+	            inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
 				inputname2='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
 				inputname3='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic.out';\
 				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
 				titlename='${3} distribution - ${2} tasks'"\
 				scripts/goodmap.gp
+	
+	epstopdf $OUTDIR/goodmap-$1-$2-$3.eps
 }
 
 mkdir -p $OUTDIR

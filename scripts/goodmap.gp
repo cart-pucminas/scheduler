@@ -17,6 +17,10 @@ g(x) = 1.0/(inputname3_max - inputname3_min)
 set terminal postscript eps enhanced color 12
 set output outputname
 
+set xlabel "Number of Generations"
+set ylabel "Load Balancing Fitness"
+set title titlename
+
 set key opaque bottom right box
 
 plot inputname using 1:4 with lines lt rgb "blue" linewidth 2 title 'Genetic Algorithm',\
