@@ -169,7 +169,7 @@ static gene_t gene_mutate(gene_t gen)
  * @brief Genetic algorithm problem.
  */
 static struct genome problem = {
-	0.05, /* Mutation rate.    */
+	0.10, /* Mutation rate.    */
 	0.80, /* Crossover rate.   */
 	0.01, /* Elitism rate.     */
 	0.90, /* Replacement rate. */
