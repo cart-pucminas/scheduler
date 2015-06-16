@@ -23,24 +23,45 @@ NGEN=1000
 POPSIZE=1000
 
 #
-# Runs the scheduler.
+# Runs the static scheduler.
 # 
 # $1 Number of threads
 # $2 Number of tasks.
 # $3 Probability distribution.
-# $4 Scheduling strategy.
 #
-function run1 {
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 \
-	1> $OUTDIR/taskmap-$1-$2-$3-$4.out 2> $OUTDIR/task-$1-$2-$3-$4.err
+function run_static {
+	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 static \
+	1> $OUTDIR/taskmap-$1-$2-$3-static.out 2> $OUTDIR/task-$1-$2-$3-static.err
 	
-	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-${4}.err';\
-				outputname='${OUTDIR}/task-${1}-${2}-${3}-${4}.eps'"\
+	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-static.err';\
+				outputname='${OUTDIR}/task-${1}-${2}-${3}-static.eps'"\
 				scripts/task.gp
 				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-${4}.eps';\
-				titlename='${4} strategy - ${3} distribution - ${2} tasks'"\
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.eps';\
+				titlename='static strategy - ${3} distribution - ${2} tasks'"\
+				scripts/taskmap.gp
+}
+
+#
+# Runs the dynamic scheduler.
+# 
+# $1 Number of threads
+# $2 Number of tasks.
+# $3 Probability distribution.
+# $4 Chunk size
+#
+function run_dynamic {
+	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 dynamic --chunksize $4\
+	1> $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.out 2> $OUTDIR/task-$1-$2-$3-dynamic-$4.err
+	
+	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-dynamic-${4}.err';\
+				outputname='${OUTDIR}/task-${1}-${2}-${3}-dynamic-${4}.eps'"\
+				scripts/task.gp
+				
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.eps';\
+				titlename='dynamic strategy (chunksize = ${4})- ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
 }
 
@@ -58,7 +79,11 @@ function run2 {
 	gnuplot -e "titlename='${2} ${3}';\
 	            inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
 				inputname2='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
-				inputname3='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic.out';\
+				inputname3='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-1.out';\
+				inputname4='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-2.out';\
+				inputname5='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-4.out';\
+				inputname6='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-8.out';\
+				inputname7='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-16.out';\
 				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
 				titlename='${3} distribution - ${2} tasks'"\
 				scripts/goodmap.gp
@@ -73,8 +98,9 @@ for distribution in random normal poisson; do
 	for nthreads in 32; do
 		for ntasks in 128 256 512; do	
 			echo $nthreads $ntasks $distribution
-			for strategy in static dynamic; do
-				run1 $nthreads $ntasks $distribution $strategy
+			run_static $nthreads $ntasks $distribution
+			for chunksize in 1 2 4 8 16; do
+				run_dynamic $nthreads $ntasks $distribution $chunksize
 			done
 			run2 $nthreads $ntasks $distribution
 		done
