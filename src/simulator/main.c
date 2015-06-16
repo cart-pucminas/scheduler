@@ -36,11 +36,12 @@ struct thread *threads = NULL;
  * @name Simulation Parameters
  */
 /**@{*/
-static unsigned nthreads = 32;              /**< Number of threads.        */
-static unsigned ntasks = 1024;              /**< Number of tasks.          */
-static unsigned distribution = 0;           /**< Probability distribution. */
-static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.           */
-static unsigned niterations = 1;            /**< Number of iterations.     */
+static unsigned nthreads = 32;              /**< Number of threads.                     */
+static unsigned ntasks = 1024;              /**< Number of tasks.                       */
+static unsigned distribution = 0;           /**< Probability distribution.              */
+static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.                        */
+static unsigned niterations = 1;            /**< Number of iterations.                  */
+unsigned chunksize = 1;                     /**< Chunk size for the dynamic scheduling. */
 /**@}*/
 
 /**
@@ -60,6 +61,7 @@ static void usage(void)
 	printf("  --iterations           Number of iterations\n");
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
+	printf("  --chunksize <num>      Chunk size for the dynamic scheduling\n");
 	printf("  --distribution <name>  Input probability density function\n");
 	printf("  --help                 Display this message\n");
 
@@ -74,11 +76,12 @@ static void usage(void)
 static void readargs(int argc, const char **argv)
 {
 	enum states{
-		STATE_READ_ARG,          /* Read argument.            */
-		STATE_SET_NTHREADS,      /* Set number of threads.    */
-		STATE_SET_NTASKS,        /* Set number of tasks.      */
-		STATE_SET_NITERATIONS,   /* Set number of iterations. */
-		STATE_SET_DISTRIBUTION}; /* Set distribution.         */
+		STATE_READ_ARG,         /* Read argument.            */
+		STATE_SET_NTHREADS,     /* Set number of threads.    */
+		STATE_SET_NTASKS,       /* Set number of tasks.      */
+		STATE_SET_NITERATIONS,  /* Set number of iterations. */
+		STATE_SET_DISTRIBUTION, /* Set distribution.         */
+		STATE_SET_CHUNKSIZE};   /* Set chunk size.           */
 	
 	unsigned state;                /* Current state.     */
 	const char *distribution_name; /* Distribution name. */
@@ -115,6 +118,11 @@ static void readargs(int argc, const char **argv)
 					niterations = atoi(arg);
 					state = STATE_READ_ARG;
 					break;
+
+				case STATE_SET_CHUNKSIZE:
+					chunksize = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
 			}
 			
 			continue;
@@ -129,6 +137,8 @@ static void readargs(int argc, const char **argv)
 			state = STATE_SET_NTASKS;
 		else if (!strcmp(arg, "--distribution"))
 			state = STATE_SET_DISTRIBUTION;
+		else if (!strcmp(arg, "--chunksize"))
+			state = STATE_SET_CHUNKSIZE;
 		else if (!strcmp(arg, "--help"))
 			usage();
 		else if (!strcmp(arg, "static"))
@@ -148,6 +158,8 @@ static void readargs(int argc, const char **argv)
 		error("invalid number of tasks");
 	else if (scheduler == SCHEDULER_NONE)
 		error("invalid scheduler");
+	else if (chunksize < 1)
+		error("invalid chunk size");
 	if (distribution_name != NULL)
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)

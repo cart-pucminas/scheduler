@@ -64,6 +64,9 @@
 	 */
 	typedef void (*scheduler_end_t)(void);
 	
+	/* Chunk size. */
+	extern unsigned chunksize;
+	
 	/* Forward definitions. */
 	extern struct thread *threads;
 	extern void schedule(const double *, unsigned, unsigned, unsigned);

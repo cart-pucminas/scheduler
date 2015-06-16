@@ -109,18 +109,21 @@ unsigned scheduler_dynamic_sched(unsigned tid)
 		{
 			n++;
 			workload += scheduler_data.tasks[i];
-			threads[tid].workload += workload;
 			threads[tid].ntasks++;
-			if (workload < threads[tid].min)
-				threads[tid].min = workload;
-			if (workload > threads[tid].max)
-				threads[tid].max = workload;
+			if (scheduler_data.tasks[i] < threads[tid].min)
+				threads[tid].min = scheduler_data.tasks[i];
+			if (scheduler_data.tasks[i] > threads[tid].max)
+				threads[tid].max = scheduler_data.tasks[i];
 			scheduler_data.taskmap[i] = tid;
 			i0 = i;
-			break;
+			
+			/* We have already scheduled enough. */
+			if (n >= chunksize)
+				break;
 		}
 	}
 	
+	threads[tid].workload += workload;
 	dqueue_insert(tid, workload);
 	
 	return (n);
