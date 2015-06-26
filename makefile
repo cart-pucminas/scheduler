@@ -26,7 +26,7 @@ export LIBSRCDIR = $(CURDIR)/libsrc
 export SRCDIR    = $(CURDIR)/src
 
 # Libraries.
-export LIBS = $(LIBDIR)/libmy.a -lm
+export LIBS = $(LIBDIR)/libmy.a -lgsl -lgslcblas -lm
 
 # Toolchain.
 export CC = gcc

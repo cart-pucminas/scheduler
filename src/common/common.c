@@ -20,15 +20,19 @@
 #include <stdlib.h>
 
 #include <mylib/util.h>
-#include "common.h"	
+#include <common.h>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 /**
  * @brief Supported probability distributions.
  */
 const char *distributions[NDISTRIBUTIONS] = {
-	"random", /* Random.  */
-	"normal", /* Normal.  */
-	"poisson" /* Poisson. */
+	"random",  /* Random.  */
+	"normal",  /* Normal.  */
+	"poisson", /* Poisson. */
+	"gamma"    /* Gammma.  */
 };
 
 #ifdef _SORT_
@@ -96,6 +100,31 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				tasks[i] = num;
 			}
+		} break;
+		
+		/* Gamma Distribution. */
+		case DISTRIBUTION_GAMMA:
+		{
+			gsl_rng * r;
+			const gsl_rng_type * T;
+			
+			gsl_rng_env_setup();
+			
+			T = gsl_rng_default;
+			r = gsl_rng_alloc (T);
+			
+			for (unsigned i = 0; i < ntasks; i++)
+			{
+				double num;
+				do
+				{
+					num = gsl_ran_gamma(r, 0.5, 1.0);
+				} while (num < 0.0);
+				
+				tasks[i] = num;
+			}
+			
+			gsl_rng_free(r);
 		} break;
 	}
 		
