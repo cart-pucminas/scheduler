@@ -94,7 +94,7 @@ function run2 {
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-for distribution in random normal poisson gamma; do
+for distribution in random normal poisson gamma beta; do
 	for nthreads in 32; do
 		for ntasks in 128 256 512; do	
 			echo $nthreads $ntasks $distribution

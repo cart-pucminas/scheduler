@@ -32,7 +32,8 @@ const char *distributions[NDISTRIBUTIONS] = {
 	"random",  /* Random.  */
 	"normal",  /* Normal.  */
 	"poisson", /* Poisson. */
-	"gamma"    /* Gammma.  */
+	"gamma",   /* Gammma.  */
+	"beta"     /* Beta.    */
 };
 
 #ifdef _SORT_
@@ -58,6 +59,13 @@ static int cmp(const void *a, const void *b)
 double *create_tasks(unsigned distribution, unsigned ntasks)
 {
 	double *tasks;
+	gsl_rng * r;
+	const gsl_rng_type * T;
+	
+	/* Setup random number generator. */
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
 	
 	/* Create tasks. */
 	tasks = smalloc(ntasks*sizeof(double));
@@ -67,7 +75,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_RANDOM:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = randnum()%ntasks;
+				tasks[i] = gsl_ran_flat(r, 0, ntasks);
 		} break;
 		
 		/* Normal distribution. */
@@ -79,7 +87,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = normalnum(32.0, 1.0);
+					num = gsl_ran_gaussian(r, 1.0) + 32.0;
 				} while (num < 0.0);
 				
 				tasks[i] = num;
@@ -90,47 +98,38 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_POISSON:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
+				tasks[i] = gsl_ran_poisson(r, 4.0);
+		} break;
+		
+		/* Gamma distribution. */
+		case DISTRIBUTION_GAMMA:
+		{
+			for (unsigned i = 0; i < ntasks; i++)
 			{
 				double num;
-				
 				do
 				{
-					num = poissonnum(8.0);
+					num = gsl_ran_gamma(r, 1.0, 2.0);
 				} while (num < 0.0);
 				
 				tasks[i] = num;
 			}
 		} break;
 		
-		/* Gamma Distribution. */
-		case DISTRIBUTION_GAMMA:
+		/* Beta distribution. */
+		case DISTRIBUTION_BETA:
 		{
-			gsl_rng * r;
-			const gsl_rng_type * T;
-			
-			gsl_rng_env_setup();
-			
-			T = gsl_rng_default;
-			r = gsl_rng_alloc (T);
-			
 			for (unsigned i = 0; i < ntasks; i++)
-			{
-				double num;
-				do
-				{
-					num = gsl_ran_gamma(r, 0.5, 1.0);
-				} while (num < 0.0);
-				
-				tasks[i] = num;
-			}
-			
-			gsl_rng_free(r);
+				tasks[i] = gsl_ran_beta(r, 0.5, 0.5)*ntasks;
 		} break;
 	}
 		
 #ifdef _SORT_	
 		qsort(tasks, ntasks, sizeof(double), cmp);
 #endif
+	
+	/* House keeping. */		
+	gsl_rng_free(r);
 	
 	return (tasks);
 }

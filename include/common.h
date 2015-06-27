@@ -23,7 +23,7 @@
 	/**
 	 * @brief Number of supported probability distributions.
 	 */
-	#define NDISTRIBUTIONS 4
+	#define NDISTRIBUTIONS 5
 
 	/**
 	 * @name Probability Distributions.
@@ -33,6 +33,7 @@
 	#define DISTRIBUTION_NORMAL  1 /**< Normal distribution.  */
 	#define DISTRIBUTION_POISSON 2 /**< Poisson distribution. */
 	#define DISTRIBUTION_GAMMA   3 /**< Gamma distribution.   */
+	#define DISTRIBUTION_BETA    4 /**< Gamma distribution.   */
 	/**@}*/
 	
 	/* Forward definitions. */
