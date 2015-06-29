@@ -26,6 +26,46 @@
 #include <gsl/gsl_randist.h>
 
 /**
+ * @name Flat Distribution Parameters
+ */
+/**@{*/
+#define FLAT_MIN   0.0
+#define FLAT_MAX 512.0
+/**@}*/
+
+/**
+ * @name Gaussian Distribution Parameters
+ */
+/**@{*/
+#define GUASSIAN_STDDEV  1.0
+#define GUASSIAN_MEAN   32.0
+/**@}*/
+
+/**
+ * @name Poisson Distribution Parameters
+ */
+/**@{*/
+#define POISSON_MU 4.0
+/**@}*/
+
+/**
+ * @name Gamma Distribution Parameters
+ */
+/**@{*/
+#define GAMMA_A 1.0
+#define GAMMA_B 2.0
+/**@}*/
+
+/**
+ * @name Beta Distribution Parameters
+ */
+/**@{*/
+#define BETA_A   0.5
+#define BETA_B   0.5
+#define BETA_M 512.0
+/**@}*/
+
+/**
  * @brief Supported probability distributions.
  */
 const char *distributions[NDISTRIBUTIONS] = {
@@ -75,7 +115,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_RANDOM:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_flat(r, 0, ntasks);
+				tasks[i] = gsl_ran_flat(r, FLAT_MIN, FLAT_MAX);
 		} break;
 		
 		/* Normal distribution. */
@@ -87,7 +127,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 				
 				do
 				{
-					num = gsl_ran_gaussian(r, 1.0) + 32.0;
+					num = gsl_ran_gaussian(r, GUASSIAN_STDDEV) + GUASSIAN_MEAN;
 				} while (num < 0.0);
 				
 				tasks[i] = num;
@@ -98,7 +138,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_POISSON:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_poisson(r, 4.0);
+				tasks[i] = gsl_ran_poisson(r, POISSON_MU);
 		} break;
 		
 		/* Gamma distribution. */
@@ -109,7 +149,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 				double num;
 				do
 				{
-					num = gsl_ran_gamma(r, 1.0, 2.0);
+					num = gsl_ran_gamma(r, GAMMA_A, GAMMA_B);
 				} while (num < 0.0);
 				
 				tasks[i] = num;
@@ -120,7 +160,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_BETA:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_beta(r, 0.5, 0.5)*ntasks;
+				tasks[i] = gsl_ran_beta(r, BETA_A, BETA_B)*BETA_M;
 		} break;
 	}
 		
