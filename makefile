@@ -37,7 +37,7 @@ export CFLAGS += -std=c99 -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: simulator searcher
+all: simulator searcher generator
 
 # Builds libraries.
 libs:
@@ -53,6 +53,11 @@ simulator: libs
 searcher: libs
 	mkdir -p $(BINDIR)
 	cd $(SRCDIR) && $(MAKE) searcher
+
+# Builds the generator.
+generator: libs
+	mkdir -p $(BINDIR)
+	cd $(SRCDIR) && $(MAKE) generator
 	
 # Cleans compilation files.
 clean:

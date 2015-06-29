@@ -23,6 +23,21 @@ NGEN=10000
 POPSIZE=1000
 
 #
+# Runs the workload generator.
+# 
+# $2 Number of tasks.
+# $3 Probability distribution.
+#
+function run_generator {
+	$BINDIR/generator --ntasks $1 --distribution $2 \
+	2> $OUTDIR/task-$1-$2.out
+	
+	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}.out';\
+				outputname='${OUTDIR}/task-${1}-${2}.eps'"\
+				scripts/task.gp
+}
+
+#
 # Runs the static scheduler.
 # 
 # $1 Number of threads
@@ -31,11 +46,7 @@ POPSIZE=1000
 #
 function run_static {
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 static \
-	1> $OUTDIR/taskmap-$1-$2-$3-static.out 2> $OUTDIR/task-$1-$2-$3-static.err
-	
-	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-static.err';\
-				outputname='${OUTDIR}/task-${1}-${2}-${3}-static.eps'"\
-				scripts/task.gp
+	1> $OUTDIR/taskmap-$1-$2-$3-static.out 2> /dev/null
 				
 	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
 				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.eps';\
@@ -53,11 +64,7 @@ function run_static {
 #
 function run_dynamic {
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 dynamic --chunksize $4\
-	1> $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.out 2> $OUTDIR/task-$1-$2-$3-dynamic-$4.err
-	
-	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}-${3}-dynamic-${4}.err';\
-				outputname='${OUTDIR}/task-${1}-${2}-${3}-dynamic-${4}.eps'"\
-				scripts/task.gp
+	1> $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.out 2> /dev/null
 				
 	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.out';\
 				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.eps';\
@@ -93,6 +100,11 @@ function run2 {
 
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
+
+# Generates workload.
+for distribution in random normal poisson gamma beta; do
+	run_generator 16384 $distribution
+done
 
 for distribution in random normal poisson gamma beta; do
 	for nthreads in 32; do

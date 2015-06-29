@@ -18,7 +18,7 @@
 #
 
 # Conflicts.
-.PHONY: simulator searcher
+.PHONY: simulator searcher generator
 
 # Builds simulator.
 simulator: simulator/*.c common/*.c
@@ -27,8 +27,13 @@ simulator: simulator/*.c common/*.c
 # Builds searcher.
 searcher: searcher/*.c common/*.c
 	$(CC) $(CFLAGS) $^ -o $(BINDIR)/searcher $(LIBS)
+	
+# Builds generator.
+generator: generator/*.c common/*.c
+	$(CC) $(CFLAGS) $^ -o $(BINDIR)/generator $(LIBS)
 
 # Cleans compilation files.
 clean:
 	@rm -f $(BINDIR)/simulator
 	@rm -f $(BINDIR)/searcher
+	@rm -f $(BINDIR)/generator
