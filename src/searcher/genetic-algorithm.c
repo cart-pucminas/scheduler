@@ -189,7 +189,8 @@ void ga(const double *_tasks, unsigned popsize, unsigned ngen)
 	
 	tasks = _tasks;
 	
-	bestgen = genetic_algorithm(&problem, popsize, ngen, GA_OPTIONS_STATISTICS);
+	bestgen = genetic_algorithm(&problem, popsize, ngen,
+		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
 	
 	free(bestgen);
 }
