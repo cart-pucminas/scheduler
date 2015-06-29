@@ -19,7 +19,7 @@
 
 BINDIR=bin
 OUTDIR=results
-NGEN=1000
+NGEN=10000
 POPSIZE=1000
 
 #
@@ -103,7 +103,7 @@ rm -f $OUTDIR/*
 
 # Generates workload.
 for distribution in random normal poisson gamma beta; do
-	run_generator 16384 $distribution
+	run_generator 8192 $distribution
 done
 
 for distribution in random normal poisson gamma beta; do
