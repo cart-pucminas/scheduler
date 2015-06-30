@@ -94,8 +94,8 @@ void scheduler_static_end(void)
  */
 unsigned scheduler_static_sched(unsigned tid)
 {
-	unsigned n;        /* Number of tasks. */
-	unsigned workload; /* Workload amount. */
+	unsigned n;      /* Number of tasks. */
+	double workload; /* Workload amount. */
 	
 	/* Get next tasks. */
 	n = 0;

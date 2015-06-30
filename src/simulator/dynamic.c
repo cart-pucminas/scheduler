@@ -96,7 +96,7 @@ void scheduler_dynamic_end(void)
 unsigned scheduler_dynamic_sched(unsigned tid)
 {
 	unsigned n;             /* Number of tasks.               */
-	unsigned workload;      /* Workload amount.               */
+	double workload;        /* Workload amount.               */
 	static unsigned i0 = 0; /* Starting point to search from. */
 	
 	/* Get next tasks. */
