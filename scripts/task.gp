@@ -19,15 +19,19 @@ set yrange [0:]
 #to put an empty boundary around the
 #data inside an autoscaled graph.
 set offset graph 0.05,0.02,0.05,0.0
+set format x "%.2t"
 set xtics min,(max-min)/8,max
 set boxwidth width*0.9
 set grid ytics linestyle 0
 set style fill solid 0.50 border 2              #fillstyle
 set tics out nomirror
-set xlabel "Tasks Size"
-set ylabel "Frequency"
+unset xlabel
+unset ylabel
+unset xtics
+unset ytics
+
+unset key
 
 #count and plot
-set key left top
 plot inputname u (hist($1,width)):(1.0) title "task" smooth freq w boxes lc rgb"green"
 

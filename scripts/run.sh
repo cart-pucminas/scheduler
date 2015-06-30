@@ -35,6 +35,9 @@ function run_generator {
 	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}.out';\
 				outputname='${OUTDIR}/task-${1}-${2}.eps'"\
 				scripts/task.gp
+	
+	epstopdf $OUTDIR/task-$1-$2.eps
+	rm $OUTDIR/task-$1-$2.eps
 }
 
 #
