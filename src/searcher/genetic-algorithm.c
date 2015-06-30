@@ -186,11 +186,21 @@ static struct genome problem = {
 void ga(const double *_tasks, unsigned popsize, unsigned ngen)
 {
 	gene_t bestgen;
+	double *workload;
 	
 	tasks = _tasks;
+	workload = scalloc(nthreads, sizeof(double));
 	
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
 	
+	/* Print statistics. */
+	for (unsigned i = 0; i < ntasks; i++)
+		workload[GENE(bestgen)[i]] += tasks[i];
+	for (unsigned i = 0; i < nthreads; i++)
+		fprintf(stderr, "%u;%lf\n", i, workload[i]);
+	
+	/* House keeping. */
+	free(workload);
 	free(bestgen);
 }

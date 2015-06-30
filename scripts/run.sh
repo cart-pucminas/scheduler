@@ -84,7 +84,8 @@ function run_dynamic {
 #
 function run2 {
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
-	--ngen $NGEN --popsize $POPSIZE 1> $OUTDIR/goodmap-$1-$2-$3.out
+	--ngen $NGEN --popsize $POPSIZE 1> $OUTDIR/goodmap-$1-$2-$3.out \
+	2>  $OUTDIR/taskmap-$1-$2-$3-ga-$4.out
 	
 	gnuplot -e "titlename='${2} ${3}';\
 	            inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
@@ -97,6 +98,11 @@ function run2 {
 				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
 				titlename='${3} distribution - ${2} tasks'"\
 				scripts/goodmap.gp
+				
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga-${4}.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga-${4}.eps';\
+				titlename='GA - ${2} tasks'"\
+				scripts/taskmap.gp
 	
 	epstopdf $OUTDIR/goodmap-$1-$2-$3.eps
 }
