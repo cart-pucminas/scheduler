@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include <limits.h>
+#include <float.h>
 
 #include <mylib/ai.h>
 #include <mylib/util.h>
@@ -89,12 +89,12 @@ static double gene_evaluate(gene_t gen)
 	
 	/* Compute load imbalance. */
 	max = 0;
-	min = UINT_MAX;
+	min = DBL_MAX;
 	for (unsigned i = 0; i < nthreads; i++)
 	{
 		if (workload[i] < min)
 			min = workload[i];
-		else if (workload[i] > max)
+		if (workload[i] > max)
 			max = workload[i];
 	}
 	
@@ -186,7 +186,6 @@ static struct genome problem = {
 void ga(const double *_tasks, unsigned popsize, unsigned ngen)
 {
 	gene_t bestgen;
-	double total;
 	double *workload;
 	
 	tasks = _tasks;
@@ -196,14 +195,10 @@ void ga(const double *_tasks, unsigned popsize, unsigned ngen)
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
 	
 	/* Print statistics. */
-	total = 0.0;
 	for (unsigned i = 0; i < ntasks; i++)
-	{
-		total += tasks[i];
 		workload[GENE(bestgen)[i]] += tasks[i];
-	}
 	for (unsigned i = 0; i < nthreads; i++)
-		fprintf(stderr, "%u;%lf\n", i, 100*workload[i]/total);
+		fprintf(stderr, "%u;%lf\n", i, workload[i]);
 	
 	/* House keeping. */
 	free(workload);

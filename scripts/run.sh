@@ -55,6 +55,9 @@ function run_static {
 				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.eps';\
 				titlename='static strategy - ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
+	
+	epstopdf $OUTDIR/taskmap-$1-$2-$3-static.eps
+	rm $OUTDIR/taskmap-$1-$2-$3-static.eps
 }
 
 #
@@ -73,6 +76,9 @@ function run_dynamic {
 				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.eps';\
 				titlename='dynamic strategy (chunksize = ${4})- ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
+	
+	epstopdf $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.eps
+	rm $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.eps
 }
 
 #
@@ -85,7 +91,7 @@ function run_dynamic {
 function run2 {
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
 	--ngen $NGEN --popsize $POPSIZE 1> $OUTDIR/goodmap-$1-$2-$3.out \
-	2>  $OUTDIR/taskmap-$1-$2-$3-ga-$4.out
+	2>  $OUTDIR/taskmap-$1-$2-$3-ga.out
 	
 	gnuplot -e "titlename='${2} ${3}';\
 	            inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
@@ -99,12 +105,13 @@ function run2 {
 				titlename='${3} distribution - ${2} tasks'"\
 				scripts/goodmap.gp
 				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga-${4}.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga-${4}.eps';\
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga.eps';\
 				titlename='GA - ${2} tasks'"\
 				scripts/taskmap.gp
 	
 	epstopdf $OUTDIR/goodmap-$1-$2-$3.eps
+	rm $OUTDIR/goodmap-$1-$2-$3.eps
 }
 
 mkdir -p $OUTDIR
