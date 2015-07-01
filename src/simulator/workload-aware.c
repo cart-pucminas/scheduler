@@ -53,12 +53,13 @@ void scheduler_workload_aware_init
 {
 	unsigned tid;
 	double avg;
-	double worksize;
-	unsigned tasks_per_thread;
+	double *workload;
 	
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
 		return;
+	
+	workload = scalloc(nthreads, sizeof(double));
 	
 	/* Initialize scheduler data. */
 	scheduler_data.ntasks = ntasks;
@@ -74,15 +75,46 @@ void scheduler_workload_aware_init
 	
 	/* Assign tasks to threads. */
 	tid = 0;
-	worksize = 0.0;
 	for (unsigned i = 0; i < ntasks; i++)
-	{	
-			
-		/* Too many tasks already assigned to this thread. */
-		if (worksize > avg)
+	{
+		/*
+		 * Too many tasks already assigned to
+		 * this thread, so skip to the next one.
+		 */
+		if (workload[tid] + tasks[i] > avg)
 		{
+			unsigned j;
+			
+			for (j = (tid + 1)%nthreads; j != tid; j = (j + 1)%nthreads)
+			{
+				if (workload[j] + tasks[i] < avg)
+					break;
+			}
+			
+			if (j == tid)
+			{
+				unsigned k;
+				
+				k = 0;
+				
+				for (j = 1; j < nthreads; j++)
+				{
+					if (workload[j] + tasks[i] < workload[k] + tasks[i])
+						k = j;
+				}
+				
+				j = k;
+			}
+		
+			tid = j;
 		}
+		
+		scheduler_data.taskmap[i] = tid;
+		workload[tid] += tasks[i];
 	}
+	
+	/* House keeping. */
+	free(workload);
 }
 
 /**
