@@ -92,6 +92,7 @@ void scheduler_smart_round_robin_init
 	unsigned tid;          /* Current thread ID. */
 	double *sorted_tasks;  /* Sorted tasks.      */
 	unsigned *sorting_map; /* Sorting map.       */
+	unsigned ndiv2;        /* ntasks/2           */
 	
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
@@ -111,11 +112,33 @@ void scheduler_smart_round_robin_init
 		
 	/* Assign tasks to threads. */
 	tid = 0;
-	for (unsigned i = 0; i < ntasks; i++)
+	ndiv2 = ntasks >> 1;
+	if (ntasks & 1)
 	{
-		scheduler_data.taskmap[sorting_map[i]] = tid;
+		scheduler_data.taskmap[sorting_map[0]] = tid;
+		
+		/* Balance workload. */
+		for (unsigned i = 1; i <= ndiv2; i++)
+		{
+			scheduler_data.taskmap[sorting_map[i]] = tid;
+			scheduler_data.taskmap[sorting_map[ntasks - i]] = tid;
 			
-		tid = (tid + 1)%nthreads;
+			/* Wrap around. */
+			tid = (tid + 1)%nthreads;
+		}
+		
+		return;
+	}
+	else
+	{
+		for (unsigned i = 0; i < ndiv2; i++)
+		{
+			scheduler_data.taskmap[sorting_map[i]] = tid;
+			scheduler_data.taskmap[sorting_map[ntasks - i - 1]] = tid;
+			
+			/* Wrap around. */
+			tid = (tid + 1)%nthreads;
+		}
 	}
 	
 	/* House keeping. */
