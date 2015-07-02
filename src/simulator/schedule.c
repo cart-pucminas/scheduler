@@ -41,31 +41,34 @@ static struct thread **ready = NULL;
 /**
  * @brief Schedulers init() table.
  */
-scheduler_init_t schedulers_init[4] = {
-	NULL,                          /* SCHEDULER_NONE           */
-	&scheduler_static_init,        /* SCHEDULER_STATIC         */
-	&scheduler_dynamic_init,       /* SCHEDULER_DYNAMIC        */
-	&scheduler_workload_aware_init /* SCHEDULER_WORKLOAD_AWARE */
+scheduler_init_t schedulers_init[5] = {
+	NULL,                             /* SCHEDULER_NONE           */
+	&scheduler_static_init,           /* SCHEDULER_STATIC         */
+	&scheduler_dynamic_init,          /* SCHEDULER_DYNAMIC        */
+	&scheduler_workload_aware_init,   /* SCHEDULER_WORKLOAD_AWARE */
+	&scheduler_smart_round_robin_init /* SCHEDULER_SMART_ROUND_ROBIN */
 };
 
 /**
  * @brief Schedulers sched() table.
  */
-scheduler_sched_t schedulers_sched[4] = {
-	NULL,                           /* SCHEDULER_NONE           */
-	&scheduler_static_sched,        /* SCHEDULER_STATIC         */
-	&scheduler_dynamic_sched,       /* SCHEDULER_DYNAMIC        */
-	&scheduler_workload_aware_sched /* SCHEDULER_WORKLOAD_AWARE */
+scheduler_sched_t schedulers_sched[5] = {
+	NULL,                              /* SCHEDULER_NONE              */
+	&scheduler_static_sched,           /* SCHEDULER_STATIC            */
+	&scheduler_dynamic_sched,          /* SCHEDULER_DYNAMIC           */
+	&scheduler_workload_aware_sched,   /* SCHEDULER_WORKLOAD_AWARE    */
+	&scheduler_smart_round_robin_sched /* SCHEDULER_SMART_ROUND_ROBIN */
 };
 
 /**
  * @brief Schedulers end() table.
  */
-scheduler_end_t schedulers_end[4] = {
-	NULL,                         /* SCHEDULER_NONE           */
-	&scheduler_static_end,        /* SCHEDULER_STATIC         */
-	&scheduler_dynamic_end,       /* SCHEDULER_DYNAMIC        */
-	&scheduler_workload_aware_end /* SCHEDULER_WORKLOAD_AWARE */
+scheduler_end_t schedulers_end[5] = {
+	NULL,                            /* SCHEDULER_NONE              */
+	&scheduler_static_end,           /* SCHEDULER_STATIC            */
+	&scheduler_dynamic_end,          /* SCHEDULER_DYNAMIC           */
+	&scheduler_workload_aware_end,   /* SCHEDULER_WORKLOAD_AWARE    */
+	&scheduler_smart_round_robin_end /* SCHEDULER_SMART_ROUND_ROBIN */
 };
 
 /**

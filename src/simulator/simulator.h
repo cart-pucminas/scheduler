@@ -43,10 +43,11 @@
 	 * @name Schedulers
 	 */
 	/**@{*/
-	#define SCHEDULER_NONE           0 /**< Null scheduler.    */
-	#define SCHEDULER_STATIC         1 /**< Static scheduler.  */
-	#define SCHEDULER_DYNAMIC        2 /**< Dynamic scheduler. */
-	#define SCHEDULER_WORKLOAD_AWARE 3 /**< Null scheduler.    */
+	#define SCHEDULER_NONE              0 /**< Null scheduler.           */
+	#define SCHEDULER_STATIC            1 /**< Static scheduler.         */
+	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.        */
+	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
+	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
 	/**@}*/
 	
 	/**
@@ -79,6 +80,9 @@
 	extern void scheduler_workload_aware_init(const double *, unsigned, unsigned);
 	extern unsigned scheduler_workload_aware_sched(unsigned);
 	extern void scheduler_workload_aware_end(void);
+	extern void scheduler_smart_round_robin_init(const double *, unsigned, unsigned);
+	extern unsigned scheduler_smart_round_robin_sched(unsigned);
+	extern void scheduler_smart_round_robin_end(void);
 
 	/*========================================================================*
 	 *                             Delta Queue                                *

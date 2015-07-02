@@ -41,43 +41,24 @@ function run_generator {
 }
 
 #
-# Runs the static scheduler.
+# Runs the simulator.
 # 
 # $1 Number of threads
 # $2 Number of tasks.
 # $3 Probability distribution.
+# $4 Loop scheduler.
 #
-function run_static {
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 static \
-	1> $OUTDIR/taskmap-$1-$2-$3-static.out 2> /dev/null
+function run {
+	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 \
+	1> $OUTDIR/taskmap-$1-$2-$3-$4.out 2> /dev/null
 				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-static.eps';\
-				titlename='static strategy - ${3} distribution - ${2} tasks'"\
+	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-$4.out';\
+				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-$4.eps';\
+				titlename='$4 strategy - ${3} distribution - ${2} tasks'"\
 				scripts/taskmap.gp
 	
-	epstopdf $OUTDIR/taskmap-$1-$2-$3-static.eps
-	rm $OUTDIR/taskmap-$1-$2-$3-static.eps
-}
-
-#
-# Runs the static scheduler.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-#
-function run_workload_aware {
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 workload-aware \
-	1> $OUTDIR/taskmap-$1-$2-$3-workload-aware.out 2> /dev/null
-				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-workload-aware.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-workload-aware.eps';\
-				titlename='workload-aware strategy - ${3} distribution - ${2} tasks'"\
-				scripts/taskmap.gp
-	
-	epstopdf $OUTDIR/taskmap-$1-$2-$3-workload-aware.eps
-	rm $OUTDIR/taskmap-$1-$2-$3-workload-aware.eps
+	epstopdf $OUTDIR/taskmap-$1-$2-$3-$4.eps
+	rm $OUTDIR/taskmap-$1-$2-$3-$4.eps
 }
 
 #
@@ -119,7 +100,7 @@ function run2 {
 				inputname3='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-1.out';\
 				inputname4='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-2.out';\
 				inputname5='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-4.out';\
-				inputname6='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-8.out';\
+				inputname6='${OUTDIR}/taskmap-${1}-${2}-${3}-smart-round-robin.out';\
 				inputname7='${OUTDIR}/taskmap-${1}-${2}-${3}-workload-aware.out';\
 				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
 				titlename='${3} distribution - ${2} tasks'"\
@@ -146,9 +127,10 @@ for distribution in random normal poisson gamma beta; do
 	for nthreads in 32; do
 		for ntasks in 128 256 512; do	
 			echo $nthreads $ntasks $distribution
-			run_static $nthreads $ntasks $distribution
-			run_workload_aware $nthreads $ntasks $distribution
-			for chunksize in 1 2 4 8 16; do
+			run $nthreads $ntasks $distribution "static"
+			run $nthreads $ntasks $distribution "workload-aware"
+			run $nthreads $ntasks $distribution "smart-round-robin"
+			for chunksize in 1 2 4; do
 				run_dynamic $nthreads $ntasks $distribution $chunksize
 			done
 			run2 $nthreads $ntasks $distribution

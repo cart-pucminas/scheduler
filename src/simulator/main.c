@@ -54,9 +54,10 @@ static void usage(void)
 	printf("Usage: scheduler [options] <scheduler>\n");
 	printf("Brief: loop scheduler simulator\n");
 	printf("Scheduler:\n");
-	printf("  static         Simulate static loop scheduling\n");
-	printf("  dynamic        Simulate dynamic loop scheduling\n");
-	printf("  workload-aware Simulate workload-aware loop scheduling\n");
+	printf("  static            Simulate static loop scheduling\n");
+	printf("  dynamic           Simulate dynamic loop scheduling\n");
+	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
+	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
 	printf("  --iterations           Number of iterations\n");
 	printf("  --nthreads <num>       Number of threads\n");
@@ -147,6 +148,8 @@ static void readargs(int argc, const char **argv)
 			scheduler = SCHEDULER_DYNAMIC;
 		else if (!strcmp(arg, "workload-aware"))
 			scheduler = SCHEDULER_WORKLOAD_AWARE;
+		else if (!strcmp(arg, "smart-round-robin"))
+			scheduler = SCHEDULER_SMART_ROUND_ROBIN;
 	}
 	
 	/* Check parameters. */

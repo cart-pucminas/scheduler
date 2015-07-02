@@ -56,5 +56,5 @@ plot inputname using 1:4 with lines lt rgb "blue" linewidth 2 title 'Genetic Alg
      g(x) with lines lt rgb "#242424" linewidth 2 title 'Dynamic (chunksize = 1)',\
      h(x) with lines lt rgb "#A0522D" linewidth 2 title 'Dynamic (chunksize = 2)',\
      i(x) with lines lt rgb "#FFA500" linewidth 2 title 'Dynamic (chunksize = 4)',\
-     j(x) with lines lt rgb "#3CB371" linewidth 2 title 'Dynamic (chunksize = 8)',\
+     j(x) with lines lt rgb "#3CB371" linewidth 2 title 'Smart Round Robin',\
      k(x) with lines lt rgb "#FF69B4" linewidth 2 title 'Workload Aware'
