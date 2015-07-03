@@ -51,7 +51,8 @@ static struct
 void scheduler_static_init
 (const double *tasks, unsigned ntasks, unsigned nthreads)
 {
-	unsigned tasks_per_thread;
+	unsigned tid;
+	unsigned work;
 	
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
@@ -64,11 +65,14 @@ void scheduler_static_init
 	scheduler_data.nthreads = nthreads;
 		
 	/* Assign tasks to threads. */
-	tasks_per_thread = ntasks/nthreads;
+	tid = 0;
+	work = 0;
 	for (unsigned i = 0; i < ntasks; i++)
 	{
-		scheduler_data.taskmap[i] = (i/tasks_per_thread >= nthreads) ? 
-			nthreads - 1 : i/tasks_per_thread;
+		scheduler_data.taskmap[i] = tid;
+		
+		if (++work == chunksize)
+			tid = (tid + 1)%nthreads;
 	}
 }
 

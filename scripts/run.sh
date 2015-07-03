@@ -17,27 +17,23 @@
 # MA 02110-1301, USA.
 #
 
+# Directories.
 BINDIR=bin
 OUTDIR=results
+
+# Genetic Algorithm Parameters
 NGEN=10000
 POPSIZE=1000
 
 #
-# Runs the workload generator.
+# Runs the task generator.
 # 
-# $2 Number of tasks.
-# $3 Probability distribution.
+# $1 Number of tasks.
+# $2 Probability distribution to use.
 #
 function run_generator {
 	$BINDIR/generator --ntasks $1 --distribution $2 \
-	2> $OUTDIR/task-$1-$2.out
-	
-	gnuplot -e "inputname='${OUTDIR}/task-${1}-${2}.out';\
-				outputname='${OUTDIR}/task-${1}-${2}.eps'"\
-				scripts/task.gp
-	
-	epstopdf $OUTDIR/task-$1-$2.eps
-	rm $OUTDIR/task-$1-$2.eps
+	1> /dev/null 2> $OUTDIR/tasks-$1-$2.out
 }
 
 #
@@ -46,40 +42,12 @@ function run_generator {
 # $1 Number of threads
 # $2 Number of tasks.
 # $3 Probability distribution.
-# $4 Loop scheduler.
+# $4 Scheduling strategy
+# $5 Chunk size
 #
-function run {
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 \
-	1> $OUTDIR/taskmap-$1-$2-$3-$4.out 2> /dev/null
-				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-$4.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-$4.eps';\
-				titlename='$4 strategy - ${3} distribution - ${2} tasks'"\
-				scripts/taskmap.gp
-	
-	epstopdf $OUTDIR/taskmap-$1-$2-$3-$4.eps
-	rm $OUTDIR/taskmap-$1-$2-$3-$4.eps
-}
-
-#
-# Runs the dynamic scheduler.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-# $4 Chunk size
-#
-function run_dynamic {
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 dynamic --chunksize $4\
-	1> $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.out 2> /dev/null
-				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-${4}.eps';\
-				titlename='dynamic strategy (chunksize = ${4})- ${3} distribution - ${2} tasks'"\
-				scripts/taskmap.gp
-	
-	epstopdf $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.eps
-	rm $OUTDIR/taskmap-$1-$2-$3-dynamic-$4.eps
+function run_simulator {
+	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 \
+	1> $OUTDIR/taskmap-$1-$2-$3-$4-$5.out 2> /dev/null
 }
 
 #
@@ -89,51 +57,33 @@ function run_dynamic {
 # $2 Number of tasks.
 # $3 Probability distribution.
 #
-function run2 {
+function run_searcher {
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
-	--ngen $NGEN --popsize $POPSIZE 1> $OUTDIR/goodmap-$1-$2-$3.out \
-	2>  $OUTDIR/taskmap-$1-$2-$3-ga.out
-	
-	gnuplot -e "titlename='${2} ${3}';\
-	            inputname='${OUTDIR}/goodmap-${1}-${2}-${3}.out';\
-				inputname2='${OUTDIR}/taskmap-${1}-${2}-${3}-static.out';\
-				inputname3='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-1.out';\
-				inputname4='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-2.out';\
-				inputname5='${OUTDIR}/taskmap-${1}-${2}-${3}-dynamic-4.out';\
-				inputname6='${OUTDIR}/taskmap-${1}-${2}-${3}-smart-round-robin.out';\
-				inputname7='${OUTDIR}/taskmap-${1}-${2}-${3}-workload-aware.out';\
-				outputname='${OUTDIR}/goodmap-${1}-${2}-${3}.eps';\
-				titlename='${3} distribution - ${2} tasks'"\
-				scripts/goodmap.gp
-				
-	gnuplot -e "inputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga.out';\
-				outputname='${OUTDIR}/taskmap-${1}-${2}-${3}-ga.eps';\
-				titlename='GA - ${2} tasks'"\
-				scripts/taskmap.gp
-	
-	epstopdf $OUTDIR/goodmap-$1-$2-$3.eps
-	rm $OUTDIR/goodmap-$1-$2-$3.eps
+	--ngen $NGEN --popsize $POPSIZE \
+	1> $OUTDIR/ga-$1-$2-$3.out 2>  $OUTDIR/taskmap-$1-$2-$3-ga-1.out
 }
 
+# Cleanup output directory.
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-# Generates workload.
+# Generate tasks.
 for distribution in random normal poisson gamma beta; do
 	run_generator 8192 $distribution
 done
 
+# Run the simulator and searcher.
 for distribution in random normal poisson gamma beta; do
 	for nthreads in 32; do
 		for ntasks in 128 256 512; do	
 			echo $nthreads $ntasks $distribution
-			run $nthreads $ntasks $distribution "static"
-			run $nthreads $ntasks $distribution "workload-aware"
-			run $nthreads $ntasks $distribution "smart-round-robin"
-			for chunksize in 1 2 4; do
-				run_dynamic $nthreads $ntasks $distribution $chunksize
+			run_simulator $nthreads $ntasks $distribution "workload-aware" 1
+			run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
+			for chunksize in 1 2 4 8 16 32; do
+				run_simulator $nthreads $ntasks $distribution "static" $chunksize
+				run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
 			done
-			run2 $nthreads $ntasks $distribution
+			run_searcher $nthreads $ntasks $distribution
 		done
 	done
 done
