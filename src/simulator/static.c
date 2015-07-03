@@ -72,7 +72,10 @@ void scheduler_static_init
 		scheduler_data.taskmap[i] = tid;
 		
 		if (++work == chunksize)
+		{
+			work = 0;
 			tid = (tid + 1)%nthreads;
+		}
 	}
 }
 
