@@ -18,10 +18,16 @@
 #
 
 # Phony list.
-.PHONY: mylib
+.PHONY: libgomp mylib
 
 # Builds everything.
-all: mylib
+all: libgomp mylib
+
+# Builds libgomp.
+libgomp:
+	cd libgomp/libgomp/build ; \
+	CFLAGS="" LIBS="" ../configure --disable-multilib ; \
+	$(MAKE)
 
 # Builds my C library.
 mylib:
@@ -29,4 +35,6 @@ mylib:
 
 # Cleans compilation files.
 clean:
+	cd libgomp/libgomp/build ; \
+	$(MAKE) distclean
 	cd mylib/ && $(MAKE) uninstall PREFIX=$(CURDIR)/..

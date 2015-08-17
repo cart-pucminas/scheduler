@@ -4,3 +4,10 @@ lib/*
 include/mylib/*
 results/*
 *.swp
+*.log
+*.o
+*.lo
+/libsrc/libgomp/libgomp/build/*
+!/libsrc/libgomp/libgomp/build/gstdint.h
+!/libsrc/libgomp/libgomp/build/libgomp.ver
+!/libsrc/libgomp/libgomp/build/libgfortran.spec
