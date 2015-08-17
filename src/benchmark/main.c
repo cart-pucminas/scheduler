@@ -154,6 +154,8 @@ static void readargs(int argc, const char **argv)
 			scheduler = SCHEDULER_WORKLOAD_AWARE;
 		else if (!strcmp(arg, "smart-round-robin"))
 			scheduler = SCHEDULER_SMART_ROUND_ROBIN;
+		else if (!strcmp(arg, "--floating-point"))
+			use_floating_point = true;
 	}
 	
 	/* Check parameters. */
