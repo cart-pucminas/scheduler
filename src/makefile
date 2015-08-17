@@ -34,6 +34,6 @@ generator: generator/*.c common/*.c
 
 # Cleans compilation files.
 clean:
-	@rm -f $(BINDIR)/simulator
+	@rm -f $(BINDIR)/scheduler
 	@rm -f $(BINDIR)/searcher
 	@rm -f $(BINDIR)/generator
