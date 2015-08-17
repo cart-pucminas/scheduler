@@ -37,12 +37,17 @@ export CFLAGS += -std=c99 -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: simulator searcher generator
+all: benchmark simulator searcher generator
 
 # Builds libraries.
 libs:
 	mkdir -p $(LIBDIR)
 	cd $(LIBSRCDIR) && $(MAKE) all
+
+# Builds the benchmark.
+benchmark: libs
+	mkdir -p $(BINDIR)
+	cd $(SRCDIR) && $(MAKE) benchmark
 
 # Builds the simulator.
 simulator: libs

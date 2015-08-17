@@ -35,6 +35,17 @@
 	#define DISTRIBUTION_GAMMA   3 /**< Gamma distribution.   */
 	#define DISTRIBUTION_BETA    4 /**< Gamma distribution.   */
 	/**@}*/
+
+	/**
+	 * @name Schedulers
+	 */
+	/**@{*/
+	#define SCHEDULER_NONE              0 /**< Null scheduler.           */
+	#define SCHEDULER_STATIC            1 /**< Static scheduler.         */
+	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.        */
+	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
+	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
+	/**@}*/
 	
 	/* Forward definitions. */
 	extern double *create_tasks(unsigned, unsigned);
