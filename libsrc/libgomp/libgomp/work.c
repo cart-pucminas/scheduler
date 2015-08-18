@@ -116,6 +116,7 @@ gomp_init_work_share (struct gomp_work_share *ws, bool ordered,
   gomp_ptrlock_init (&ws->next_ws, NULL);
   ws->threads_completed = 0;
   ws->thread_start = NULL;
+  ws->taskmap = NULL;
 }
 
 /* Do any needed destruction of gomp_work_share fields before it
@@ -129,6 +130,8 @@ gomp_fini_work_share (struct gomp_work_share *ws)
     free (ws->ordered_team_ids);
   if (ws->thread_start != NULL)
 	free(ws->thread_start);
+  if (ws->taskmap != NULL)
+	free(ws->taskmap);
   gomp_ptrlock_destroy (&ws->next_ws);
 }
 

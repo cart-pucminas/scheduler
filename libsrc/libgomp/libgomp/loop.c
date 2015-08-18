@@ -24,6 +24,7 @@
 
 /* This file handles the LOOP (FOR/DO) construct.  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -50,146 +51,99 @@ extern unsigned _ntasks; /* Number of tasks. */
 	if ((b) < (a))           \
 		exch((b), (a), (t)); \
 
-#define M 20
-
-/*
- * Quicksort partition.
- */
-static unsigned partition(unsigned *a, unsigned l, unsigned r)
-{
-	unsigned v;    /* Partitioning element. */
-	unsigned t;    /* Temporary element.    */
-	unsigned i, j; /* Loop index.           */
-	
-	i = l - 1;
-	j = r;
-	v = a[r];
-	
-	while (1)
-	{
-		while (a[++i] < v)
-			/* NOOP.*/ ;
-		
-		while (a[--j] > v)
-		{
-			if (j == l)
-				break;
-		}
-		
-		if (i >= j)
-			break;
-		
-		exch(a[i], a[j], t);
-	}
-	
-	exch(a[i], a[r], t);
-	
-	return (i);
-}
-
-/*
- * Quicksort.
- */
-static void quicksort(unsigned *a, unsigned l, unsigned r)
-{
-	unsigned i; /* Pivot.             */
-	unsigned t; /* Temporary element. */
-	
-	/* Fine grain stop. */
-	if ((r - l) <= M)
-		return;
-	
-	/* Avoid anomalous partition. */
-	exch(a[(l + r) >> 1], a[r - 1], t);
-	
-	/* Median of three. */
-	compexgh(a[l], a[r - 1], t);
-	compexgh(a[l], a[r], t);
-	compexgh(a[r - 1], a[r], t);
-	
-	/* Sort. */
-	i = partition(a, l + 1 , r - 1);
-	quicksort(a, l, i - 1);
-	quicksort(a, i + 1, r);
-}
-
 /*
  * Insertion sort.
  */
-static void insertion(unsigned *a, unsigned l, unsigned r)
+static unsigned *insertion(unsigned *a, unsigned l, unsigned r)
 {
+	unsigned n;    /* Array size.      */
 	unsigned t;    /* Temporary value. */
-	unsigned v;    /* Working element. */
 	unsigned i, j; /* Loop indexes.    */
+	unsigned *map; /* Sort map.        */
 	
-	for (i = r; i > l; i--)
-		compexgh(a[i - 1], a[i], t);
+	n = r - l;
 	
-	for (i = l + 2; i <= r; i++)
+	/* Create map. */
+	map = malloc(n*sizeof(unsigned));
+	assert(map != NULL);
+	for (i = 0; i < n; i++)
+		map[i] = i;
+	
+	for (i = 1; i < n; i++)
 	{
-		j = i;
-		v = a[i];
-		
-		while (v < a[j - 1])
+		for (j = i; j > 0; j--)
 		{
-			a[j] = a[j - 1];
-			j--;
+			if (a[j - 1] < a[j])
+				break;
+			
+			exch(a[j - 1], a[j], t);
+			exch(map[j - 1], map[j], t);
 		}
-		
-		a[j] = v;
 	}
+	
+	return (map);
 }
 
 /*
  * Sorts an array of numbers.
  */
-void sort(unsigned *a, unsigned n)
+unsigned *sort(unsigned *a, unsigned n)
 {
-	quicksort(a, 0, n - 1);
-	insertion(a, 0, n - 1);
+	return (insertion(a, 0, n - 1));
 } 
- 
+
 /*
  * Balances workload.
  */
-void balance(unsigned *work, unsigned n, unsigned k)
+static unsigned *balance(unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
-	unsigned i, j;  /* Loop indexes. */
-	unsigned ndiv2; /* n/2           */
+	unsigned i;        /* Loop index.        */
+	unsigned tid;      /* Current thread ID. */
+	unsigned *taskmap; /* Task map.          */
+	unsigned *sortmap; /* Sorting map.       */
+	unsigned ndiv2;    /* ntasks/2           */
 	
-	sort(work, n);
+	/* Initialize scheduler data. */
+	tid = 0;
+	ndiv2 = ntasks >> 1;
+	taskmap = malloc(ntasks*sizeof(unsigned));
+	assert(taskmap != NULL);
 	
-	j = 0;
-	ndiv2 = n >> 1;
+	/* Sort tasks. */
+	sortmap = sort(tasks, ntasks);
 	
-	if (n & 1)
+	/* Assign tasks to threads. */
+	if (ntasks & 1)
 	{
-		work[0] = 0;
+		taskmap[sortmap[0]] = tid;
 		
 		/* Balance workload. */
 		for (i = 1; i <= ndiv2; i++)
 		{
-			work[i] = j;
-			work[n - i] = j;
+			taskmap[sortmap[i]] = tid;
+			taskmap[sortmap[ntasks - i]] = tid;
 			
 			/* Wrap around. */
-			if ((++j) == k)
-				j = 0;
+			if ((++tid) == nthreads)
+				tid = 0;
 		}
-		
-		return;
+	}
+	else
+	{
+		for (i = 0; i < ndiv2; i++)
+		{
+			taskmap[sortmap[i]] = tid;
+			taskmap[sortmap[ntasks - i - 1]] = tid;
+			
+			/* Wrap around. */
+			if ((++tid) == nthreads)
+				tid = 0;
+		}
 	}
 	
-	/* Balance workload. */
-	for (i = 0; i < ndiv2; i++)
-	{
-		work[i] = j;
-		work[n - i - 1] = j;
-		
-		/* Wrap around. */
-		if ((++j) == k)
-			j = 0;
-	}
+	free(sortmap);
+	
+	return (taskmap);
 }
  
 /*============================================================================*
@@ -252,10 +206,10 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
     {
 	  struct gomp_thread *thr = gomp_thread ();
 	  struct gomp_team *team = thr->ts.team;
-	  num_threads = team ? team->nthreads : 1;
+	  num_threads = (team != NULL) ? team->nthreads : 1;
 	}
 	
-	balance(_tasks, _ntasks, num_threads);
+	ws->taskmap = balance(_tasks, _ntasks, num_threads);
 	
 	ws->loop_start = start;
 	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));

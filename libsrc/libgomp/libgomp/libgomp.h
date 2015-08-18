@@ -154,10 +154,6 @@ struct gomp_work_share
        GFS_STATIC loops, this the iteration start point and never changes.  */
     long next;
 
-     /* Used in GFS_PEDRO scheduler. It points the start index for every
-      * thread in the loop. */
-	unsigned *thread_start;
-	
     /* The same, but with unsigned long long type.  */
     unsigned long long next_ull;
 
@@ -166,9 +162,11 @@ struct gomp_work_share
   };
   
   /*
-   * Used in GFS_PEDRO scheduler. Constant loop start.
+   * Used in GFS_PEDRO scheduler.
    */
   long loop_start;
+  unsigned *taskmap;
+  unsigned *thread_start;
 
   union {
     /* Link to gomp_work_share struct for next work sharing construct

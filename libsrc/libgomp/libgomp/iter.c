@@ -279,7 +279,7 @@ gomp_iter_pedro_next (long *pstart, long *pend)
   start = ws->thread_start[tid];
   for (i = start; i < _ntasks; i++)
   {
-     if (_tasks[i] == tid)
+     if (ws->taskmap[i] == tid)
        goto found;
   }
 
