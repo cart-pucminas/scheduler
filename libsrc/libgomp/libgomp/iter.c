@@ -259,8 +259,7 @@ gomp_iter_dynamic_next (long *pstart, long *pend)
 #include <stdio.h>
 
 /* Workloads. */
-extern unsigned *_tasks; /* Tasks.           */
-extern unsigned _ntasks; /* Number of tasks. */
+extern unsigned __ntasks; /* Number of tasks. */
 
 bool
 gomp_iter_pedro_next (long *pstart, long *pend)
@@ -277,7 +276,7 @@ gomp_iter_pedro_next (long *pstart, long *pend)
 
   /* Search for next task. */
   start = ws->thread_start[tid];
-  for (i = start; i < _ntasks; i++)
+  for (i = start; i < __ntasks; i++)
   {
      if (ws->taskmap[i] == tid)
        goto found;

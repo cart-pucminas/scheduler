@@ -17,8 +17,8 @@
  * 
  *   #pragma omp paralell for tasks(myarray, ntasks)
  */
-unsigned *_tasks;
-unsigned _ntasks;
+unsigned *__tasks;
+unsigned __ntasks;
 
 int main(int argc, char **argv)
 {
@@ -29,10 +29,10 @@ int main(int argc, char **argv)
 	((void)argv);
 	
 	/* Initialize tasks. */
-	_tasks = (unsigned *) malloc(N*sizeof(unsigned));
-	_ntasks = N;
+	__tasks = (unsigned *) malloc(N*sizeof(unsigned));
+	__ntasks = N;
 	for (i = 0; i < N; i++)
-		_tasks[i] = i;
+		__tasks[i] = i;
 	
 	#pragma omp parallel num_threads(2)
 	{
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	free(_tasks);
+	free(__tasks);
 
 	return (0);
 }

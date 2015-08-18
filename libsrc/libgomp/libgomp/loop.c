@@ -35,8 +35,8 @@
  *============================================================================*/
 
 /* Workloads. */
-extern unsigned *_tasks; /* Tasks.           */
-extern unsigned _ntasks; /* Number of tasks. */
+extern unsigned *__tasks; /* Tasks.           */
+extern unsigned __ntasks; /* Number of tasks. */
 
 /*
  * Exchange two numbers.
@@ -209,7 +209,7 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
 	  num_threads = (team != NULL) ? team->nthreads : 1;
 	}
 	
-	ws->taskmap = balance(_tasks, _ntasks, num_threads);
+	ws->taskmap = balance(__tasks, __ntasks, num_threads);
 	
 	ws->loop_start = start;
 	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));

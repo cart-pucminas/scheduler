@@ -28,6 +28,10 @@
 extern bool use_floating_point;
 extern unsigned chunksize;
 
+/* Workloads. */
+static unsigned *__tasks; /* Tasks.           */
+static unsigned __ntasks; /* Number of tasks. */
+
 const double bar[] = {
 	 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,
 	 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
@@ -102,6 +106,21 @@ void kernel
 		#pragma omp parallel for schedule(dynamic, chunksize) private(total)
 		for (unsigned i = 0; i < ntasks; i++)
 			total += work(tasks[i]);
+	}
+	
+	/* Smart round-robin scheduler. */
+	else if (scheduler == SCHEDULER_SMART_ROUND_ROBIN)
+	{
+		__ntasks = ntasks;
+		__tasks = smalloc(ntasks*sizeof(unsigned));
+		for (unsigned i = 0; i < ntasks; i++)
+			__tasks[i] = (unsigned)(tasks[i]*1000.0);
+		
+		#pragma omp parallel for schedule(runtime) private(total)
+		for (unsigned i = 0; i < ntasks; i++)
+			total += work(tasks[i]);
+		
+		free(__tasks);
 	}
 	
 	/* Static scheduler. */

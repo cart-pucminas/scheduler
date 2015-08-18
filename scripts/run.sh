@@ -21,7 +21,7 @@
 TIME=/usr/bin/time
 
 # Hacked Libgomp.
-LIBGOMP=../libsrc/libgomp/libgomp/build/.libs/
+LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Directories.
 BINDIR=bin
@@ -80,6 +80,7 @@ function run_searcher {
 #
 function run_benchmark {
 	LD_LIBRARY_PATH=$LIBGOMP \
+	OMP_SCHEDULE=pedro \
 	$TIME -f %U -o $OUTDIR/time-$1-$2-$3-$4-$5.out \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 
 }
