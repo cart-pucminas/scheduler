@@ -51,23 +51,73 @@ extern unsigned __ntasks; /* Number of tasks. */
 	if ((b) < (a))           \
 		exch((b), (a), (t)); \
 
+#ifdef _USE_QUICKSORT_
+
+/*
+ * Quicksort partition.
+ */
+static unsigned partition(unsigned *map, unsigned *a, unsigned l, unsigned r)
+{
+	unsigned t;     /* Temporary value.  */
+	unsigned i, j;  /* Scanning indexes. */
+	unsigned pivot; /* Pivot.            */
+	
+	pivot = a[r];
+	i = l;
+	j = r - 1;
+	
+	while (1)
+	{
+		while (a[i] > pivot)
+			i++;
+			
+		while (a[j] < pivot)
+		{
+			if (j == l)
+				break;
+			j--;
+		}
+		
+		if (i >= j)
+			break;
+		
+		exch(a[i], a[j], t);
+		exch(map[i], map[j], t);
+	}
+		
+	exch(a[i], a[r], t);
+	exch(map[i], map[r], t);
+	
+	return (i);
+}
+
+/*
+ * Quicksort. 
+ */
+static void quicksort(unsigned *map, unsigned *a, unsigned l, unsigned r)
+{
+	unsigned p;
+	
+	if (r <= l)
+		return;
+	
+	p = partition(map, a, l, r);
+	quicksort(map, a, l, p - 1);
+	quicksort(map, a, p + 1, r);
+}
+
+#else
+
 /*
  * Insertion sort.
  */
-static unsigned *insertion(unsigned *a, unsigned l, unsigned r)
+static void insertion(unsigned *map, unsigned *a, unsigned l, unsigned r)
 {
 	unsigned n;    /* Array size.      */
 	unsigned t;    /* Temporary value. */
 	unsigned i, j; /* Loop indexes.    */
-	unsigned *map; /* Sort map.        */
 	
 	n = r - l;
-	
-	/* Create map. */
-	map = malloc(n*sizeof(unsigned));
-	assert(map != NULL);
-	for (i = 0; i < n; i++)
-		map[i] = i;
 	
 	for (i = 1; i < n; i++)
 	{
@@ -80,16 +130,31 @@ static unsigned *insertion(unsigned *a, unsigned l, unsigned r)
 			exch(map[j - 1], map[j], t);
 		}
 	}
-	
-	return (map);
 }
+
+#endif
 
 /*
  * Sorts an array of numbers.
  */
 unsigned *sort(unsigned *a, unsigned n)
 {
-	return (insertion(a, 0, n - 1));
+	unsigned i;    /* Loop index.  */
+	unsigned *map; /* Sorting map. */
+	
+	/* Create map. */
+	map = malloc(n*sizeof(unsigned));
+	assert(map != NULL);
+	for (i = 0; i < n; i++)
+		map[i] = i;
+
+#ifdef _USE_QUICKSORT_
+	quicksort(map, a, 0, n - 1);
+#else
+	insertion(map, a, 0, n - 1);
+#endif
+
+	return (map);
 } 
 
 /*
