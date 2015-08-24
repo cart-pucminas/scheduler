@@ -29,8 +29,8 @@ extern bool use_floating_point;
 extern unsigned chunksize;
 
 /* Workloads. */
-static unsigned *__tasks; /* Tasks.           */
-static unsigned __ntasks; /* Number of tasks. */
+unsigned *__tasks; /* Tasks.           */
+unsigned __ntasks; /* Number of tasks. */
 
 const double bar[] = {
 	 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,
