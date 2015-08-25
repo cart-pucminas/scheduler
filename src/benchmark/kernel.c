@@ -32,7 +32,7 @@ extern unsigned chunksize;
 unsigned *__tasks; /* Tasks.           */
 unsigned __ntasks; /* Number of tasks. */
 
-const double bar[] = {
+const double barf[] = {
 	 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,
 	 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
 	17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
@@ -43,23 +43,56 @@ const double bar[] = {
 	57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0
 };
 
+const unsigned bari[] = {
+	 1,  2,  3,  4,  5,  6,  7,  8,
+	 9, 10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20, 21, 22, 23, 24,
+	25, 26, 27, 28, 29, 30, 31, 32,
+	33, 34, 35, 36, 37, 38, 39, 40,
+	41, 42, 43, 44, 45, 46, 47, 48,
+	49, 50, 51, 52, 53, 54, 55, 56,
+	57, 58, 59, 60, 61, 62, 63, 64
+};
+
 /**
  * @brief Performs some integer precision work.
  */
 static double worki(double foo)
 {
-	unsigned n = N*foo;
+	unsigned bar;
+	unsigned n2 = N*foo*N*foo;
 	unsigned dummy = 0;
 	
-	for (unsigned i = 0; i < n; i++)
+	for (unsigned i = 0; i < n2; i++)
 	{
-		for (unsigned j = 0; j < n; j++)
+		for (unsigned k = 0; k < 64; k++)
 		{
-			for (unsigned k = 0; k < 64; k++)
-			{
-				dummy += ((unsigned) bar[k])*((unsigned) bar[k]) +
-				         2*((unsigned) bar[k]) + 4;
-			}
+			__asm__("movl $1, %%eax\n"
+			        "movl $2, %%ebx\n"
+			        "movl $3, %%ebx\n"
+			        "movl $4, %%edx\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%ebx, %%ecx\n"
+			        "imul %%ecx, %%edx\n"
+			        "imul %%eax, %%ecx\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%ebx, %%ecx\n"
+			        "imul %%ecx, %%edx\n"
+			        "imul %%eax, %%ecx\n"
+			        "imul %%ebx, %%eax\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%ebx, %%ecx\n"
+			        "imul %%ecx, %%edx\n"
+			        "imul %%eax, %%ecx\n"
+			        "imul %%eax, %%ebx\n"
+			        "imul %%ebx, %%ecx\n"
+			        "imul %%ecx, %%edx\n"
+			        "imul %%eax, %%ecx\n"
+			        "imul %%eax, %0"
+			         : "=r" (bar));
+			dummy += bar;
 		}
 	}
 	
@@ -71,15 +104,16 @@ static double worki(double foo)
  */
 static double workf(double foo)
 {
-	unsigned n = N*foo;
+	unsigned bar;
+	unsigned n2 = N*foo*N*foo;
 	double dummy = 0.0;
 	
-	for (unsigned i = 0; i < n; i++)
+	for (unsigned i = 0; i < n2; i++)
 	{
-		for (unsigned j = 0; j < n; j++)
+		for (unsigned k = 0; k < 64; k++)
 		{
-			for (unsigned k = 0; k < 64; k++)
-				dummy += bar[k]*bar[k] + 2*bar[k] + 4;
+			bar = barf[k];
+			dummy += (bar + 1)*(bar + 2)*(bar + 3)*(bar + 4);
 		}
 	}
 	

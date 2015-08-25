@@ -22,7 +22,7 @@
 
 # Builds benchmark.
 benchmark: benchmark/*.c common/*.c
-	$(CC) $(CFLAGS) -rdynamic -fopenmp $^ -o $(BINDIR)/benchmark $(LIBS)
+	$(CC) $(CFLAGS) -rdynamic -fopenmp -O0 $^ -o $(BINDIR)/benchmark $(LIBS)
 
 # Builds simulator.
 simulator: simulator/*.c common/*.c
