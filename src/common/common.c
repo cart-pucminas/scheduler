@@ -28,7 +28,7 @@
 /**
  * @brief Multiplying factor.
  */
-#define FACTOR 100000.0
+#define FACTOR 1000.0
 
 /**
  * @name Flat Distribution Parameters
