@@ -28,10 +28,10 @@
  */
 static struct
 {
-	unsigned ntasks;     /**< Number of tasks.   */
-	unsigned *taskmap;   /**< Task map.          */
-	const double *tasks; /**< Tasks.             */
-	unsigned nthreads;   /**< Number of threads. */
+	unsigned ntasks;       /**< Number of tasks.   */
+	unsigned *taskmap;     /**< Task map.          */
+	const unsigned *tasks; /**< Tasks.             */
+	unsigned nthreads;     /**< Number of threads. */
 } scheduler_data = {
 	0,
 	NULL,
@@ -49,17 +49,17 @@ static struct
  * @param nthreads Number of threads.
  */
 void scheduler_workload_aware_init
-(const double *tasks, unsigned ntasks, unsigned nthreads)
+(const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
 	unsigned tid;
 	double avg;
-	double *workload;
+	unsigned *workload;
 	
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
 		return;
 	
-	workload = scalloc(nthreads, sizeof(double));
+	workload = scalloc(nthreads, sizeof(unsigned));
 	
 	/* Initialize scheduler data. */
 	scheduler_data.ntasks = ntasks;
@@ -139,8 +139,8 @@ void scheduler_workload_aware_end(void)
  */
 unsigned scheduler_workload_aware_sched(unsigned tid)
 {
-	unsigned n;      /* Number of tasks. */
-	double workload; /* Workload amount. */
+	unsigned n;        /* Number of tasks. */
+	unsigned workload; /* Workload amount. */
 	
 	/* Get next tasks. */
 	n = 0;

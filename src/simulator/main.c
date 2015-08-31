@@ -17,7 +17,7 @@
  * MA 02110-1301, USA.
  */
 
-#include <float.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -194,7 +194,7 @@ static void threads_spawn(void)
 		threads[i].ntasks = 0;
 		threads[i].avg = 0;
 		threads[i].max = 0;
-		threads[i].min = DBL_MAX;
+		threads[i].min = UINT_MAX;
 	}
 }
 
@@ -211,7 +211,7 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
-	double *tasks;
+	unsigned *tasks;
 	
 	readargs(argc, argv);
 	
@@ -227,7 +227,7 @@ int main(int argc, const const char **argv)
 		if (niterations == 1)
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				fprintf(stderr, "%lf\n", tasks[i]);
+				fprintf(stderr, "%u\n", tasks[i]);
 		}
 		
 		/* House keeping. */
@@ -236,7 +236,7 @@ int main(int argc, const const char **argv)
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-		printf("%u;%lf\n", threads[i].tid, threads[i].workload);
+		printf("%u;%u\n", threads[i].tid, threads[i].workload);
 	
 	threads_join();
 	

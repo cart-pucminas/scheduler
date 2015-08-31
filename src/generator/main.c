@@ -127,7 +127,7 @@ out:
  */
 int main(int argc, const const char **argv)
 {
-	double *tasks;
+	unsigned *tasks;
 	
 	readargs(argc, argv);
 	
@@ -135,7 +135,7 @@ int main(int argc, const const char **argv)
 	
 	/* Print tasks. */
 	for (unsigned i = 0; i < ntasks; i++)
-		fprintf(stderr, "%lf\n", tasks[i]);
+		fprintf(stderr, "%u\n", tasks[i]);
 		
 	/* House keeping. */
 	free(tasks);

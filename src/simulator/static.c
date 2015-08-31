@@ -28,10 +28,10 @@
  */
 static struct
 {
-	unsigned ntasks;     /**< Number of tasks.   */
-	unsigned *taskmap;   /**< Task map.          */
-	const double *tasks; /**< Tasks.             */
-	unsigned nthreads;   /**< Number of threads. */
+	unsigned ntasks;       /**< Number of tasks.   */
+	unsigned *taskmap;     /**< Task map.          */
+	const unsigned *tasks; /**< Tasks.             */
+	unsigned nthreads;     /**< Number of threads. */
 } scheduler_data = {
 	0,
 	NULL,
@@ -49,7 +49,7 @@ static struct
  * @param nthreads Number of threads.
  */
 void scheduler_static_init
-(const double *tasks, unsigned ntasks, unsigned nthreads)
+(const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
 	unsigned tid;
 	unsigned work;
@@ -102,7 +102,7 @@ void scheduler_static_end(void)
 unsigned scheduler_static_sched(unsigned tid)
 {
 	unsigned n;      /* Number of tasks. */
-	double workload; /* Workload amount. */
+	unsigned workload; /* Workload amount. */
 	
 	/* Get next tasks. */
 	n = 0;

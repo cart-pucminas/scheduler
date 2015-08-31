@@ -26,6 +26,11 @@
 #include <gsl/gsl_randist.h>
 
 /**
+ * @brief Multiplying factor.
+ */
+#define FACTOR 100000.0
+
+/**
  * @name Flat Distribution Parameters
  */
 /**@{*/
@@ -88,7 +93,7 @@ const char *distributions[NDISTRIBUTIONS] = {
  */
 static int cmp(const void *a, const void *b)
 {
-	return ((*(double *)a) - (*(double *)b));
+	return ((*(unsigned *)a) - (*(unsigned *)b));
 }
 
 #endif
@@ -96,9 +101,9 @@ static int cmp(const void *a, const void *b)
 /**
  * @brief Generates tasks.
  */
-double *create_tasks(unsigned distribution, unsigned ntasks)
+unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 {
-	double *tasks;
+	unsigned *tasks;
 	gsl_rng * r;
 	const gsl_rng_type * T;
 	
@@ -108,14 +113,14 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 	r = gsl_rng_alloc(T);
 	
 	/* Create tasks. */
-	tasks = smalloc(ntasks*sizeof(double));
+	tasks = smalloc(ntasks*sizeof(unsigned));
 	switch (distribution)
 	{
 		/* Random distribution. */
 		case DISTRIBUTION_RANDOM:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_flat(r, FLAT_MIN, FLAT_MAX);
+				tasks[i] = (unsigned)(gsl_ran_flat(r, FLAT_MIN, FLAT_MAX)*FACTOR);
 		} break;
 		
 		/* Normal distribution. */
@@ -130,7 +135,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 					num = gsl_ran_gaussian(r, GUASSIAN_STDDEV) + GUASSIAN_MEAN;
 				} while (num < 0.0);
 				
-				tasks[i] = num;
+				tasks[i] = (unsigned)(num*FACTOR);
 			}
 		} break;
 		
@@ -138,7 +143,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_POISSON:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_poisson(r, POISSON_MU);
+				tasks[i] = (unsigned)(gsl_ran_poisson(r, POISSON_MU)*FACTOR);
 		} break;
 		
 		/* Gamma distribution. */
@@ -152,7 +157,7 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 					num = gsl_ran_gamma(r, GAMMA_A, GAMMA_B);
 				} while (num < 0.0);
 				
-				tasks[i] = num;
+				tasks[i] = (unsigned)(num*FACTOR);
 			}
 		} break;
 		
@@ -160,12 +165,12 @@ double *create_tasks(unsigned distribution, unsigned ntasks)
 		case DISTRIBUTION_BETA:
 		{
 			for (unsigned i = 0; i < ntasks; i++)
-				tasks[i] = gsl_ran_beta(r, BETA_A, BETA_B)*BETA_M;
+				tasks[i] = (unsigned)(gsl_ran_beta(r, BETA_A, BETA_B)*BETA_M*FACTOR);
 		} break;
 	}
 		
 #ifdef _SORT_	
-		qsort(tasks, ntasks, sizeof(double), cmp);
+		qsort(tasks, ntasks, sizeof(unsigned), cmp);
 #endif
 	
 	/* House keeping. */		

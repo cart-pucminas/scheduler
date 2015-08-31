@@ -31,18 +31,18 @@
 	 */
 	struct thread
 	{
-		unsigned tid;    /**< Thread ID.                  */
-		double workload; /**< Total assigned workload.    */
-		unsigned ntasks; /**< Number of assigned tasks.   */
-		double avg;      /**< Average task size.          */
-		double max;      /**< Maximum assigned task size. */
-		double min;      /**< Minimum assigned task size. */
+		unsigned tid;      /**< Thread ID.                  */
+		unsigned workload; /**< Total assigned workload.    */
+		unsigned ntasks;   /**< Number of assigned tasks.   */
+		double avg;        /**< Average task size.          */
+		unsigned max;      /**< Maximum assigned task size. */
+		unsigned min;      /**< Minimum assigned task size. */
 	};
 	
 	/**
 	 * @brief Initializes the scheduling strategy.
 	 */
-	typedef void (*scheduler_init_t)(const double *, unsigned, unsigned);
+	typedef void (*scheduler_init_t)(const unsigned *, unsigned, unsigned);
 	
 	/**
 	 * @brief Scheduling strategy.
@@ -59,17 +59,17 @@
 	
 	/* Forward definitions. */
 	extern struct thread *threads;
-	extern void schedule(const double *, unsigned, unsigned, unsigned);
-	extern void scheduler_static_init(const double *, unsigned, unsigned);
+	extern void schedule(const unsigned *, unsigned, unsigned, unsigned);
+	extern void scheduler_static_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_static_sched(unsigned);
 	extern void scheduler_static_end(void);
-	extern void scheduler_dynamic_init(const double *, unsigned, unsigned);
+	extern void scheduler_dynamic_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_dynamic_sched(unsigned);
 	extern void scheduler_dynamic_end(void);
-	extern void scheduler_workload_aware_init(const double *, unsigned, unsigned);
+	extern void scheduler_workload_aware_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_workload_aware_sched(unsigned);
 	extern void scheduler_workload_aware_end(void);
-	extern void scheduler_smart_round_robin_init(const double *, unsigned, unsigned);
+	extern void scheduler_smart_round_robin_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_smart_round_robin_sched(unsigned);
 	extern void scheduler_smart_round_robin_end(void);
 
@@ -90,7 +90,7 @@
 	struct dqueue
 	{
 		unsigned tid;        /**< Thread ID.                */
-		double remaining;    /**< Remaining time.           */
+		unsigned remaining;    /**< Remaining time.           */
 		struct dqueue *next; /**< Next thread in the queue. */
 	};
 	

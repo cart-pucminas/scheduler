@@ -27,7 +27,7 @@
 #include <mylib/util.h>
 #include <common.h>
 
-extern void kernel(const double *, unsigned, unsigned, unsigned);
+#include "benchmark.h"
 
 /**
  * @brief Threads.
@@ -44,7 +44,6 @@ static unsigned distribution = 0;           /**< Probability distribution.      
 static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.                        */
 static unsigned niterations = 1;            /**< Number of iterations.                  */
 unsigned chunksize = 1;                     /**< Chunk size for the dynamic scheduling. */
-bool use_floating_point = false;            /**< Use floating point unit?               */
 /**@}*/
 
 /**
@@ -62,7 +61,6 @@ static void usage(void)
 	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
 	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
-	printf("  --floating-point       Use floating-point unit\n");
 	printf("  --iterations           Number of iterations\n");
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
@@ -154,8 +152,6 @@ static void readargs(int argc, const char **argv)
 			scheduler = SCHEDULER_WORKLOAD_AWARE;
 		else if (!strcmp(arg, "smart-round-robin"))
 			scheduler = SCHEDULER_SMART_ROUND_ROBIN;
-		else if (!strcmp(arg, "--floating-point"))
-			use_floating_point = true;
 	}
 	
 	/* Check parameters. */
@@ -191,7 +187,7 @@ out:
  */
 int main(int argc, const const char **argv)
 {
-	double *tasks;
+	unsigned *tasks;
 	
 	readargs(argc, argv);
 

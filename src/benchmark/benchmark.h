@@ -17,14 +17,13 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef _SEARCHER_H_
-#define _SEARCHER_H_
+#ifndef BENCHMARK_H_
+#define BENCHMARK_H_
 
 	/* Forward definitions. */
-	extern unsigned nthreads;
-	extern unsigned ntasks;
-	
-	/* Forward definitions. */
-	extern void ga(const unsigned *, unsigned, unsigned);
+	extern void kernel(const unsigned *, unsigned, unsigned, unsigned);
 
-#endif /* _SEARCHER_H_ */
+	/* Forward definitions. */
+	extern unsigned chunksize;
+
+#endif /* BENCHMARK_H_ */

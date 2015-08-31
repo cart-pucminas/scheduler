@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include <float.h>
+#include <limits.h>
 
 #include <mylib/ai.h>
 #include <mylib/util.h>
@@ -33,7 +33,7 @@
 /**
  * @brief Tasks.
  */
-static const double *tasks = NULL;
+static const unsigned *tasks = NULL;
 
 /**
  * @brief Destroys a gene.
@@ -72,10 +72,10 @@ static gene_t gene_generate(void)
  */
 static double gene_evaluate(gene_t gen)
 {
-	double min, max;  /* max and min workloads. */
-	double *workload; /* Per-thred workload.    */
+	unsigned min, max;  /* max and min workloads. */
+	unsigned *workload; /* Per-thred workload.    */
 	
-	workload = scalloc(nthreads, sizeof(double));
+	workload = scalloc(nthreads, sizeof(unsigned));
 	
 	/* Compute workload of threads. */
 	for (unsigned i = 0; i < ntasks; i++)
@@ -89,7 +89,7 @@ static double gene_evaluate(gene_t gen)
 	
 	/* Compute load imbalance. */
 	max = 0;
-	min = DBL_MAX;
+	min = UINT_MAX;
 	for (unsigned i = 0; i < nthreads; i++)
 	{
 		if (workload[i] < min)
@@ -183,13 +183,13 @@ static struct genome problem = {
 /**
  * @brief Genetic algorithm for searching a good loop scheduling.
  */
-void ga(const double *_tasks, unsigned popsize, unsigned ngen)
+void ga(const unsigned *_tasks, unsigned popsize, unsigned ngen)
 {
 	gene_t bestgen;
-	double *workload;
+	unsigned *workload;
 	
 	tasks = _tasks;
-	workload = scalloc(nthreads, sizeof(double));
+	workload = scalloc(nthreads, sizeof(unsigned));
 	
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
@@ -198,7 +198,7 @@ void ga(const double *_tasks, unsigned popsize, unsigned ngen)
 	for (unsigned i = 0; i < ntasks; i++)
 		workload[GENE(bestgen)[i]] += tasks[i];
 	for (unsigned i = 0; i < nthreads; i++)
-		fprintf(stderr, "%u;%lf\n", i, workload[i]);
+		fprintf(stderr, "%u;%u\n", i, workload[i]);
 	
 	/* House keeping. */
 	free(workload);

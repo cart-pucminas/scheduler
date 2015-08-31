@@ -162,7 +162,7 @@ out:
  */
 int main(int argc, const const char **argv)
 {
-	double *tasks;
+	unsigned *tasks;
 	
 	readargs(argc, argv);
 	

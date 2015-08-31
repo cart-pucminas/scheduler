@@ -29,10 +29,10 @@
  */
 static struct
 {
-	unsigned ntasks;     /**< Number of tasks.   */
-	unsigned *taskmap;   /**< Task map.          */
-	const double *tasks; /**< Tasks.             */
-	unsigned nthreads;   /**< Number of threads. */
+	unsigned ntasks;       /**< Number of tasks.   */
+	unsigned *taskmap;     /**< Task map.          */
+	const unsigned *tasks; /**< Tasks.             */
+	unsigned nthreads;     /**< Number of threads. */
 } scheduler_data = {
 	0,
 	NULL,
@@ -48,7 +48,7 @@ static struct
  * 
  * @returns Sorting map.
  */
-unsigned *sort(double *a, unsigned n)
+unsigned *sort(unsigned *a, unsigned n)
 {
 	unsigned *map;
 	
@@ -64,7 +64,7 @@ unsigned *sort(double *a, unsigned n)
 			/* Swap. */
 			if (a[j] < a[i])
 			{
-				double tmp1;
+				unsigned tmp1;
 				unsigned tmp2;
 				
 				tmp1 = a[j]; tmp2   = map[j];
@@ -87,20 +87,20 @@ unsigned *sort(double *a, unsigned n)
  * @param nthreads Number of threads.
  */
 void scheduler_smart_round_robin_init
-(const double *tasks, unsigned ntasks, unsigned nthreads)
+(const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
-	unsigned tid;          /* Current thread ID. */
-	double *sorted_tasks;  /* Sorted tasks.      */
-	unsigned *sorting_map; /* Sorting map.       */
-	unsigned ndiv2;        /* ntasks/2           */
+	unsigned tid;           /* Current thread ID. */
+	unsigned *sorted_tasks; /* Sorted tasks.      */
+	unsigned *sorting_map;  /* Sorting map.       */
+	unsigned ndiv2;         /* ntasks/2           */
 	
 	/* Already initialized. */
 	if (scheduler_data.taskmap != NULL)
 		return;
 		
 	
-	sorted_tasks = smalloc(ntasks*sizeof(double));
-	memcpy(sorted_tasks, tasks, ntasks*sizeof(double));
+	sorted_tasks = smalloc(ntasks*sizeof(unsigned));
+	memcpy(sorted_tasks, tasks, ntasks*sizeof(unsigned));
 	
 	sorting_map = sort(sorted_tasks, ntasks);
 	
@@ -168,8 +168,8 @@ void scheduler_smart_round_robin_end(void)
  */
 unsigned scheduler_smart_round_robin_sched(unsigned tid)
 {
-	unsigned n;      /* Number of tasks. */
-	double workload; /* Workload amount. */
+	unsigned n;        /* Number of tasks. */
+	unsigned workload; /* Workload amount. */
 	
 	/* Get next tasks. */
 	n = 0;
