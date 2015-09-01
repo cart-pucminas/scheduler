@@ -40,9 +40,6 @@ static unsigned char **sideboards = NULL;
 
 #define N 64
 
-#define for_x for (unsigned x = 0; x < N; x++)
-#define for_y for (unsigned y = 0; y < N; y++)
-#define for_xy for_x for_y
 #define BOARD(tid, y, x)(boards[tid][(y)*N + (x)])
 #define SIDEBOARD(tid, y, x)sideboards[tid][(y)*N + (x)]
 
@@ -54,21 +51,24 @@ static void play_game(unsigned tid, unsigned niter)
 {
 	for (unsigned k = 0; k < niter; k++)
 	{
-		for (unsigned y = 0; y < N; y++)
+		for (int y = 0; y < N; y++)
 		{
-			for (unsigned x = 0; x < N; x++)
+			for (int x = 0; x < N; x++)
 			{
 				unsigned n = 0;
-				for (unsigned y1 = y - 1; y1 <= y + 1; y1++)
+				
+				for (int y1 = y - 1; y1 <= y + 1; y1++)
 				{
-					for (unsigned x1 = x - 1; x1 <= x + 1; x1++)
+					for (int x1 = x - 1; x1 <= x + 1; x1++)
 					{
-						if (BOARD(tid,(y1 + N)%N, (x1 + N)%N))
+						if (BOARD(tid, (y1 + N)%N, (x1 + N)%N))
 							n++;
 					}
 				}
 		 
-				if (BOARD(tid, y, x)) n--;
+				if (BOARD(tid, y, x))
+					n--;
+				
 				SIDEBOARD(tid, y, x) = ((n == 3) || ((n == 2) && BOARD(tid, y, x)));
 			}
 		}
