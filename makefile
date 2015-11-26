@@ -33,7 +33,8 @@ export CC = gcc
 
 # Toolchain configuration.
 export CFLAGS  = -I $(INCDIR)
-export CFLAGS += -std=c99 -pedantic -Wall -Wextra -Werror -fopenmp
+export CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L
+export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
