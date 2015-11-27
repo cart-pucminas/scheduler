@@ -20,7 +20,7 @@
 #include <omp.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
+#include <stdlib.h>
 
 #include <common.h>
 #include <mylib/util.h>
@@ -28,72 +28,70 @@
 #include "benchmark.h"
 
 /**
- * @brief 10^6
+ * @brief Cache line size.
  */
-#define MEGA 1000000
-
-/**
- * @brief 10^3
- */
-#define KILO 1000
+#define CACHE_LINE_SIZE 64
 
 /* Workloads. */
 unsigned *__tasks; /* Tasks.           */
 unsigned __ntasks; /* Number of tasks. */
 
 /**
- * @brief Simulates a synthetic numeric kernel.
+ * @brief Dummy variable.
  */
-void kernel
-(const unsigned *tasks, unsigned ntasks, unsigned nthreads, unsigned scheduler)
-{	
-	(void) nthreads;
+static int *foobar;
 
-	/* Dynamic scheduler. */
-	if (scheduler == SCHEDULER_STATIC)
-	{
-		#pragma omp parallel for schedule(dynamic, chunksize)
-		for (unsigned i = 0; i < ntasks; i++)
+/**
+ * @brief Benchmark kernel.
+ */
+void kernel(int tid, int n)
+{
+	n *= 1000;
+	for (int j = 0; j < n; j++)
+		foobar[tid*CACHE_LINE_SIZE] *= 211111;
+}
+
+
+/**
+ * @brief Synthetic benchmark. 
+ */
+void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, unsigned nthreads, unsigned scheduler)
+{
+	foobar = smemalign(64, nthreads*CACHE_LINE_SIZE*sizeof(int));
+	
+	for (unsigned k = 0; k < niterations; k++)
+	{	
+		/* Dynamic scheduler. */
+		if (scheduler == SCHEDULER_STATIC)
 		{
-			struct timespec req;
-			req.tv_sec = tasks[i]/KILO;
-			req.tv_nsec = (tasks[i]%KILO)*MEGA;
-/*			fprintf(stderr, "%ld \n", req.tv_nsec); */
-			nanosleep(&req, NULL);
+			#pragma omp parallel for schedule(dynamic, chunksize)
+			for (unsigned i = 0; i < ntasks; i++)
+				kernel(omp_get_thread_num(), tasks[i]);
+		}
+		
+		/* Smart round-robin scheduler. */
+		else if (scheduler == SCHEDULER_SMART_ROUND_ROBIN)
+		{		
+			__ntasks = ntasks;
+			__tasks = smalloc(ntasks*sizeof(unsigned));
+			memcpy(__tasks, tasks, ntasks*sizeof(unsigned));
+			
+			#pragma omp parallel for schedule(runtime)
+			for (unsigned i = 0; i < ntasks; i++)
+				kernel(omp_get_thread_num(), tasks[i]);
+			
+			free(__tasks);
+		}
+		
+		/* Static scheduler. */
+		else
+		{
+			#pragma omp parallel for schedule(static, chunksize)
+			for (unsigned i = 0; i < ntasks; i++)
+				kernel(omp_get_thread_num(), tasks[i]);
 		}
 	}
 	
-	/* Smart round-robin scheduler. */
-	else if (scheduler == SCHEDULER_SMART_ROUND_ROBIN)
-	{		
-		__ntasks = ntasks;
-		__tasks = smalloc(ntasks*sizeof(unsigned));
-		memcpy(__tasks, tasks, ntasks*sizeof(unsigned));
-		
-		#pragma omp parallel for schedule(runtime)
-		for (unsigned i = 0; i < ntasks; i++)
-		{
-			struct timespec req;
-			req.tv_sec = tasks[i]/KILO;
-			req.tv_nsec = (tasks[i]%KILO)*MEGA;
-/*			fprintf(stderr, "%ld \n", req.tv_nsec); */
-			nanosleep(&req, NULL);
-		}
-		
-		free(__tasks);
-	}
-	
-	/* Static scheduler. */
-	else
-	{
-		#pragma omp parallel for schedule(static, chunksize)
-		for (unsigned i = 0; i < ntasks; i++)
-		{
-			struct timespec req;
-			req.tv_sec = tasks[i]/KILO;
-			req.tv_nsec = (tasks[i]%KILO)*MEGA;
-/*			fprintf(stderr, "%ld \n", req.tv_nsec); */
-			nanosleep(&req, NULL);
-		}
-	}
+	/* House keeping. */
+	free(foobar);
 }

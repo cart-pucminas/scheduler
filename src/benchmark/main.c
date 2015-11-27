@@ -190,17 +190,13 @@ int main(int argc, const const char **argv)
 	unsigned *tasks;
 	
 	readargs(argc, argv);
-
-	/* Simulate! */
-	for (unsigned i = 0; i < niterations; i++)
-	{
-		tasks = create_tasks(distribution, ntasks);
 	
-		kernel(tasks, ntasks, nthreads, scheduler);
+	tasks = create_tasks(distribution, ntasks);
+
+	benchmark(tasks, ntasks, niterations, nthreads, scheduler);
 		
-		/* House keeping. */
-		free(tasks);
-	}
+	/* House keeping. */
+	free(tasks);
 	
 	return (EXIT_SUCCESS);
 }

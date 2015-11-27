@@ -18,14 +18,17 @@
 #  
 
 # Directories.
-export BINDIR    = $(CURDIR)/bin
-export DOCDIR    = $(CURDIR)/doc
-export INCDIR    = $(CURDIR)/include
-export LIBDIR    = $(CURDIR)/lib
-export LIBSRCDIR = $(CURDIR)/libsrc
-export SRCDIR    = $(CURDIR)/src
+export PREFIX     = $(CURDIR)
+export BINDIR     = $(CURDIR)/bin
+export CONTRIBDIR = $(CURDIR)/contrib
+export DOCDIR     = $(CURDIR)/doc
+export INCDIR     = $(CURDIR)/include
+export LIBDIR     = $(CURDIR)/lib
+export LIBSRCDIR  = $(CURDIR)/libsrc
+export SRCDIR     = $(CURDIR)/src
 
 # Libraries.
+export MYLIB = mylib-0.6
 export LIBS = $(LIBDIR)/libmy.a -lgsl -lgslcblas -lm
 
 # Toolchain.
@@ -43,6 +46,12 @@ all: benchmark simulator searcher generator
 # Builds libraries.
 libs:
 	mkdir -p $(LIBDIR)
+	cd $(CONTRIBDIR) &&                                \
+	mkdir -p $(MYLIB) &&                               \
+	tar -xjvf $(MYLIB).tar.bz2 --directory $(MYLIB) && \
+	cd $(MYLIB) &&                                     \
+	$(MAKE) install PREFIX=$(PREFIX)
+	rm -rf $(CONTRIBDIR)/$(MYLIB)
 	cd $(LIBSRCDIR) && $(MAKE) all
 
 # Builds the benchmark.
@@ -69,3 +78,5 @@ generator: libs
 clean:
 	cd $(LIBSRCDIR) && $(MAKE) clean
 	cd $(SRCDIR) && $(MAKE) clean
+	rm -rf $(INCDIR)/mylib
+	rm -rf $(LIBDIR)

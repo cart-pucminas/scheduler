@@ -1,3 +1,0 @@
-[submodule "libsrc/mylib"]
-	path = libsrc/mylib
-	url = https://github.com/ppenna/mylib.git

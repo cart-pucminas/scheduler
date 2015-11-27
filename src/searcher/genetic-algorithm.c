@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include <mylib/ai.h>
 #include <mylib/util.h>
@@ -173,6 +174,7 @@ static struct genome problem = {
 	0.80, /* Crossover rate.   */
 	0.01, /* Elitism rate.     */
 	0.90, /* Replacement rate. */
+	0,    /* Tournament size.  */
 	&gene_generate,  /* generate()  */
 	&gene_evaluate,  /* evaluate()  */
 	&gene_crossover, /* crossover() */

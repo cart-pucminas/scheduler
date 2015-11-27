@@ -21,7 +21,7 @@
 #define BENCHMARK_H_
 
 	/* Forward definitions. */
-	extern void kernel(const unsigned *, unsigned, unsigned, unsigned);
+	extern void benchmark(const unsigned *, unsigned, unsigned, unsigned, unsigned);
 
 	/* Forward definitions. */
 	extern unsigned chunksize;
