@@ -25,6 +25,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#define _SORT_
+
 /**
  * @brief Multiplying factor.
  */

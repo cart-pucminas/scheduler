@@ -39,18 +39,17 @@ unsigned __ntasks; /* Number of tasks. */
 /**
  * @brief Dummy variable.
  */
-static int *foobar;
+volatile static int *foobar;
 
 /**
  * @brief Benchmark kernel.
  */
 void kernel(int tid, int n)
 {
-	n *= 1000;
+	n *= 100;
 	for (int j = 0; j < n; j++)
-		foobar[tid*CACHE_LINE_SIZE] *= 211111;
+		foobar[tid*CACHE_LINE_SIZE]++;
 }
-
 
 /**
  * @brief Synthetic benchmark. 
@@ -64,7 +63,7 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 		/* Dynamic scheduler. */
 		if (scheduler == SCHEDULER_STATIC)
 		{
-			#pragma omp parallel for schedule(dynamic, chunksize)
+			#pragma omp parallel for schedule(dynamic)
 			for (unsigned i = 0; i < ntasks; i++)
 				kernel(omp_get_thread_num(), tasks[i]);
 		}
@@ -86,7 +85,7 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 		/* Static scheduler. */
 		else
 		{
-			#pragma omp parallel for schedule(static, chunksize)
+			#pragma omp parallel for schedule(static)
 			for (unsigned i = 0; i < ntasks; i++)
 				kernel(omp_get_thread_num(), tasks[i]);
 		}
