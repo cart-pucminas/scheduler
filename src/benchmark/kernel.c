@@ -39,7 +39,7 @@ unsigned __ntasks; /* Number of tasks. */
 /**
  * @brief Dummy variable.
  */
-volatile static int *foobar;
+static int *foobar;
 
 /**
  * @brief Benchmark kernel.
@@ -61,7 +61,7 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 	for (unsigned k = 0; k < niterations; k++)
 	{	
 		/* Dynamic scheduler. */
-		if (scheduler == SCHEDULER_STATIC)
+		if (scheduler == SCHEDULER_DYNAMIC)
 		{
 			#pragma omp parallel for schedule(dynamic)
 			for (unsigned i = 0; i < ntasks; i++)
