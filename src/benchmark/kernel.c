@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include <common.h>
 #include <mylib/util.h>
@@ -46,7 +47,6 @@ static int *foobar;
  */
 void kernel(int tid, int n)
 {
-	n *= 100;
 	for (int j = 0; j < n; j++)
 		foobar[tid*CACHE_LINE_SIZE]++;
 }
@@ -56,7 +56,12 @@ void kernel(int tid, int n)
  */
 void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, unsigned nthreads, unsigned scheduler)
 {
+	uint64_t end;
+	uint64_t start;
+	
 	foobar = smemalign(64, nthreads*CACHE_LINE_SIZE*sizeof(int));
+	
+	start = get_time();
 	
 	for (unsigned k = 0; k < niterations; k++)
 	{	
@@ -90,6 +95,10 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 				kernel(omp_get_thread_num(), tasks[i]);
 		}
 	}
+	
+	end = get_time();
+	
+	printf("%" PRId64 "\n", start - end);
 	
 	/* House keeping. */
 	free(foobar);
