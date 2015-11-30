@@ -158,7 +158,7 @@ unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				{
 					num = gsl_ran_gamma(r, GAMMA_A, GAMMA_B);
 				} while (num < 0.0);
-				tasks[i] = (unsigned)(ntasks*tasks[i]);
+				tasks[i] = (unsigned)(num*FACTOR);
 			}
 		} break;
 		

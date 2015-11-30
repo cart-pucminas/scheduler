@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <inttypes.h>
+#include <stdint.h>
 
 #include <common.h>
 #include <mylib/util.h>
@@ -32,6 +32,11 @@
  * @brief Cache line size.
  */
 #define CACHE_LINE_SIZE 64
+
+/**
+ * @brief Kernel load.
+ */
+#define KERNEL_LOAD 1000000
 
 /* Workloads. */
 unsigned *__tasks; /* Tasks.           */
@@ -47,8 +52,11 @@ static int *foobar;
  */
 void kernel(int tid, int n)
 {
-	for (int j = 0; j < n; j++)
-		foobar[tid*CACHE_LINE_SIZE]++;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < KERNEL_LOAD; j++)
+			foobar[tid*CACHE_LINE_SIZE]++;		
+	}
 }
 
 /**
@@ -98,7 +106,7 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 	
 	end = get_time();
 	
-	printf("%" PRId64 "\n", start - end);
+	printf("%.2lf\n", (end - start)/1000.0);
 	
 	/* House keeping. */
 	free(foobar);

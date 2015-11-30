@@ -17,8 +17,20 @@
 # MA 02110-1301, USA.
 #
 
-# Time utility.
-TIME=/usr/bin/time
+#
+# Run searcher?
+#
+RUN_SEARCHER=false
+
+#
+# Run simulator?
+#
+RUN_SIMULATOR=false
+
+#
+# Run benchmark?
+#
+RUN_BENCHMARK=true
 
 # Hacked Libgomp.
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
@@ -78,37 +90,52 @@ function run_searcher {
 # $4 Scheduling strategy
 # $5 Chunk size
 #
-function run_benchmark {
+function run_benchmark
+{
+	# Build thread map.
+	for (( i=0; i<$1; i++ )); do
+		map[$i]=$i
+	done
+	
+	export OMP_NUM_THREADS=$1
+	export GOMP_CPU_AFFINITY="${map[@]}"
+
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
-	$TIME -f %U -o $OUTDIR/time-$1-$2-$3-$4-$5.out \
-	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 
+	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
+	                  $4 --chunksize $5 > $OUTDIR/time-$1-$2-$3-$4-$5.out
 }
 
 # Cleanup output directory.
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-# Generate tasks.
-for distribution in random normal poisson gamma beta; do
-	run_generator 8192 $distribution
-done
-
 # Run the benchmark, simulator and searcher.
-for distribution in random normal poisson gamma beta; do
-	for nthreads in 32; do
+for distribution in gamma; do
+	for nthreads in 2; do
+		# Simulate.
 		for ntasks in 128 256 512; do	
 			echo $nthreads $ntasks $distribution
+			for chunksize in 1; do
+				if [ $RUN_SIMULATOR == "true" ]; then
+					run_simulator $nthreads $ntasks $distribution "static" $chunksize
+					run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
+				fi
+				if [ $RUN_BENCHMARK == "true" ] ; then
+					run_benchmark $nthreads $ntasks $distribution "static" $chunksize
+					run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize
+				fi
+			done
+			if [ $RUN_SIMULATOR == "true" ]; then
 				run_simulator $nthreads $ntasks $distribution "workload-aware" 1
 				run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
+			fi
+			if [ $RUN_BENCHMARK == "true" ] ; then
 				run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1
-			for chunksize in 1 2 4 8 16 32; do
-				run_simulator $nthreads $ntasks $distribution "static" $chunksize
-				run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
-				run_benchmark $nthreads $ntasks $distribution "static" $chunksize
-				run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize
-			done
-			run_searcher $nthreads $ntasks $distribution
+			fi
+			if [ $RUN_SEARCHER == "true" ]; then
+				run_searcher $nthreads $ntasks $distribution
+			fi
 		done
 	done
 done
