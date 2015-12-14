@@ -29,13 +29,16 @@ export SRCDIR     = $(CURDIR)/src
 
 # Libraries.
 export MYLIB = mylib-0.6
-export LIBS = $(LIBDIR)/libmy.a -lgsl -lgslcblas -lm
+export LIBS  = $(LIBDIR)/libmy.a
+export LIBS += $(CONTRIBDIR)/lib/libgsl.a
+export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a
+export LIBS += -lm
 
 # Toolchain.
 export CC = gcc
 
 # Toolchain configuration.
-export CFLAGS  = -I $(INCDIR)
+export CFLAGS  = -I $(INCDIR) -I $(CONTRIBDIR)/include
 export CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L
 export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
