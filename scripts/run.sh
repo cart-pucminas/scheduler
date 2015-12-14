@@ -36,7 +36,7 @@ RUN_BENCHMARK=true
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Benchmark parameters.
-LOAD=20000
+LOAD=100000
 
 # Directories.
 BINDIR=bin
@@ -97,7 +97,7 @@ function run_benchmark
 {
 	# Build thread map.
 	for (( i=0; i<$1; i++ )); do
-		map[$i]=$i
+		map[$i]=$((2*$i))
 	done
 	
 	export OMP_NUM_THREADS=$1
@@ -114,7 +114,7 @@ mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
 # Run the benchmark, simulator and searcher.
-for distribution in gamma; do
+for distribution in beta poisson gamma normal random; do
 	for nthreads in 2; do
 		# Simulate.
 		for ntasks in 128; do	
