@@ -21,9 +21,6 @@
 #define BENCHMARK_H_
 
 	/* Forward definitions. */
-	extern void benchmark(const unsigned *, unsigned, unsigned, unsigned, unsigned);
-
-	/* Forward definitions. */
-	extern unsigned chunksize;
+	extern void benchmark(const unsigned *, unsigned, unsigned, unsigned, unsigned, unsigned);
 
 #endif /* BENCHMARK_H_ */

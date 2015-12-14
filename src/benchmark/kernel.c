@@ -28,46 +28,37 @@
 
 #include "benchmark.h"
 
-/**
- * @brief Cache line size.
- */
-#define CACHE_LINE_SIZE 64
-
-/**
- * @brief Kernel load.
- */
-#define KERNEL_LOAD 1000000
-
 /* Workloads. */
 unsigned *__tasks; /* Tasks.           */
 unsigned __ntasks; /* Number of tasks. */
 
 /**
- * @brief Dummy variable.
- */
-static int *foobar;
-
-/**
  * @brief Benchmark kernel.
  */
-void kernel(int tid, int n)
+void kernel(int n, int load)
 {
+	int sum = 0;
+	
 	for (int i = 0; i < n; i++)
 	{
-		for (int j = 0; j < KERNEL_LOAD; j++)
-			foobar[tid*CACHE_LINE_SIZE]++;		
+		for (int j = 0; j < load; j++)
+			sum++;		
 	}
 }
 
 /**
  * @brief Synthetic benchmark. 
  */
-void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, unsigned nthreads, unsigned scheduler)
+void benchmark(
+	const unsigned *tasks,
+	unsigned ntasks,
+	unsigned niterations,
+	unsigned nthreads,
+	unsigned load,
+	unsigned scheduler)
 {
 	uint64_t end;
 	uint64_t start;
-	
-	foobar = smemalign(64, nthreads*CACHE_LINE_SIZE*sizeof(int));
 	
 	start = get_time();
 	
@@ -76,9 +67,9 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 		/* Dynamic scheduler. */
 		if (scheduler == SCHEDULER_DYNAMIC)
 		{
-			#pragma omp parallel for schedule(dynamic)
+			#pragma omp parallel for schedule(dynamic) num_threads(nthreads)
 			for (unsigned i = 0; i < ntasks; i++)
-				kernel(omp_get_thread_num(), tasks[i]);
+				kernel(tasks[i], load);
 		}
 		
 		/* Smart round-robin scheduler. */
@@ -88,9 +79,9 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 			__tasks = smalloc(ntasks*sizeof(unsigned));
 			memcpy(__tasks, tasks, ntasks*sizeof(unsigned));
 			
-			#pragma omp parallel for schedule(runtime)
+			#pragma omp parallel for schedule(runtime) num_threads(nthreads)
 			for (unsigned i = 0; i < ntasks; i++)
-				kernel(omp_get_thread_num(), tasks[i]);
+				kernel(tasks[i], load);
 			
 			free(__tasks);
 		}
@@ -98,16 +89,13 @@ void benchmark(const unsigned *tasks, unsigned ntasks, unsigned niterations, uns
 		/* Static scheduler. */
 		else
 		{
-			#pragma omp parallel for schedule(static)
+			#pragma omp parallel for schedule(static) num_threads(nthreads)
 			for (unsigned i = 0; i < ntasks; i++)
-				kernel(omp_get_thread_num(), tasks[i]);
+				kernel(tasks[i], load);
 		}
 	}
 	
 	end = get_time();
 	
 	printf("%.2lf\n", (end - start)/1000.0);
-	
-	/* House keeping. */
-	free(foobar);
 }

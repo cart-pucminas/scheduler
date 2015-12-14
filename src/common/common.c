@@ -36,16 +36,16 @@
  * @name Flat Distribution Parameters
  */
 /**@{*/
-#define FLAT_MIN   0.0
-#define FLAT_MAX 512.0
+#define FLAT_MIN 0.0
+#define FLAT_MAX 8.0
 /**@}*/
 
 /**
  * @name Gaussian Distribution Parameters
  */
 /**@{*/
-#define GUASSIAN_STDDEV  1.0
-#define GUASSIAN_MEAN   32.0
+#define GUASSIAN_STDDEV 1.0
+#define GUASSIAN_MEAN   4.0
 /**@}*/
 
 /**

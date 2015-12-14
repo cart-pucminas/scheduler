@@ -43,7 +43,8 @@ static unsigned ntasks = 1024;              /**< Number of tasks.               
 static unsigned distribution = 0;           /**< Probability distribution.              */
 static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.                        */
 static unsigned niterations = 1;            /**< Number of iterations.                  */
-unsigned chunksize = 1;                     /**< Chunk size for the dynamic scheduling. */
+static unsigned chunksize = 1;              /**< Chunk size for the dynamic scheduling. */
+static unsigned load = 0;                   /**< Kernel load.                           */
 /**@}*/
 
 /**
@@ -62,6 +63,7 @@ static void usage(void)
 	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
 	printf("  --iterations           Number of iterations\n");
+	printf("  --load <num>           kernel load\n");
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --chunksize <num>      Chunk size for the dynamic scheduling\n");
@@ -83,6 +85,7 @@ static void readargs(int argc, const char **argv)
 		STATE_SET_NTHREADS,     /* Set number of threads.    */
 		STATE_SET_NTASKS,       /* Set number of tasks.      */
 		STATE_SET_NITERATIONS,  /* Set number of iterations. */
+		STATE_SET_LOAD,         /* Set kernel load.          */
 		STATE_SET_DISTRIBUTION, /* Set distribution.         */
 		STATE_SET_CHUNKSIZE};   /* Set chunk size.           */
 	
@@ -126,6 +129,11 @@ static void readargs(int argc, const char **argv)
 					chunksize = atoi(arg);
 					state = STATE_READ_ARG;
 					break;
+
+				case STATE_SET_LOAD:
+					load = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
 			}
 			
 			continue;
@@ -136,6 +144,8 @@ static void readargs(int argc, const char **argv)
 			state = STATE_SET_NTHREADS;
 		else if (!strcmp(arg, "--niterations"))
 			state = STATE_SET_NITERATIONS;
+		else if (!strcmp(arg, "--load"))
+			state = STATE_SET_LOAD;
 		else if (!strcmp(arg, "--ntasks"))
 			state = STATE_SET_NTASKS;
 		else if (!strcmp(arg, "--distribution"))
@@ -165,6 +175,8 @@ static void readargs(int argc, const char **argv)
 		error("invalid scheduler");
 	else if (chunksize < 1)
 		error("invalid chunk size");
+	else if (load == 0)
+		error("invalid kernel load");
 	if (distribution_name != NULL)
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
@@ -193,7 +205,7 @@ int main(int argc, const const char **argv)
 	
 	tasks = create_tasks(distribution, ntasks);
 
-	benchmark(tasks, ntasks, niterations, nthreads, scheduler);
+	benchmark(tasks, ntasks, niterations, nthreads, load, scheduler);
 		
 	/* House keeping. */
 	free(tasks);

@@ -35,6 +35,9 @@ RUN_BENCHMARK=true
 # Hacked Libgomp.
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
+# Benchmark parameters.
+LOAD=20000
+
 # Directories.
 BINDIR=bin
 OUTDIR=results
@@ -103,7 +106,7 @@ function run_benchmark
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
-	                  $4 --chunksize $5 > $OUTDIR/time-$1-$2-$3-$4-$5.out
+	                  $4 --chunksize $5 --load $LOAD
 }
 
 # Cleanup output directory.
@@ -114,8 +117,9 @@ rm -f $OUTDIR/*
 for distribution in gamma; do
 	for nthreads in 2; do
 		# Simulate.
-		for ntasks in 128 256 512; do	
+		for ntasks in 128; do	
 			echo $nthreads $ntasks $distribution
+			run_generator $ntasks $distribution
 			for chunksize in 1; do
 				if [ $RUN_SIMULATOR == "true" ]; then
 					run_simulator $nthreads $ntasks $distribution "static" $chunksize
