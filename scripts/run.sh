@@ -114,7 +114,7 @@ mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
 # Run the benchmark, simulator and searcher.
-for distribution in gamma; do
+for distribution in beta poisson gamma normal random; do
 	for nthreads in 12; do
 		# Simulate.
 		for ntasks in 128; do	

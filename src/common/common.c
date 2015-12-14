@@ -44,7 +44,7 @@
  * @name Gaussian Distribution Parameters
  */
 /**@{*/
-#define GUASSIAN_STDDEV 1.0
+#define GUASSIAN_STDDEV 2.0
 #define GUASSIAN_MEAN   4.0
 /**@}*/
 
@@ -67,9 +67,9 @@
  * @name Beta Distribution Parameters
  */
 /**@{*/
-#define BETA_A   0.5
-#define BETA_B   0.5
-#define BETA_M 512.0
+#define BETA_A  0.5
+#define BETA_B  0.5
+#define BETA_M 10.0
 /**@}*/
 
 /**
