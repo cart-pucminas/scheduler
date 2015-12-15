@@ -17,6 +17,17 @@
 extern int verbose;
 extern int nthreads;
 
+/*
+ * For now, libgomp hopes that we will
+ * fill these structures. A better
+ * way to achieve the same think would
+ * be to do something like:
+ * 
+ *   #pragma omp paralell for tasks(myarray, ntasks)
+ */
+unsigned *__tasks;
+unsigned __ntasks;
+
 /* Kmeans data. */
 float mindistance;   /* Minimum distance.             */
 int npoints;         /* Number of points.             */
@@ -229,16 +240,6 @@ static void compute_centroids(void)
 
 #elif defined(_RUNTIME_SCHEDULE_)
 
-/*
- * For now, libgomp hopes that we will
- * fill these structures. A better
- * way to achieve the same think would
- * be to do something like:
- * 
- *   #pragma omp paralell for tasks(myarray, ntasks)
- */
-unsigned *__tasks;
-unsigned __ntasks;
 unsigned *__tasks2;
 
 /*
@@ -373,6 +374,9 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 {
 	int i, j;  /* Loop indexes. */
 	int again; /* Loop again?   */
+
+	((void)__tasks);
+	((void)__ntasks);
 	
 	/* Setup parameters. */
 	data = _data;

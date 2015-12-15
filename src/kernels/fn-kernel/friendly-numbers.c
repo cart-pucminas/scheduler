@@ -14,6 +14,17 @@ extern int verbose;
 extern int nthreads;
 
 /*
+ * For now, libgomp hopes that we will
+ * fill these structures. A better
+ * way to achieve the same think would
+ * be to do something like:
+ * 
+ *   #pragma omp paralell for tasks(myarray, ntasks)
+ */
+unsigned *__tasks;
+unsigned __ntasks;
+
+/*
  * Computes the Greatest Common Divisor of two numbers.
  */
 static int gcd(int a, int b)
@@ -65,6 +76,9 @@ int friendly_numbers(int start, int end)
 	int range;    /* Range of numbers.           */
 	int i, j;     /* Loop indexes.               */
 	int nfriends; /* Number of friendly numbers. */
+
+	((void)__tasks);
+	((void)__ntasks);
 
 	nfriends = 0;
 	range = end - start + 1;
@@ -120,6 +134,9 @@ int friendly_numbers(int start, int end)
 	int i, j;     /* Loop indexes.               */
 	int nfriends; /* Number of friendly numbers. */
 
+	((void)__tasks);
+	((void)__ntasks);
+
 	nfriends = 0;
 	range = end - start + 1;
 	
@@ -161,17 +178,6 @@ int friendly_numbers(int start, int end)
 }
 
 #elif defined(_RUNTIME_SCHEDULE_)
-
-/*
- * For now, libgomp hopes that we will
- * fill these structures. A better
- * way to achieve the same think would
- * be to do something like:
- * 
- *   #pragma omp paralell for tasks(myarray, ntasks)
- */
-unsigned *__tasks;
-unsigned __ntasks;
 
 /*
  * Computes friendly numbers.

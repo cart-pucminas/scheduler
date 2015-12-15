@@ -16,6 +16,17 @@ extern int verbose;
 extern int nthreads;
 
 /*
+ * For now, libgomp hopes that we will
+ * fill these structures. A better
+ * way to achieve the same think would
+ * be to do something like:
+ * 
+ *   #pragma omp paralell for tasks(myarray, ntasks)
+ */
+unsigned *__tasks;
+unsigned __ntasks = NBUCKETS;
+
+/*
  * Merge sort algorithm.
  */
 extern void mergesort(struct list *l);
@@ -38,6 +49,9 @@ void bucketsort(int *array, int n)
 	int range;                   /* Bucket range.            */
 	struct list **buckets;       /* Buckets.                 */
 	unsigned ptrs[NBUCKETS + 1]; /* Cumulative bucket sizes. */
+
+	((void)__tasks);
+	((void)__ntasks);
 	
 	/* Create buckets. */
 	buckets = smalloc(NBUCKETS*sizeof(struct list *));
@@ -148,6 +162,9 @@ void bucketsort(int *array, int n)
 	int range;                   /* Bucket range.            */
 	struct list **buckets;       /* Buckets.                 */
 	unsigned ptrs[NBUCKETS + 1]; /* Cumulative bucket sizes. */
+
+	((void)__tasks);
+	((void)__ntasks);
 	
 	/* Create buckets. */
 	buckets = smalloc(NBUCKETS*sizeof(struct list *));
@@ -244,18 +261,8 @@ void bucketsort(int *array, int n)
 
 static omp_lock_t locks[NBUCKETS];
 
-/*
- * For now, libgomp hopes that we will
- * fill these structures. A better
- * way to achieve the same think would
- * be to do something like:
- * 
- *   #pragma omp paralell for tasks(myarray, ntasks)
- */
 unsigned tasks1[NBUCKETS];
 unsigned tasks2[NBUCKETS];
-unsigned *__tasks;
-unsigned __ntasks = NBUCKETS;
 
 /*
  * Bucket sort algorithm.
