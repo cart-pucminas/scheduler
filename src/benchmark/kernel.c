@@ -57,19 +57,35 @@ void benchmark(
 	unsigned load,
 	unsigned scheduler)
 {
-	uint64_t end;
-	uint64_t start;
-	
-	start = get_time();
-	
+	double time[nthreads];
+	unsigned additions[nthreads];
+	double total_time = 0;
+	unsigned total_additions = 0;
+
+	memset(additions, 0, nthreads*sizeof(unsigned));
+
 	for (unsigned k = 0; k < niterations; k++)
 	{	
 		/* Dynamic scheduler. */
 		if (scheduler == SCHEDULER_DYNAMIC)
 		{
-			#pragma omp parallel for schedule(dynamic) num_threads(nthreads)
-			for (unsigned i = 0; i < ntasks; i++)
-				kernel(tasks[i], load);
+			#pragma omp parallel num_threads(nthreads)
+			{
+				uint64_t end;
+				uint64_t start;
+
+				start = get_time();
+
+				#pragma omp for schedule(dynamic) nowait
+				for (unsigned i = 0; i < ntasks; i++)
+				{
+					additions[omp_get_thread_num()] += tasks[i]*load;
+					kernel(tasks[i], load);
+				}
+	
+				end = get_time();
+				time[omp_get_thread_num()] = (end - start)/1000.0;
+			}
 		}
 		
 		/* Smart round-robin scheduler. */
@@ -79,23 +95,55 @@ void benchmark(
 			__tasks = smalloc(ntasks*sizeof(unsigned));
 			memcpy(__tasks, tasks, ntasks*sizeof(unsigned));
 			
-			#pragma omp parallel for schedule(runtime) num_threads(nthreads)
-			for (unsigned i = 0; i < ntasks; i++)
-				kernel(tasks[i], load);
-			
+			#pragma omp parallel num_threads(nthreads)
+			{
+				uint64_t end;
+				uint64_t start;
+
+				start = get_time();
+
+				#pragma omp for schedule(runtime) nowait
+				for (unsigned i = 0; i < ntasks; i++)
+				{
+					additions[omp_get_thread_num()] += tasks[i]*load;
+					kernel(tasks[i], load);
+				}
+	
+				end = get_time();
+				time[omp_get_thread_num()] = (end - start)/1000.0;
+			}
 			free(__tasks);
 		}
 		
 		/* Static scheduler. */
 		else
 		{
-			#pragma omp parallel for schedule(static) num_threads(nthreads)
-			for (unsigned i = 0; i < ntasks; i++)
-				kernel(tasks[i], load);
+			#pragma omp parallel num_threads(nthreads)
+			{
+				uint64_t end;
+				uint64_t start;
+
+				start = get_time();
+
+				#pragma omp for schedule(static) nowait
+				for (unsigned i = 0; i < ntasks; i++)
+				{
+					additions[omp_get_thread_num()] += tasks[i]*load;
+					kernel(tasks[i], load);
+				}
+	
+				end = get_time();
+				time[omp_get_thread_num()] = (end - start)/1000.0;
+			}
 		}
 	}
-	
-	end = get_time();
-	
-	printf("%.2lf\n", (end - start)/1000.0);
+
+	/* Print statistics. */
+	for (unsigned i = 0; i < nthreads; i++)
+	{
+		total_time += time[i];
+		total_additions += additions[i];
+		printf("thread %d: %.2lf %u\n", i, time[i], additions[i]);
+	}
+	printf("total: %.2lf %u\n", total_time, total_additions);
 }
