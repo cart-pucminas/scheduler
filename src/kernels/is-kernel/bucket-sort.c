@@ -254,8 +254,8 @@ static omp_lock_t locks[NBUCKETS];
  */
 unsigned tasks1[NBUCKETS];
 unsigned tasks2[NBUCKETS];
-unsigned *_tasks;
-unsigned _ntasks = NBUCKETS;
+unsigned *__tasks;
+unsigned __ntasks = NBUCKETS;
 
 /*
  * Bucket sort algorithm.
@@ -340,7 +340,7 @@ void bucketsort(int *array, int n)
 				}
 			}
 
-			_tasks = tasks1;
+			__tasks = tasks1;
 		}
 		#pragma omp barrier
 		
@@ -353,7 +353,7 @@ void bucketsort(int *array, int n)
 		}
 		
 		#pragma omp master
-		_tasks = tasks2;
+		__tasks = tasks2;
 		#pragma omp barrier
 		
 		/* Rebuild array. */

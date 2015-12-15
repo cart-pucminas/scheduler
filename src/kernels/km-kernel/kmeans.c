@@ -237,9 +237,9 @@ static void compute_centroids(void)
  * 
  *   #pragma omp paralell for tasks(myarray, ntasks)
  */
-unsigned *_tasks;
-unsigned _ntasks;
-unsigned *_tasks2;
+unsigned *__tasks;
+unsigned __ntasks;
+unsigned *__tasks2;
 
 /*
  * Populates clusters.
@@ -279,8 +279,8 @@ static void populate(void)
 					#pragma omp critical
 					{
 						
-						_tasks[map[i]]--;
-						_tasks[j]++;
+						__tasks[map[i]]--;
+						__tasks[j]++;
 						dirty[j] = 1;
 					}
 					
@@ -304,7 +304,7 @@ static void compute_centroids(void)
 	int tid;             /* Thread ID.           */
 	int i, j;            /* Loop indexes.        */
 	int pop;             /* Centroid population. */
-	unsigned *tmp_tasks; /* Used for swap.       */
+	unsigned *tmp__tasks; /* Used for swap.       */
 	
 	memset(has_changed, 0, nthreads*sizeof(int));
 	
@@ -312,10 +312,10 @@ static void compute_centroids(void)
 	for (i = 0; i < ncentroids; i++)
 	{
 		if (!dirty[i])
-			_tasks[i] = 0;
+			__tasks[i] = 0;
 		
 		if (verbose){
-			fprintf(stderr, "%u\n", _tasks[i]);
+			fprintf(stderr, "%u\n", __tasks[i]);
 		}
 	}
 	
@@ -354,14 +354,14 @@ static void compute_centroids(void)
 			if (!vector_equal(tmp[tid], centroids[i]))
 				has_changed[tid] = 1;
 			
-			_tasks2[i] = pop;
+			__tasks2[i] = pop;
 		}
 	}
 	
 	/* Black magic =) */
-	tmp_tasks = _tasks;
-	_tasks = _tasks2;
-	_tasks2 = tmp_tasks;
+	tmp__tasks = __tasks;
+	__tasks = __tasks2;
+	__tasks2 = tmp__tasks;
 }
 
 #endif
@@ -387,10 +387,10 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 	dirty = smalloc(ncentroids*sizeof(int));
 	centroids = smalloc(ncentroids*sizeof(vector_t));
 #ifdef _RUNTIME_SCHEDULE_
-	_ntasks = ncentroids;
-	_tasks = scalloc(ncentroids, sizeof(unsigned));
-	_tasks2 = smalloc(ncentroids*sizeof(unsigned));
-	_tasks[0] = npoints;
+	__ntasks = ncentroids;
+	__tasks = scalloc(ncentroids, sizeof(unsigned));
+	__tasks2 = smalloc(ncentroids*sizeof(unsigned));
+	__tasks[0] = npoints;
 #endif
 	for (i = 0; i < ncentroids; i++)
 	{
@@ -399,8 +399,8 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 		vector_assign(centroids[i], data[j]);
 		map[j] = i;
 #ifdef _RUNTIME_SCHEDULE_
-		_tasks[i]++;
-		_tasks[0]--;
+		__tasks[i]++;
+		__tasks[0]--;
 #endif
 	}
 	tmp = smalloc(nthreads*sizeof(vector_t));
@@ -437,8 +437,8 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 	free(has_changed);
 	free(dirty);
 #ifdef _RUNTIME_SCHEDULE_
-	free(_tasks);
-	free(_tasks2);
+	free(__tasks);
+	free(__tasks2);
 #endif
 
 	return (map);

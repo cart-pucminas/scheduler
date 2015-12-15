@@ -162,7 +162,6 @@ int friendly_numbers(int start, int end)
 
 #elif defined(_RUNTIME_SCHEDULE_)
 
-
 /*
  * For now, libgomp hopes that we will
  * fill these structures. A better
@@ -171,8 +170,8 @@ int friendly_numbers(int start, int end)
  * 
  *   #pragma omp paralell for tasks(myarray, ntasks)
  */
-unsigned *_tasks;
-unsigned _ntasks;
+unsigned *__tasks;
+unsigned __ntasks;
 
 /*
  * Computes friendly numbers.
@@ -191,15 +190,15 @@ int friendly_numbers(int start, int end)
 	
 	num = smalloc(sizeof(int)*range);
 	den = smalloc(sizeof(int)*range);
-	_tasks = smalloc(sizeof(unsigned)*range);
-	_ntasks = range;
+	__tasks = smalloc(sizeof(unsigned)*range);
+	__ntasks = range;
 	
 	/* Initialize tasks. */
 	for (i = start; i < end; i++) {
-		_tasks[i - start] = i;
+		__tasks[i - start] = i;
 		
 		if (verbose){
-			fprintf(stderr, "%u\n", _tasks[i - start]);
+			fprintf(stderr, "%u\n", __tasks[i - start]);
 		}
 	}
 	
@@ -233,7 +232,7 @@ int friendly_numbers(int start, int end)
 
 	free(num);
 	free(den);
-	free(_tasks);
+	free(__tasks);
 	
 	return (nfriends);
 }
