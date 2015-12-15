@@ -44,7 +44,7 @@ export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: benchmark simulator searcher generator
+all: benchmark simulator searcher generator kernels
 
 # Builds libraries.
 libs:
@@ -76,6 +76,11 @@ searcher: libs
 generator: libs
 	mkdir -p $(BINDIR)
 	cd $(SRCDIR) && $(MAKE) generator
+
+# Builds kernels.
+kernels: libs
+	mkdir -p $(BINDIR)
+	cd $(SRCDIR) && $(MAKE) kernels
 	
 # Cleans compilation files.
 clean:
