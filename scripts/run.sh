@@ -36,7 +36,7 @@ RUN_BENCHMARK=true
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Benchmark parameters.
-LOAD=100000
+LOAD=200000
 
 # Directories.
 BINDIR=bin
@@ -92,12 +92,13 @@ function run_searcher {
 # $3 Probability distribution.
 # $4 Scheduling strategy
 # $5 Chunk size
+# $6 Iteration
 #
 function run_benchmark
 {
 	# Build thread map.
 	for (( i=0; i<$1; i++ )); do
-		map[$i]=$((2*$i))
+		map[$i]=$i
 	done
 	
 	export OMP_NUM_THREADS=$1
@@ -106,7 +107,8 @@ function run_benchmark
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
-	                  $4 --chunksize $5 --load $LOAD
+	                  $4 --chunksize $5 --load $LOAD >> \
+					  $OUTDIR/$3-$2-$1-$4-$5-$6.out 2> /dev/null
 }
 
 # Cleanup output directory.
@@ -114,32 +116,34 @@ mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
 # Run the benchmark, simulator and searcher.
-for distribution in beta poisson gamma normal random; do
-	for nthreads in 12; do
-		# Simulate.
-		for ntasks in 128; do	
-			echo $nthreads $ntasks $distribution
-			run_generator $ntasks $distribution
-			for chunksize in 1; do
+for i in {1..10}; do
+	echo iteration $i
+	for distribution in beta normal; do
+		for nthreads in 12; do
+			# Simulate.
+			for ntasks in 512; do	
+				run_generator $ntasks $distribution
+				for chunksize in 1; do
+					if [ $RUN_SIMULATOR == "true" ]; then
+						run_simulator $nthreads $ntasks $distribution "static" $chunksize
+						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
+					fi
+					if [ $RUN_BENCHMARK == "true" ] ; then
+						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $i
+						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $i
+					fi
+				done
 				if [ $RUN_SIMULATOR == "true" ]; then
-					run_simulator $nthreads $ntasks $distribution "static" $chunksize
-					run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
+					run_simulator $nthreads $ntasks $distribution "workload-aware" 1
+					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
 				fi
 				if [ $RUN_BENCHMARK == "true" ] ; then
-					run_benchmark $nthreads $ntasks $distribution "static" $chunksize
-					run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize
+					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $i
+				fi
+				if [ $RUN_SEARCHER == "true" ]; then
+					run_searcher $nthreads $ntasks $distribution
 				fi
 			done
-			if [ $RUN_SIMULATOR == "true" ]; then
-				run_simulator $nthreads $ntasks $distribution "workload-aware" 1
-				run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
-			fi
-			if [ $RUN_BENCHMARK == "true" ] ; then
-				run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1
-			fi
-			if [ $RUN_SEARCHER == "true" ]; then
-				run_searcher $nthreads $ntasks $distribution
-			fi
 		done
 	done
 done
