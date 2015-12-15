@@ -20,12 +20,12 @@
 #
 # Number of threads.
 #
-NTHREADS=2
+NTHREADS=12
 
 #
 # Simultaneos Multithreading?
 #
-SMT=true
+SMT=false
 
 #
 # Kernel class.
@@ -35,7 +35,7 @@ CLASS=standard
 #
 # Number of iterations.
 #
-NITERATIONS=1
+NITERATIONS=10
 
 #
 # Run searcher?
@@ -122,9 +122,15 @@ function run_searcher {
 function run_benchmark
 {
 	# Build thread map.
-	for (( i=0; i<$1; i++ )); do
-		map[$i]=$i
-	done
+	if [ $SMT == "true" ]; then
+		for (( i=0; i<$1; i++ )); do
+			map[$i]=$((2*$i))
+		done
+	else
+		for (( i=0; i<$1; i++ )); do
+			map[$i]=$i
+		done
+	fi
 	
 	export OMP_NUM_THREADS=$1
 	export GOMP_CPU_AFFINITY="${map[@]}"
@@ -134,6 +140,8 @@ function run_benchmark
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
 	                  $4 --chunksize $5 --load $LOAD >> \
 					  $OUTDIR/$3-$2-$1-$4-$5-$6.out 2> /dev/null
+}
+
 #
 # Runs the kernel.
 #
@@ -143,17 +151,16 @@ function run_benchmark
 #
 function run_kernel
 {
+	# Build thread map.
 	if [ $SMT == "true" ]; then
-		# Build thread map.
 		for (( i=0; i<$1; i++ )); do
 			map[$i]=$((2*$i))
 		done
 	else
-		# Build thread map.
 		for (( i=0; i<$1; i++ )); do
 			map[$i]=$i
 		done
-	fi;
+	fi
 
 	export GOMP_CPU_AFFINITY="${map[@]}"
 
@@ -205,3 +212,4 @@ for (( i=0; i<$NITERATIONS; i++ )); do
 		done
 	fi
 done
+
