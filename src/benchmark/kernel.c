@@ -74,7 +74,7 @@ void benchmark(
 				uint64_t end;
 				uint64_t start;
 
-				start = get_time();
+				start = timer_get();
 
 				#pragma omp for schedule(dynamic) nowait
 				for (unsigned i = 0; i < ntasks; i++)
@@ -83,7 +83,7 @@ void benchmark(
 					kernel(tasks[i], load);
 				}
 	
-				end = get_time();
+				end = timer_get();
 				time[omp_get_thread_num()] = (end - start)/1000.0;
 			}
 		}
@@ -100,7 +100,7 @@ void benchmark(
 				uint64_t end;
 				uint64_t start;
 
-				start = get_time();
+				start = timer_get();
 
 				#pragma omp for schedule(runtime) nowait
 				for (unsigned i = 0; i < ntasks; i++)
@@ -109,7 +109,7 @@ void benchmark(
 					kernel(tasks[i], load);
 				}
 	
-				end = get_time();
+				end = timer_get();
 				time[omp_get_thread_num()] = (end - start)/1000.0;
 			}
 			free(__tasks);
@@ -123,7 +123,7 @@ void benchmark(
 				uint64_t end;
 				uint64_t start;
 
-				start = get_time();
+				start = timer_get();
 
 				#pragma omp for schedule(static) nowait
 				for (unsigned i = 0; i < ntasks; i++)
@@ -132,7 +132,7 @@ void benchmark(
 					kernel(tasks[i], load);
 				}
 	
-				end = get_time();
+				end = timer_get();
 				time[omp_get_thread_num()] = (end - start)/1000.0;
 			}
 		}
