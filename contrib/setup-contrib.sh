@@ -19,8 +19,8 @@
 
 tar -xjvf gsl-1.16.tar.bz2
 cd gsl-1.16
-./configure
-make
+./configure --prefix=$PWD/../
+make -j 4
 make install
 cd ..
 rm -rf gsl-1.16
