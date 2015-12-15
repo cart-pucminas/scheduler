@@ -18,6 +18,26 @@
 #
 
 #
+# Number of threads.
+#
+NTHREADS=2
+
+#
+# Simultaneos Multithreading?
+#
+SMT=true
+
+#
+# Kernel class.
+#
+CLASS=standard
+
+#
+# Number of iterations.
+#
+NITERATIONS=1
+
+#
 # Run searcher?
 #
 RUN_SEARCHER=false
@@ -30,7 +50,12 @@ RUN_SIMULATOR=false
 #
 # Run benchmark?
 #
-RUN_BENCHMARK=true
+RUN_BENCHMARK=false
+
+#
+# Run kernels?
+#
+RUN_KERNELS=true
 
 # Hacked Libgomp.
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
@@ -109,6 +134,32 @@ function run_benchmark
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
 	                  $4 --chunksize $5 --load $LOAD >> \
 					  $OUTDIR/$3-$2-$1-$4-$5-$6.out 2> /dev/null
+#
+# Runs the kernel.
+#
+# $1 Kernel.
+# $2 Number of threads.
+# $3 Scheduling strategy.
+#
+function run_kernel
+{
+	if [ $SMT == "true" ]; then
+		# Build thread map.
+		for (( i=0; i<$1; i++ )); do
+			map[$i]=$((2*$i))
+		done
+	else
+		# Build thread map.
+		for (( i=0; i<$1; i++ )); do
+			map[$i]=$i
+		done
+	fi;
+
+	export GOMP_CPU_AFFINITY="${map[@]}"
+
+	LD_LIBRARY_PATH=$LIBGOMP \
+	OMP_SCHEDULE=pedro \
+	$BINDIR/$1.$3 --class $CLASS --nthreads $2 >> $OUTDIR/$1-$3-$CLASS-$2.out
 }
 
 # Cleanup output directory.
@@ -116,7 +167,7 @@ mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
 # Run the benchmark, simulator and searcher.
-for i in {1..10}; do
+for (( i=0; i<$NITERATIONS; i++ )); do
 	echo iteration $i
 	for distribution in beta normal; do
 		for nthreads in 12; do
@@ -146,4 +197,11 @@ for i in {1..10}; do
 			done
 		done
 	done
+	if [ $RUN_KERNELS == "true" ]; then
+		for kernel in fn is km; do
+			for scheduler in static dynamic srr; do
+				run_kernel $kernel $NTHREADS $scheduler
+			done
+		done
+	fi
 done

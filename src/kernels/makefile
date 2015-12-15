@@ -17,37 +17,29 @@
 # MA 02110-1301, USA.
 #
 
-# Conflicts.
-.PHONY: benchmark
-.PHONY: simulator
-.PHONY: searcher
-.PHONY: generator
-.PHONY: kernels
+all: static dynamic smart-round-robin
 
-# Builds benchmark.
-benchmark: benchmark/*.c common/*.c
-	$(CC) $(CFLAGS) -rdynamic -fopenmp -O0 $^ -o $(BINDIR)/benchmark $(LIBS)
+# Builds static kernels.
+static:
+	cd fn-kernel && $(MAKE) static
+	cd is-kernel && $(MAKE) static
+	cd km-kernel && $(MAKE) static
 
-# Builds simulator.
-simulator: simulator/*.c common/*.c
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/scheduler $(LIBS)
-	
-# Builds searcher.
-searcher: searcher/*.c common/*.c
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/searcher $(LIBS)
-	
-# Builds generator.
-generator: generator/*.c common/*.c
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/generator $(LIBS)
+# Builds dynamic kernels.
+dynamic:
+	cd fn-kernel && $(MAKE) dynamic
+	cd is-kernel && $(MAKE) dynamic
+	cd km-kernel && $(MAKE) dynamic
 
-# Builds kernels.
-kernels:
-	cd kernels && $(MAKE) all
+# Builds runtime kernels.
+smart-round-robin:
+	cd fn-kernel && $(MAKE) smart-round-robin
+	cd is-kernel && $(MAKE) smart-round-robin
+	cd km-kernel && $(MAKE) smart-round-robin
 
 # Cleans compilation files.
 clean:
-	@rm -f $(BINDIR)/benchmark
-	@rm -f $(BINDIR)/scheduler
-	@rm -f $(BINDIR)/searcher
-	@rm -f $(BINDIR)/generator
-	cd kernels && $(MAKE) clean
+	cd fn-kernel && $(MAKE) clean
+	cd is-kernel && $(MAKE) clean
+	cd km-kernel && $(MAKE) clean
+
