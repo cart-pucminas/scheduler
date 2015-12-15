@@ -25,7 +25,7 @@ NTHREADS=12
 #
 # Simultaneos Multithreading?
 #
-SMT=false
+SMT=true
 
 #
 # Kernel class.
@@ -35,7 +35,7 @@ CLASS=standard
 #
 # Number of iterations.
 #
-NITERATIONS=10
+NITERATIONS=1
 
 #
 # Run searcher?
@@ -153,20 +153,23 @@ function run_kernel
 {
 	# Build thread map.
 	if [ $SMT == "true" ]; then
-		for (( i=0; i<$1; i++ )); do
+		for (( i=0; i<$2; i++ )); do
 			map[$i]=$((2*$i))
 		done
 	else
-		for (( i=0; i<$1; i++ )); do
+		for (( i=0; i<$2; i++ )); do
 			map[$i]=$i
 		done
 	fi
 
+	export OMP_NUM_THREADS=$2
 	export GOMP_CPU_AFFINITY="${map[@]}"
 
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
-	$BINDIR/$1.$3 --class $CLASS --nthreads $2 >> $OUTDIR/$1-$3-$CLASS-$2.out
+	$BINDIR/$1.$3 --class $CLASS --nthreads $2 \
+#	>> $OUTDIR/$1-$3-$CLASS-$2.out \
+#	2> $OUTDIR/$CLASS-$1.tasks
 }
 
 # Cleanup output directory.
