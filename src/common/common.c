@@ -37,15 +37,15 @@
  */
 /**@{*/
 #define FLAT_MIN 0.0
-#define FLAT_MAX 8.0
+#define FLAT_MAX 512.0
 /**@}*/
 
 /**
  * @name Gaussian Distribution Parameters
  */
 /**@{*/
-#define GUASSIAN_STDDEV 2.0
-#define GUASSIAN_MEAN   4.0
+#define GUASSIAN_STDDEV 1.0
+#define GUASSIAN_MEAN   32.0
 /**@}*/
 
 /**
@@ -67,9 +67,9 @@
  * @name Beta Distribution Parameters
  */
 /**@{*/
-#define BETA_A  0.5
-#define BETA_B  0.5
-#define BETA_M 10.0
+#define BETA_A   0.5
+#define BETA_B   0.5
+#define BETA_M 512.0
 /**@}*/
 
 /**
