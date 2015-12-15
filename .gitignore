@@ -11,3 +11,7 @@ results/*
 !/libsrc/libgomp/libgomp/build/gstdint.h
 !/libsrc/libgomp/libgomp/build/libgomp.ver
 !/libsrc/libgomp/libgomp/build/libgfortran.spec
+contrib/bin
+contrib/lib
+contrib/include
+contrib/share
