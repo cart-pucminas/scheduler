@@ -47,6 +47,53 @@
 	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
 	/**@}*/
 	
+	#define _SORT_
+
+	/**
+	 * @brief Multiplying factor.
+	 */
+	#define FACTOR 1000.0
+
+	/**
+	 * @name Flat Distribution Parameters
+	 */
+	/**@{*/
+	#define FLAT_MIN 0.0
+	#define FLAT_MAX 512.0
+	/**@}*/
+
+	/**
+	 * @name Gaussian Distribution Parameters
+	 */
+	/**@{*/
+	#define GUASSIAN_STDDEV 1.0
+	#define GUASSIAN_MEAN   32.0
+	/**@}*/
+
+	/**
+	 * @name Poisson Distribution Parameters
+	 */
+	/**@{*/
+	#define POISSON_MU 4.0
+	/**@}*/
+
+	/**
+	 * @name Gamma Distribution Parameters
+	 */
+	/**@{*/
+	#define GAMMA_A 1.0
+	#define GAMMA_B 2.0
+	/**@}*/
+
+	/**
+	 * @name Beta Distribution Parameters
+	 */
+	/**@{*/
+	#define BETA_A   0.5
+	#define BETA_B   0.5
+	#define BETA_M 512.0
+	/**@}*/
+
 	/* Forward definitions. */
 	extern unsigned *create_tasks(unsigned, unsigned);
 	
