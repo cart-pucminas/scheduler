@@ -30,12 +30,7 @@ SMT=true
 #
 # Kernel class.
 #
-CLASS=standard
-
-#
-# Number of iterations.
-#
-NITERATIONS=1
+CLASS=small
 
 #
 # Run searcher?
@@ -50,18 +45,18 @@ RUN_SIMULATOR=false
 #
 # Run benchmark?
 #
-RUN_BENCHMARK=false
+RUN_BENCHMARK=true
 
 #
 # Run kernels?
 #
-RUN_KERNELS=true
+RUN_KERNELS=false
 
 # Hacked Libgomp.
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Benchmark parameters.
-LOAD=200000
+LOAD=200000000
 
 # Directories.
 BINDIR=bin
@@ -110,16 +105,11 @@ function run_searcher {
 }
 
 #
-# Runs the benchmark.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-# $4 Scheduling strategy
-# $5 Chunk size
-# $6 Iteration
+# Maps threads on the cores.
 #
-function run_benchmark
+# $1 Number of threads.
+#
+function map_threads
 {
 	# Build thread map.
 	if [ $SMT == "true" ]; then
@@ -134,12 +124,30 @@ function run_benchmark
 	
 	export OMP_NUM_THREADS=$1
 	export GOMP_CPU_AFFINITY="${map[@]}"
+}
 
+#
+# Runs the benchmark.
+# 
+# $1 Number of threads
+# $2 Number of tasks.
+# $3 Probability distribution.
+# $4 Scheduling strategy
+# $5 Chunk size
+# $6 Iteration
+# $7 Seed.
+#
+function run_benchmark
+{
+	map_threads $1
+
+	GSL_RNG_SEED=$7          \
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
-	                  $4 --chunksize $5 --load $LOAD >> \
-					  $OUTDIR/$3-$2-$1-$4-$5-$6.out 2> /dev/null
+	                  $4 --chunksize $5 --load $LOAD | tail -n 1
+#					  >> $OUTDIR/$3-$2-$1-$4-$5-$6.out \
+#					  2> /dev/null
 }
 
 #
@@ -151,19 +159,7 @@ function run_benchmark
 #
 function run_kernel
 {
-	# Build thread map.
-	if [ $SMT == "true" ]; then
-		for (( i=0; i<$2; i++ )); do
-			map[$i]=$((2*$i))
-		done
-	else
-		for (( i=0; i<$2; i++ )); do
-			map[$i]=$i
-		done
-	fi
-
-	export OMP_NUM_THREADS=$2
-	export GOMP_CPU_AFFINITY="${map[@]}"
+	map_threads $2
 
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
@@ -176,13 +172,16 @@ function run_kernel
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
+# 7 113 [47] 91 [3]
+
 # Run the benchmark, simulator and searcher.
-for (( i=0; i<$NITERATIONS; i++ )); do
-	echo iteration $i
-	for distribution in beta normal; do
-		for nthreads in 12; do
-			# Simulate.
-			for ntasks in 512; do	
+for ntasks in 96; do	
+#	for i in {1..5}; do
+	for seed in {1..100}; do
+		echo seed $seed
+		for distribution in random; do
+			for nthreads in 12; do
+				# Simulate.
 				run_generator $ntasks $distribution
 				for chunksize in 1; do
 					if [ $RUN_SIMULATOR == "true" ]; then
@@ -190,8 +189,8 @@ for (( i=0; i<$NITERATIONS; i++ )); do
 						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
 					fi
 					if [ $RUN_BENCHMARK == "true" ] ; then
-						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $i
-						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $i
+#						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $i $seed
+						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $i $seed
 					fi
 				done
 				if [ $RUN_SIMULATOR == "true" ]; then
@@ -199,16 +198,17 @@ for (( i=0; i<$NITERATIONS; i++ )); do
 					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
 				fi
 				if [ $RUN_BENCHMARK == "true" ] ; then
-					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $i
+					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $i $seed
 				fi
 				if [ $RUN_SEARCHER == "true" ]; then
 					run_searcher $nthreads $ntasks $distribution
 				fi
 			done
 		done
+#		done
 	done
 	if [ $RUN_KERNELS == "true" ]; then
-		for kernel in fn is km; do
+		for kernel in is; do
 			for scheduler in static dynamic srr; do
 				run_kernel $kernel $NTHREADS $scheduler
 			done

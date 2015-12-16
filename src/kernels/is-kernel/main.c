@@ -11,18 +11,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include <mylib/util.h>
 
-/**
- * @brief Input data paramters.
- */
-/**@{*/
-#define FACTOR          134217728 /**< Multiplying factor. */
-#define GAUSSIAN_STDDEV 0.85      /**< Standard deviation. */
-#define GAUSSIAN_MEAN   2.0       /**< Mean.               */
-#define MIN             0.0       /**< Minimum value.      */
-#define MAX             4.0       /**< Maximum value.      */
-/**@*/
+#include <common.h>
 
 /*
  * Bucket sort algorithm.
@@ -145,10 +139,16 @@ static void readargs(int argc, char **argv)
  */
 int main(int argc, char **argv)
 {
-	double tmp;     /* Temporary number.   */
 	int *a;         /* Array to be sorted. */
 	uint64_t end;   /* End time.           */
 	uint64_t start; /* Start time.         */
+	gsl_rng * r;
+	const gsl_rng_type * T;
+	
+	/* Setup random number generator. */
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
 	
 	readargs(argc, argv);
 	
@@ -159,12 +159,8 @@ int main(int argc, char **argv)
 	a = smalloc(p->n*sizeof(int));
 	for (int i = 0; i < p->n; i++)
 	{
-		do
-		{
-			tmp = normalnum(GAUSSIAN_MEAN, GAUSSIAN_STDDEV);
-		} while ((tmp < MIN) || (tmp > MAX));
+		a[i] = (int)ceil(gsl_ran_beta(r, BETA_A, BETA_B)*BETA_M*FACTOR);
 		
-		a[i] = (int)ceil(tmp*FACTOR);
 		fprintf(stderr, "%d\n", a[i]);
 	}
 	
@@ -176,6 +172,7 @@ int main(int argc, char **argv)
 	
 	/* House keeping. */
 	free(a);
+	gsl_rng_free(r);
 	
 	return (0);
 }

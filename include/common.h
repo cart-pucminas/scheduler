@@ -46,28 +46,26 @@
 	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
 	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
 	/**@}*/
-	
-	#define _SORT_
 
 	/**
 	 * @brief Multiplying factor.
 	 */
-	#define FACTOR 1000.0
+	#define FACTOR 10.0
 
 	/**
 	 * @name Flat Distribution Parameters
 	 */
 	/**@{*/
 	#define FLAT_MIN 0.0
-	#define FLAT_MAX 512.0
+	#define FLAT_MAX 10.0
 	/**@}*/
 
 	/**
 	 * @name Gaussian Distribution Parameters
 	 */
 	/**@{*/
-	#define GUASSIAN_STDDEV 1.0
-	#define GUASSIAN_MEAN   32.0
+	#define GUASSIAN_STDDEV 2.5
+	#define GUASSIAN_MEAN   5.0
 	/**@}*/
 
 	/**
@@ -89,13 +87,13 @@
 	 * @name Beta Distribution Parameters
 	 */
 	/**@{*/
-	#define BETA_A   0.5
-	#define BETA_B   0.5
-	#define BETA_M 512.0
+	#define BETA_A 0.5
+	#define BETA_B 0.5
+	#define BETA_M 1.0
 	/**@}*/
 
 	/* Forward definitions. */
-	extern unsigned *create_tasks(unsigned, unsigned);
+	extern unsigned *create_tasks(unsigned, unsigned, unsigned);
 	
 	/* Forward definitions. */
 	extern const char *distributions[NDISTRIBUTIONS];
