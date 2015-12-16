@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	
 	omp_set_num_threads(nthreads);
 
-	for (int i = start; i <= end; i++)
+	for (int i = p->start; i <= p->end; i++)
 		fprintf(stderr, "%d\n", i);
 	
 	/* Compute friendly numbers. */
