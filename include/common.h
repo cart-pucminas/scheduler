@@ -93,7 +93,7 @@
 	/**@}*/
 
 	/* Forward definitions. */
-	extern unsigned *create_tasks(unsigned, unsigned, unsigned);
+	extern unsigned *create_tasks(unsigned, unsigned);
 	
 	/* Forward definitions. */
 	extern const char *distributions[NDISTRIBUTIONS];
