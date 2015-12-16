@@ -12,6 +12,14 @@
 
 #include "vector.h"
 
+/**
+ * @brief Input data paramters.
+ */
+/**@{*/
+#define GAUSSIAN_STDDEV 1024 /**< Standard deviation. */
+#define GAUSSIAN_MEAN   0    /**< Mean.               */
+/**@*/
+
 /*
  * Creates a vector.
  */
@@ -132,7 +140,7 @@ struct vector *vector_random(struct vector *v)
 
 	/* Fill vector. */
 	for (i = 0; i < vector_size(v); i++)
-		VECTOR(v, i) = normalnum(0, 1024);
+		VECTOR(v, i) = normalnum(GAUSSIAN_MEAN, GAUSSIAN_STDDEV);
 
 	return (v);
 }

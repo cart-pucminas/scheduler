@@ -13,6 +13,17 @@
 
 #include <mylib/util.h>
 
+/**
+ * @brief Input data paramters.
+ */
+/**@{*/
+#define FACTOR          134217728 /**< Multiplying factor. */
+#define GAUSSIAN_STDDEV 0.85      /**< Standard deviation. */
+#define GAUSSIAN_MEAN   2.0       /**< Mean.               */
+#define MIN             0.0       /**< Minimum value.      */
+#define MAX             4.0       /**< Maximum value.      */
+/**@*/
+
 /*
  * Bucket sort algorithm.
  */
@@ -134,7 +145,6 @@ static void readargs(int argc, char **argv)
  */
 int main(int argc, char **argv)
 {
-	int i;          /* Loop index.         */
 	double tmp;     /* Temporary number.   */
 	int *a;         /* Array to be sorted. */
 	uint64_t end;   /* End time.           */
@@ -146,31 +156,22 @@ int main(int argc, char **argv)
 	omp_set_num_threads(nthreads);
 	
 	/* Benchmark initialization. */
-	if (verbose)
-		printf("initializing...\n");
-	start = timer_get();
 	a = smalloc(p->n*sizeof(int));
-	for (i = 0; i < p->n; i++)
+	for (int i = 0; i < p->n; i++)
 	{
 		do
 		{
-			tmp = normalnum(2, 0.85);
-		} while ((tmp < 0.0) || (tmp > 4.0));
+			tmp = normalnum(GAUSSIAN_MEAN, GAUSSIAN_STDDEV);
+		} while ((tmp < MIN) || (tmp > MAX));
 		
-		a[i] = (int)ceil(tmp*134217728);
+		a[i] = (int)ceil(tmp*FACTOR);
+		fprintf(stderr, "%d\n", a[i]);
 	}
-	end = timer_get();
-	if (verbose)
-		printf("  time spent: %f\n", (end - start)/1000.0);
 	
 	/* Cluster data. */
-	if (verbose)
-		printf("sorting...\n");
 	start = timer_get();
 	bucketsort(a, p->n);
 	end = timer_get();
-	if (verbose)
-		printf("  time spent: ");
 	printf("%f\n", (end - start)/1000.0);
 	
 	/* House keeping. */

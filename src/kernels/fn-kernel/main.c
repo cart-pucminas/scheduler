@@ -140,15 +140,14 @@ int main(int argc, char **argv)
 	readargs(argc, argv);
 	
 	omp_set_num_threads(nthreads);
+
+	for (int i = start; i <= end; i++)
+		fprintf(stderr, "%d\n", i);
 	
 	/* Compute friendly numbers. */
-	if (verbose)
-		printf("computing friendly numbers...\n");
 	start = timer_get();
 	friendly_numbers(p->start, p->end);
 	end = timer_get();
-	if (verbose)
-		printf("  time spent: ");
 	printf("%lf\n", (end - start)/1000.0);
 	
 	return (0);

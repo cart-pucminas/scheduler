@@ -151,27 +151,17 @@ int main(int argc, char **argv)
 	omp_set_num_threads(nthreads);
 	
 	/* Benchmark initialization. */
-	if (verbose)
-		printf("initializing...\n");
-	start = timer_get();
 	data = smalloc(p->npoints*sizeof(vector_t));
 	for (i = 0; i < p->npoints; i++)
 	{
 		data[i] = vector_create(p->dimension);
 		vector_random(data[i]);
 	}
-	end = timer_get();
-	if (verbose)
-		printf("  time spent: %f\n", (end - start)/1000.0);
 	
 	/* Cluster data. */
-	if (verbose)
-		printf("clustering data...\n");
 	start = timer_get();
 	map = kmeans(data, p->npoints, p->ncentroids, p->mindistance);
 	end = timer_get();
-	if (verbose)
-		printf("  time spent: ");
 	printf("%f\n", (end - start)/1000.0);
 	
 	/* House keeping. */
