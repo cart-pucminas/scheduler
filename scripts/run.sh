@@ -56,7 +56,7 @@ RUN_KERNELS=false
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Benchmark parameters.
-LOAD=200000000
+LOAD=100000000
 
 # Directories.
 BINDIR=bin
@@ -71,10 +71,12 @@ POPSIZE=1000
 # 
 # $1 Number of tasks.
 # $2 Probability distribution to use.
+# $3 Seed to use.
 #
 function run_generator {
+	GSL_RNG_SEED=$3                                 \
 	$BINDIR/generator --ntasks $1 --distribution $2 \
-	1> /dev/null 2> $OUTDIR/tasks-$1-$2.out
+		1> /dev/null 2> $OUTDIR/$2-$1-$3.tasks
 }
 
 #
@@ -134,20 +136,19 @@ function map_threads
 # $3 Probability distribution.
 # $4 Scheduling strategy
 # $5 Chunk size
-# $6 Iteration
-# $7 Seed.
+# $6 Seed.
 #
 function run_benchmark
 {
 	map_threads $1
 
-	GSL_RNG_SEED=$7          \
-	LD_LIBRARY_PATH=$LIBGOMP \
-	OMP_SCHEDULE=pedro \
+	GSL_RNG_SEED=$7                                                               \
+	LD_LIBRARY_PATH=$LIBGOMP                                                      \
+	OMP_SCHEDULE=pedro                                                            \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
-	                  $4 --chunksize $5 --load $LOAD | tail -n 1
-#					  >> $OUTDIR/$3-$2-$1-$4-$5-$6.out \
-#					  2> /dev/null
+		$4 --chunksize $5 --load $LOAD                                            \
+		>> $OUTDIR/$3-$2-$6-$4-$5-$1.benchmark                                    \
+		2> /dev/null
 }
 
 #
@@ -164,33 +165,29 @@ function run_kernel
 	LD_LIBRARY_PATH=$LIBGOMP \
 	OMP_SCHEDULE=pedro \
 	$BINDIR/$1.$3 --class $CLASS --nthreads $2 \
-#	>> $OUTDIR/$1-$3-$CLASS-$2.out \
-#	2> $OUTDIR/$CLASS-$1.tasks
+		>> $OUTDIR/$1-$3-$CLASS-$2.out \
+		2> $OUTDIR/$CLASS-$1.tasks
 }
 
 # Cleanup output directory.
 mkdir -p $OUTDIR
 rm -f $OUTDIR/*
 
-# 7 113 [47] 91 [3]
-
 # Run the benchmark, simulator and searcher.
-for ntasks in 96; do	
-#	for i in {1..5}; do
-	for seed in {1..100}; do
-		echo seed $seed
-		for distribution in random; do
+for seed in {1..30}; do
+	for ntasks in 48; do
+		for distribution in random normal beta gamma poisson; do
 			for nthreads in 12; do
-				# Simulate.
-				run_generator $ntasks $distribution
+				echo running $distribution $ntasks $seed
+				run_generator $ntasks $distribution $seed
 				for chunksize in 1; do
 					if [ $RUN_SIMULATOR == "true" ]; then
 						run_simulator $nthreads $ntasks $distribution "static" $chunksize
 						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
 					fi
 					if [ $RUN_BENCHMARK == "true" ] ; then
-#						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $i $seed
-						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $i $seed
+#						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $seed
+						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $seed
 					fi
 				done
 				if [ $RUN_SIMULATOR == "true" ]; then
@@ -198,14 +195,13 @@ for ntasks in 96; do
 					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
 				fi
 				if [ $RUN_BENCHMARK == "true" ] ; then
-					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $i $seed
+					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 				fi
 				if [ $RUN_SEARCHER == "true" ]; then
 					run_searcher $nthreads $ntasks $distribution
 				fi
 			done
 		done
-#		done
 	done
 	if [ $RUN_KERNELS == "true" ]; then
 		for kernel in is; do
