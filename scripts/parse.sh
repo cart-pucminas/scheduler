@@ -20,30 +20,70 @@
 # Results directory.
 RESULTS=results
 
+# Scripts directory.
+SCRIPTS=scripts
+
 # Not used.
 NTHREADS=12
 CHUNKSIZE=1
+
+#
+# Plots task histogram.
+#
+function plot_task_histogram
+{
+	gnuplot -e "inputname='$1'" -e "outputname='$2'" $SCRIPTS/task.gp
+}
+
+mkdir -p $RESULTS/tasks
+mkdir -p $RESULTS/time
+mkdir -p $RESULTS/additions
+mkdir -p $RESULTS/thread
 
 #
 # Extracts information from benchmark trace file.
 #
 #
 for distribution in random normal beta gamma poisson; do
-	for ntasks in 48 96 192; do
+	for ntasks in 48 96; do
 		prefix1=$RESULTS/$distribution-$ntasks
-		for scheduler in static dynamic smart-round-robin; do
-			for seed in {1..30}; do
-				prefix2=$prefix1-$seed-$CHUNKSIZE-$NTHREADS
-				head -n $NTHREADS \
-					> $RESULTS/$prefix-$seed-$scheduler.thread
-				tail -n 1 $prefix2.benchmark \
-					>> $RESULTS/$prefix-$scheduler.tmp
-			done
-			cut -d" " -f 2 $RESULTS/$prefix1-$scheduler.tmp \
-				>> $RESULTS/$prefix1.time
-			cut -d" " -f 3 $RESULTS/$prefix1-$scheduler.tmp \
-				>> $RESULTS/$prefix1.additions
-			rm $RESULTS/*tmp
+		for seed in {1..30}; do
+			tail -n $ntasks $prefix1-$seed.tasks \
+				> $RESULTS/tasks/$distribution-$ntasks-$seed.tasks
+			
+			rm $prefix1-$seed.tasks
+
+			plot_task_histogram                                  \
+				$RESULTS/tasks/$distribution-$ntasks-$seed.tasks \
+				$RESULTS/tasks/$distribution-$ntasks-$seed.eps
 		done
+		for scheduler in dynamic smart-round-robin; do
+			for seed in {1..30}; do
+				prefix2=$prefix1-$seed-$scheduler-$CHUNKSIZE-$NTHREADS
+
+				tail -n 1 $prefix2.benchmark \
+					>> $prefix1-$scheduler.tmp
+
+				head -n $NTHREADS $prefix2.benchmark | cut -d" " -f 3,4 \
+					> $prefix1-$seed-$scheduler.thread 
+				cut -d" " -f 1,3 $prefix1-$scheduler.tmp \
+					>> $prefix1-$seed-$scheduler.thread
+				mv $RESULTS/*.thread $RESULTS/thread
+
+				rm $prefix2.benchmark
+			done
+			cut -d" " -f 2 $prefix1-$scheduler.tmp \
+				>> $prefix1-$scheduler.time
+
+			cut -d" " -f 3 $prefix1-$scheduler.tmp \
+				>> $prefix1-$scheduler.additions
+			rm $RESULTS/*.tmp
+		done
+		paste -d";"                         \
+			$prefix1-dynamic.time           \
+			$prefix1-smart-round-robin.time \
+			>> $RESULTS/time/$distribution-$ntasks.time.csv
+		
+		rm $prefix1-*.time
 	done
 done
