@@ -18,36 +18,32 @@
 #
 
 # Results directory.
-RESULTS_DIR=results
+RESULTS=results
 
 # Not used.
 NTHREADS=12
 CHUNKSIZE=1
 
-for it in {i..10}; do
-	for distribution in beta normal; do
-		$prefix1=$RESULTS/$ditribution
-		for ntasks in 512; do
-			prefix2=$prefix1-$ntasks-$NTHREADS
-			for scheduler in static dynamic smart-round-robin; do
-				file1=$prefix2-$scheduler-$CHUNKSIZE-$it.out
-				file2=$prefix2-$scheduler-$CHUNKSIZE.time
-				file3=$prefix2-$scheduler-$CHUNKSIZE-$it.imbalance.csv
-				tail -n $((1 + $NTHREADS)) $file >> $file2
-				head -n $NTHREADS          $file >  $file3
+#
+# Extracts information from benchmark trace file.
+#
+#
+for distribution in random normal beta gamma poisson; do
+	for ntasks in 48 96 192; do
+		prefix1=$RESULTS/$distribution-$ntasks
+		for scheduler in static dynamic smart-round-robin; do
+			for seed in {1..30}; do
+				prefix2=$prefix1-$seed-$CHUNKSIZE-$NTHREADS
+				head -n $NTHREADS \
+					> $RESULTS/$prefix-$seed-$scheduler.thread
+				tail -n 1 $prefix2.benchmark \
+					>> $RESULTS/$prefix-$scheduler.tmp
 			done
-			paste -d";" \
-				$prefix2-static-$CHUNKSIZE.time \
-				$prefix2-dynamic-$CHUNKSIZE.time \
-				$prefix2-smart-round-robin-$CHUNKSIZE.time \
-				>> $prefix2.tmp
-				rm *.time
+			cut -d" " -f 2 $RESULTS/$prefix1-$scheduler.tmp \
+				>> $RESULTS/$prefix1.time
+			cut -d" " -f 3 $RESULTS/$prefix1-$scheduler.tmp \
+				>> $RESULTS/$prefix1.additions
+			rm $RESULTS/*tmp
 		done
-		paste -d";" \
-			$prefix1-128-$NTHREADS.tmp \
-			$prefix1-256-$NTHREADS.tmp \
-			$prefix1-512-$NTHREADS.tmp \
-			>> $prefix1.csv
-			rm *.tmp
 	done
 done
