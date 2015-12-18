@@ -40,12 +40,12 @@ RUN_SEARCHER=false
 #
 # Run simulator?
 #
-RUN_SIMULATOR=true
+RUN_SIMULATOR=false
 
 #
 # Run benchmark?
 #
-RUN_BENCHMARK=false
+RUN_BENCHMARK=true
 
 #
 # Run kernels?
@@ -56,7 +56,7 @@ RUN_KERNELS=false
 LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
 
 # Benchmark parameters.
-LOAD=100000000
+LOAD=200000000
 
 # Directories.
 BINDIR=bin
@@ -172,46 +172,50 @@ function run_kernel
 		2> $OUTDIR/$CLASS-$1.tasks
 }
 
-# Cleanup output directory.
-mkdir -p $OUTDIR
-rm -f $OUTDIR/*
-
 # Run the benchmark, simulator and searcher.
-for seed in {1..30}; do
-	for ntasks in 48 96 192; do
-		for distribution in random normal beta gamma poisson; do
-			for nthreads in 12; do
-				echo running $distribution $ntasks $seed
-				run_generator $ntasks $distribution $seed
-				for chunksize in 1; do
+for it in {1..5}; do
+	
+	rm -rf $OUTDIR
+	mkdir -p $OUTDIR
+	
+	for seed in {1..30}; do
+		for ntasks in 48 96 192; do
+			for distribution in beta gamma normal poisson random; do
+				for nthreads in 12; do
+					echo running $it $distribution $ntasks $seed
+					run_generator $ntasks $distribution $seed
+					for chunksize in 1 2 4; do
+						if [ $RUN_SIMULATOR == "true" ]; then
+							run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed
+							run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize $seed
+						fi
+						if [ $RUN_BENCHMARK == "true" ] ; then
+							run_benchmark $nthreads $ntasks $distribution "static" $chunksize $seed
+							run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $seed
+						fi
+					done
 					if [ $RUN_SIMULATOR == "true" ]; then
-						run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed
-						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize $seed
+						run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
+						run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 					fi
 					if [ $RUN_BENCHMARK == "true" ] ; then
-#						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $seed
-						run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $seed
+						run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
+					fi
+					if [ $RUN_SEARCHER == "true" ]; then
+						run_searcher $nthreads $ntasks $distribution
 					fi
 				done
-				if [ $RUN_SIMULATOR == "true" ]; then
-#					run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
-					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
-				fi
-				if [ $RUN_BENCHMARK == "true" ] ; then
-					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
-				fi
-				if [ $RUN_SEARCHER == "true" ]; then
-					run_searcher $nthreads $ntasks $distribution
-				fi
 			done
 		done
+		if [ $RUN_KERNELS == "true" ]; then
+			for kernel in is; do
+				for scheduler in static dynamic srr; do
+					run_kernel $kernel $NTHREADS $scheduler
+				done
+			done
+		fi
 	done
-	if [ $RUN_KERNELS == "true" ]; then
-		for kernel in is; do
-			for scheduler in static dynamic srr; do
-				run_kernel $kernel $NTHREADS $scheduler
-			done
-		done
-	fi
+	
+	tar -cjvf $OUTDIR-$it.tar.bz2 $OUTDIR/*
 done
 
