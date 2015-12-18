@@ -40,12 +40,12 @@ RUN_SEARCHER=false
 #
 # Run simulator?
 #
-RUN_SIMULATOR=false
+RUN_SIMULATOR=true
 
 #
 # Run benchmark?
 #
-RUN_BENCHMARK=true
+RUN_BENCHMARK=false
 
 #
 # Run kernels?
@@ -87,10 +87,13 @@ function run_generator {
 # $3 Probability distribution.
 # $4 Scheduling strategy
 # $5 Chunk size
+# $6 Seed.
 #
-function run_simulator {
+function run_simulator
+{
+	GSL_RNG_SEED=$6                                                                 \
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 \
-	1> $OUTDIR/taskmap-$1-$2-$3-$4-$5.out 2> /dev/null
+	1> $OUTDIR/$3-$2-$6-$4-$5-$1.simulator 2> /dev/null
 }
 
 #
@@ -175,15 +178,15 @@ rm -f $OUTDIR/*
 
 # Run the benchmark, simulator and searcher.
 for seed in {1..30}; do
-	for ntasks in 48; do
+	for ntasks in 48 96 192; do
 		for distribution in random normal beta gamma poisson; do
 			for nthreads in 12; do
 				echo running $distribution $ntasks $seed
 				run_generator $ntasks $distribution $seed
 				for chunksize in 1; do
 					if [ $RUN_SIMULATOR == "true" ]; then
-						run_simulator $nthreads $ntasks $distribution "static" $chunksize
-						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize
+						run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed
+						run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize $seed
 					fi
 					if [ $RUN_BENCHMARK == "true" ] ; then
 #						run_benchmark $nthreads $ntasks $distribution "static" $chunksize $seed
@@ -191,8 +194,8 @@ for seed in {1..30}; do
 					fi
 				done
 				if [ $RUN_SIMULATOR == "true" ]; then
-					run_simulator $nthreads $ntasks $distribution "workload-aware" 1
-					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1
+					run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
+					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 				fi
 				if [ $RUN_BENCHMARK == "true" ] ; then
 					run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
