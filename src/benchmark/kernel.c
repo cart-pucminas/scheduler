@@ -58,12 +58,8 @@ void benchmark(
 	unsigned scheduler)
 {
 	double time[nthreads];
-	unsigned additions[nthreads];
 	double total_time = 0;
 	double elapsed_time = 0;
-	unsigned total_additions = 0;
-
-	memset(additions, 0, nthreads*sizeof(unsigned));
 
 	for (unsigned k = 0; k < niterations; k++)
 	{	
@@ -79,10 +75,7 @@ void benchmark(
 
 				#pragma omp for schedule(dynamic) nowait
 				for (unsigned i = 0; i < ntasks; i++)
-				{
-					additions[omp_get_thread_num()] += tasks[i]*load;
 					kernel(tasks[i], load);
-				}
 	
 				end = timer_get();
 				time[omp_get_thread_num()] += (end - start)/1000.0;
@@ -105,10 +98,7 @@ void benchmark(
 
 				#pragma omp for schedule(runtime) nowait
 				for (unsigned i = 0; i < ntasks; i++)
-				{
-					additions[omp_get_thread_num()] += tasks[i]*load;
 					kernel(tasks[i], load);
-				}
 	
 				end = timer_get();
 				time[omp_get_thread_num()] += (end - start)/1000.0;
@@ -128,10 +118,7 @@ void benchmark(
 
 				#pragma omp for schedule(static) nowait
 				for (unsigned i = 0; i < ntasks; i++)
-				{
-					additions[omp_get_thread_num()] += tasks[i]*load;
 					kernel(tasks[i], load);
-				}
 	
 				end = timer_get();
 				time[omp_get_thread_num()] += (end - start)/1000.0;
@@ -144,8 +131,7 @@ void benchmark(
 	{
 		elapsed_time = (time[i] > elapsed_time) ? time[i] : elapsed_time;
 		total_time += time[i];
-		total_additions += additions[i];
-		printf("thread %d: %.2lf %u\n", i, time[i], additions[i]);
+		printf("thread %d: %.2lf\n", i, time[i]);
 	}
-	printf("%.2lf %.2lf %u\n", total_time, elapsed_time, total_additions);
+	printf("%.2lf %.2lf\n", total_time, elapsed_time);
 }
