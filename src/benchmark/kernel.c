@@ -55,7 +55,8 @@ void benchmark(
 	unsigned niterations,
 	unsigned nthreads,
 	unsigned load,
-	unsigned scheduler)
+	unsigned scheduler,
+	unsigned chunksize)
 {
 	double time[nthreads];
 	double total_time = 0;
@@ -73,7 +74,7 @@ void benchmark(
 
 				start = timer_get();
 
-				#pragma omp for schedule(dynamic) nowait
+				#pragma omp for schedule(dynamic, chunksize) nowait
 				for (unsigned i = 0; i < ntasks; i++)
 					kernel(tasks[i], load);
 	
@@ -116,7 +117,7 @@ void benchmark(
 
 				start = timer_get();
 
-				#pragma omp for schedule(static) nowait
+				#pragma omp for schedule(static, chunksize) nowait
 				for (unsigned i = 0; i < ntasks; i++)
 					kernel(tasks[i], load);
 	

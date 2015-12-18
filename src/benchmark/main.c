@@ -205,7 +205,7 @@ int main(int argc, const const char **argv)
 	
 	tasks = create_tasks(distribution, ntasks);
 
-	benchmark(tasks, ntasks, niterations, nthreads, load, scheduler);
+	benchmark(tasks, ntasks, niterations, nthreads, load, scheduler, chunksize);
 		
 	/* House keeping. */
 	free(tasks);
