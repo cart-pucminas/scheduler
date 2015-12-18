@@ -24,7 +24,7 @@ extern int nthreads;
  *   #pragma omp paralell for tasks(myarray, ntasks)
  */
 unsigned *__tasks;
-unsigned __ntasks = NBUCKETS;
+unsigned __ntasks;
 
 /*
  * Merge sort algorithm.
@@ -33,12 +33,10 @@ extern void mergesort(struct list *l);
 
 #if defined(_STATIC_SCHEDULE_)
 
-static omp_lock_t locks[NBUCKETS];
-
 /*
  * Bucket sort algorithm.
  */
-void bucketsort(int *array, int n)
+void bucketsort(int *array, int n, int nbuckets)
 {
 	int off;                     /* Offset for numbers.      */
 	int min;                     /* Min number in array.     */
@@ -48,18 +46,21 @@ void bucketsort(int *array, int n)
 	int i, j;                    /* Loop indexes.            */
 	int range;                   /* Bucket range.            */
 	struct list **buckets;       /* Buckets.                 */
-	unsigned ptrs[NBUCKETS + 1]; /* Cumulative bucket sizes. */
+	unsigned ptrs[nbuckets + 1]; /* Cumulative bucket sizes. */
+	omp_lock_t locks[nbuckets];
 
 	((void)__tasks);
 	((void)__ntasks);
+
+	__ntasks = nbuckets;
 	
 	/* Create buckets. */
-	buckets = smalloc(NBUCKETS*sizeof(struct list *));
-	for (i = 0; i < NBUCKETS; i++)
+	buckets = smalloc(nbuckets*sizeof(struct list *));
+	for (i = 0; i < nbuckets; i++)
 	{
 		buckets[i] = list_create();
 		omp_init_lock(&locks[i]);
-	}	
+	}
 
 	min = INT_MAX;
 	max = INT_MIN;
@@ -69,7 +70,7 @@ void bucketsort(int *array, int n)
 		/* Find max number in the array. */
 		minp = INT_MAX;
 		maxp = INT_MIN;
-		#pragma omp for 
+		#pragma omp for
 		for (i = 0; i < n; i++)
 		{
 			/* Found min. */
@@ -90,7 +91,7 @@ void bucketsort(int *array, int n)
 		/* Distribute numbers into buckets. */
 		#pragma omp master
 		{
-			range = abs(max - min)/NBUCKETS;
+			range = abs(max - min)/nbuckets;
 			off = (min < 0) ? abs(min) : 0;
 		}
 		#pragma omp barrier
@@ -99,8 +100,8 @@ void bucketsort(int *array, int n)
 		for (i = 0; i < n; i++)
 		{
 			j = (array[i] + off)/range;
-			if (j >= NBUCKETS)
-				j = NBUCKETS - 1;
+			if (j >= nbuckets)
+				j = nbuckets - 1;
 			
 			omp_set_lock(&locks[j]);	
 			list_push(buckets[j], array[i]);
@@ -111,14 +112,14 @@ void bucketsort(int *array, int n)
 		#pragma omp master
 		{
 			ptrs[0] = 0;
-			for (j = 1; j < (NBUCKETS + 1); j++)
+			for (j = 1; j < (nbuckets + 1); j++)
 				ptrs[j] = ptrs[j - 1] + list_length(buckets[j - 1]);
 		}
 		#pragma omp barrier
 		
 		/* Sort Each bucket. */
 		#pragma omp for schedule(static)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			if (!list_empty(buckets[i]))
 					mergesort(buckets[i]);
@@ -126,7 +127,7 @@ void bucketsort(int *array, int n)
 		
 		/* Rebuild array. */
 		#pragma omp for schedule(static)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			j = ptrs[i];
 			
@@ -136,7 +137,7 @@ void bucketsort(int *array, int n)
 	}
 	
 	/* House keeping. */
-	for (i = 0; i < NBUCKETS; i++)
+	for (i = 0; i < nbuckets; i++)
 	{
 		list_destroy(buckets[i]);
 		omp_destroy_lock(&locks[i]);
@@ -146,12 +147,10 @@ void bucketsort(int *array, int n)
 
 #elif defined(_DYNAMIC_SCHEDULE_)
 
-static omp_lock_t locks[NBUCKETS];
-
 /*
  * Bucket sort algorithm.
  */
-void bucketsort(int *array, int n)
+void bucketsort(int *array, int n, int nbuckets)
 {
 	int off;                     /* Offset for numbers.      */
 	int min;                     /* Min number in array.     */
@@ -161,14 +160,17 @@ void bucketsort(int *array, int n)
 	int i, j;                    /* Loop indexes.            */
 	int range;                   /* Bucket range.            */
 	struct list **buckets;       /* Buckets.                 */
-	unsigned ptrs[NBUCKETS + 1]; /* Cumulative bucket sizes. */
+	unsigned ptrs[nbuckets + 1]; /* Cumulative bucket sizes. */
+	omp_lock_t locks[nbuckets];
 
 	((void)__tasks);
 	((void)__ntasks);
+
+	__ntasks = nbuckets;
 	
 	/* Create buckets. */
-	buckets = smalloc(NBUCKETS*sizeof(struct list *));
-	for (i = 0; i < NBUCKETS; i++)
+	buckets = smalloc(nbuckets*sizeof(struct list *));
+	for (i = 0; i < nbuckets; i++)
 	{
 		buckets[i] = list_create();
 		omp_init_lock(&locks[i]);
@@ -182,7 +184,7 @@ void bucketsort(int *array, int n)
 		/* Find max number in the array. */
 		minp = INT_MAX;
 		maxp = INT_MIN;
-		#pragma omp for 
+		#pragma omp for
 		for (i = 0; i < n; i++)
 		{
 			/* Found min. */
@@ -203,7 +205,7 @@ void bucketsort(int *array, int n)
 		/* Distribute numbers into buckets. */
 		#pragma omp master
 		{
-			range = abs(max - min)/NBUCKETS;
+			range = abs(max - min)/nbuckets;
 			off = (min < 0) ? abs(min) : 0;
 		}
 		#pragma omp barrier
@@ -212,8 +214,8 @@ void bucketsort(int *array, int n)
 		for (i = 0; i < n; i++)
 		{
 			j = (array[i] + off)/range;
-			if (j >= NBUCKETS)
-				j = NBUCKETS - 1;
+			if (j >= nbuckets)
+				j = nbuckets - 1;
 			
 			omp_set_lock(&locks[j]);	
 			list_push(buckets[j], array[i]);
@@ -224,14 +226,14 @@ void bucketsort(int *array, int n)
 		#pragma omp master
 		{
 			ptrs[0] = 0;
-			for (j = 1; j < (NBUCKETS + 1); j++)
+			for (j = 1; j < (nbuckets + 1); j++)
 				ptrs[j] = ptrs[j - 1] + list_length(buckets[j - 1]);
 		}
 		#pragma omp barrier
 		
 		/* Sort Each bucket. */
 		#pragma omp for schedule(dynamic)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			if (!list_empty(buckets[i]))
 					mergesort(buckets[i]);
@@ -239,7 +241,7 @@ void bucketsort(int *array, int n)
 		
 		/* Rebuild array. */
 		#pragma omp for schedule(dynamic)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			j = ptrs[i];
 			
@@ -249,7 +251,7 @@ void bucketsort(int *array, int n)
 	}
 	
 	/* House keeping. */
-	for (i = 0; i < NBUCKETS; i++)
+	for (i = 0; i < nbuckets; i++)
 	{
 		list_destroy(buckets[i]);
 		omp_destroy_lock(&locks[i]);
@@ -259,15 +261,10 @@ void bucketsort(int *array, int n)
 
 #elif defined(_RUNTIME_SCHEDULE_)
 
-static omp_lock_t locks[NBUCKETS];
-
-unsigned tasks1[NBUCKETS];
-unsigned tasks2[NBUCKETS];
-
 /*
  * Bucket sort algorithm.
  */
-void bucketsort(int *array, int n)
+void bucketsort(int *array, int n, int nbuckets)
 {
 	int off;                     /* Offset for numbers.      */
 	int min;                     /* Min number in array.     */
@@ -277,11 +274,16 @@ void bucketsort(int *array, int n)
 	int i, j;                    /* Loop indexes.            */
 	int range;                   /* Bucket range.            */
 	struct list **buckets;       /* Buckets.                 */
-	unsigned ptrs[NBUCKETS + 1]; /* Cumulative bucket sizes. */
+	unsigned ptrs[nbuckets + 1]; /* Cumulative bucket sizes. */
+	omp_lock_t locks[nbuckets];
+	unsigned tasks1[nbuckets];
+	unsigned tasks2[nbuckets];
+
+	__ntasks = nbuckets;
 	
 	/* Create buckets. */
-	buckets = smalloc(NBUCKETS*sizeof(struct list *));
-	for (i = 0; i < NBUCKETS; i++)
+	buckets = smalloc(nbuckets*sizeof(struct list *));
+	for (i = 0; i < nbuckets; i++)
 	{
 		buckets[i] = list_create();
 		omp_init_lock(&locks[i]);
@@ -316,17 +318,17 @@ void bucketsort(int *array, int n)
 		/* Distribute numbers into buckets. */
 		#pragma omp master
 		{
-			range = abs(max - min)/NBUCKETS;
+			range = abs(max - min)/nbuckets;
 			off = (min < 0) ? abs(min) : 0;
 		}
 		#pragma omp barrier
 
-		#pragma omp for schedule (static)
+		#pragma omp for
 		for (i = 0; i < n; i++)
 		{
 			j = (array[i] + off)/range;
-			if (j >= NBUCKETS)
-				j = NBUCKETS - 1;
+			if (j >= nbuckets)
+				j = nbuckets - 1;
 			
 			omp_set_lock(&locks[j]);	
 			list_push(buckets[j], array[i]);
@@ -337,7 +339,7 @@ void bucketsort(int *array, int n)
 		#pragma omp master
 		{
 			ptrs[0] = 0;
-			for (i = 0, j = 1; i < NBUCKETS; i++, j++)
+			for (i = 0, j = 1; i < nbuckets; i++, j++)
 			{
 				tasks2[i] = tasks1[i] = list_length(buckets[i]);
 				ptrs[j] = ptrs[j - 1] + list_length(buckets[i]);
@@ -353,7 +355,7 @@ void bucketsort(int *array, int n)
 		
 		/* Sort Each bucket. */
 		#pragma omp for schedule(runtime)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			if (!list_empty(buckets[i]))
 				mergesort(buckets[i]);
@@ -365,7 +367,7 @@ void bucketsort(int *array, int n)
 		
 		/* Rebuild array. */
 		#pragma omp for schedule(runtime)
-		for (i = 0; i < NBUCKETS; i++)
+		for (i = 0; i < nbuckets; i++)
 		{
 			j = ptrs[i];
 			
@@ -375,7 +377,7 @@ void bucketsort(int *array, int n)
 	}
 	
 	/* House keeping. */
-	for (i = 0; i < NBUCKETS; i++)
+	for (i = 0; i < nbuckets; i++)
 	{
 		list_destroy(buckets[i]);
 		omp_destroy_lock(&locks[i]);

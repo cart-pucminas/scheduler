@@ -21,22 +21,23 @@
 /*
  * Bucket sort algorithm.
  */
-extern void bucketsort(int *array, int n);
+extern void bucketsort(int *, int, int);
 
 /*
  * Problem.
  */
 struct problem
 {
-	int n; /* Number of elements. */
+	int n;        /* Number of elements. */
+	int nbuckets; /* Number of buckets.  */
 };
 
 /* Problem sizes. */
-static struct problem tiny        = {  33554432 };
-static struct problem small       = {  67108864 };
-static struct problem workstation = { 134217728 };
-static struct problem standard    = { 268435456 };
-static struct problem large       = { 536870912 };
+static struct problem tiny        = {  33554432, 48};
+static struct problem small       = {  67108864, 48};
+static struct problem workstation = { 134217728, 96};
+static struct problem standard    = { 268435456, 96};
+static struct problem large       = { 536870912, 192};
 
 /* Benchmark parameters. */
 int verbose = 0;                  /* Be verbose?        */
@@ -166,7 +167,7 @@ int main(int argc, char **argv)
 	
 	/* Cluster data. */
 	start = timer_get();
-	bucketsort(a, p->n);
+	bucketsort(a, p->n, p->nbuckets);
 	end = timer_get();
 	printf("%f\n", (end - start)/1000.0);
 	
