@@ -28,16 +28,16 @@ NTHREADS=12
 CHUNKSIZE=1
 
 mkdir -p $RESULTS/tasks
-mkdir -p $RESULTS/time
-mkdir -p $RESULTS/additions
-mkdir -p $RESULTS/thread
+mkdir -p $RESULTS/benchmark/time
+mkdir -p $RESULTS/benchmark/thread
+mkdir -p $RESULTS/simulator/time
+mkdir -p $RESULTS/simulator/thread
 
 #
 # Extracts information from benchmark trace file.
 #
-#
-for distribution in random normal beta gamma poisson; do
-	for ntasks in 48 96; do
+for distribution in beta gamma normal poisson random; do
+	for ntasks in 48 96 192; do
 		prefix1=$RESULTS/$distribution-$ntasks
 		for seed in {1..30}; do
 			tail -n $ntasks $prefix1-$seed.tasks \
@@ -45,38 +45,44 @@ for distribution in random normal beta gamma poisson; do
 			
 			rm $prefix1-$seed.tasks
 		done
-		for scheduler in dynamic smart-round-robin; do
+		for scheduler in dynamic static smart-round-robin; do
 			for seed in {1..30}; do
 				prefix2=$prefix1-$seed-$scheduler-$CHUNKSIZE-$NTHREADS
 
 				tail -n 1 $prefix2.benchmark \
-					>> $prefix1-$scheduler.tmp
+					>> $prefix1-$scheduler.tmp1
+
+				tail -n 1 $prefix2.simulator \
+					>> $prefix1-$scheduler.tmp2
 
 				head -n $NTHREADS $prefix2.benchmark | cut -d" " -f 3,4 \
-					> $prefix1-$seed-$scheduler.thread.csv
-				mv $RESULTS/*.thread.csv $RESULTS/thread
+					> $prefix1-$seed-$scheduler.csv
+				mv $RESULTS/*.csv $RESULTS/benchmark/thread
 
+				head -n $NTHREADS $prefix2.simulator | cut -d";" -f 2 \
+					> $prefix1-$seed-$scheduler.csv
+				mv $RESULTS/*.csv $RESULTS/simulator/thread
+				
+				rm $prefix2.simulator
 				rm $prefix2.benchmark
 			done
-			cut -d" " -f 2 $prefix1-$scheduler.tmp \
+			cut -d" " -f 2 $prefix1-$scheduler.tmp1 \
 				>> $prefix1-$scheduler.time
 
-			cut -d" " -f 3 $prefix1-$scheduler.tmp \
-				>> $prefix1-$scheduler.additions
-
-			rm $RESULTS/*.tmp
+			rm $RESULTS/*.tmp1
 		done
+		paste -d";"                         \
+			$prefix1-static.tmp2            \
+			$prefix1-dynamic.tmp2           \
+			$prefix1-smart-round-robin.tmp2 \
+			>> $RESULTS/simulator/time/$distribution-$ntasks.csv
+
 		paste -d";"                         \
 			$prefix1-dynamic.time           \
 			$prefix1-smart-round-robin.time \
-			>> $RESULTS/time/$distribution-$ntasks.time.csv
-
-		paste -d";"                              \
-			$prefix1-dynamic.additions           \
-			$prefix1-smart-round-robin.additions \
-			>> $RESULTS/additions/$distribution-$ntasks.additions.csv
+			>> $RESULTS/benchmark/time/$distribution-$ntasks.csv
 		
+		rm $prefix1-*.tmp2
 		rm $prefix1-*.time
-		rm $prefix1-*.additions
 	done
 done

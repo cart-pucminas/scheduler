@@ -194,7 +194,7 @@ for seed in {1..30}; do
 					fi
 				done
 				if [ $RUN_SIMULATOR == "true" ]; then
-					run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
+#					run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
 					run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 				fi
 				if [ $RUN_BENCHMARK == "true" ] ; then
