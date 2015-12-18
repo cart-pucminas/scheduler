@@ -211,6 +211,7 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
+	unsigned total = 0;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
@@ -236,7 +237,11 @@ int main(int argc, const const char **argv)
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
+	{
+		total = (threads[i].workload > total) ? threads[i].workload : total;
 		printf("%u;%u\n", threads[i].tid, threads[i].workload);
+	}
+	printf("%u\n", total);
 	
 	threads_join();
 	
