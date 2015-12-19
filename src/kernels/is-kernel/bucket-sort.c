@@ -96,7 +96,7 @@ void bucketsort(int *array, int n, int nbuckets)
 		}
 		#pragma omp barrier
 
-		#pragma omp for schedule (static)
+		#pragma omp for
 		for (i = 0; i < n; i++)
 		{
 			j = (array[i] + off)/range;
@@ -210,7 +210,7 @@ void bucketsort(int *array, int n, int nbuckets)
 		}
 		#pragma omp barrier
 
-		#pragma omp for schedule (static)
+		#pragma omp for
 		for (i = 0; i < n; i++)
 		{
 			j = (array[i] + off)/range;

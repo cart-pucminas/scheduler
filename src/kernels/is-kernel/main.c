@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 	a = smalloc(p->n*sizeof(int));
 	for (int i = 0; i < p->n; i++)
 	{
-		a[i] = (int)ceil(gsl_ran_beta(r, BETA_A, BETA_B)*BETA_M*FACTOR);
+		a[i] = (int)ceil(gsl_ran_beta(r, BETA_A, BETA_B)*p->n);
 		
 		fprintf(stderr, "%d\n", a[i]);
 	}
