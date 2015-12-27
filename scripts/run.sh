@@ -182,8 +182,8 @@ for it in {1..5}; do
 	rm -rf $OUTDIR
 	mkdir -p $OUTDIR
 	
-	for seed in {1..30}; do
-		for ntasks in 48 96 192; do
+	for ntasks in 48 96 192; do
+		for seed in {1..30}; do
 			for distribution in beta gamma normal poisson random; do
 				for nthreads in 12; do
 					echo running $it $distribution $ntasks $seed
@@ -205,12 +205,12 @@ for it in {1..5}; do
 					if [ $RUN_BENCHMARK == "true" ] ; then
 						run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 					fi
-					if [ $RUN_SEARCHER == "true" ]; then
-						run_searcher $nthreads $ntasks $distribution
-					fi
 				done
 			done
 		done
+		if [ $RUN_SEARCHER == "true" ]; then
+			run_searcher $nthreads $ntasks $distribution
+		fi
 		if [ $RUN_KERNELS == "true" ]; then
 			for kernel in is; do
 				for scheduler in static dynamic srr; do
