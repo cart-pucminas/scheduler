@@ -10,6 +10,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include <mylib/util.h>
 
 #include "vector.h"
@@ -18,6 +21,8 @@
  * Clusters data. 
  */
 extern int *kmeans(vector_t *_points, int _npoints, int _ncentroids, float _mindistance);
+
+gsl_rng * r;
 
 /*
  * Problem.
@@ -41,7 +46,7 @@ static struct problem large       = { 524288, 16, 1024, 0.0 };
 int verbose = 0;                  /* Be verbose?        */
 static int seed = 0;              /* Seed value.        */
 int nthreads = 1;                 /* Number of threads. */
-static struct problem *p = &tiny; /* Problem.           */
+struct problem *p = &tiny; /* Problem.           */
 
 /*
  * Prints program usage and exits.
@@ -144,6 +149,12 @@ int main(int argc, char **argv)
 	uint64_t start; /* Start time.      */
 	vector_t *data; /* Data points.     */
 	int *map;       /* Map of clusters. */
+	const gsl_rng_type * T;
+	
+	/* Setup random number generator. */
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
 	
 	readargs(argc, argv);
 	
@@ -165,6 +176,7 @@ int main(int argc, char **argv)
 	printf("%f\n", (end - start)/1000.0);
 	
 	/* House keeping. */
+	gsl_rng_free(r);
 	free(map);
 	for (i = 0; i < p->npoints; i++)
 		vector_destroy(data[i]);

@@ -8,16 +8,22 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include <mylib/util.h>
 
 #include "vector.h"
+
+extern gsl_rng * r;
 
 /**
  * @brief Input data paramters.
  */
 /**@{*/
-#define GAUSSIAN_STDDEV 1024 /**< Standard deviation. */
-#define GAUSSIAN_MEAN   0    /**< Mean.               */
+#define GAUSSIAN_STDDEV 2.5 /**< Standard deviation. */
+#define GAUSSIAN_MEAN   5.0 /**< Mean.               */
+#define GAUSSIAN_FACTOR 1000000
 /**@*/
 
 /*
@@ -140,7 +146,15 @@ struct vector *vector_random(struct vector *v)
 
 	/* Fill vector. */
 	for (i = 0; i < vector_size(v); i++)
-		VECTOR(v, i) = normalnum(GAUSSIAN_MEAN, GAUSSIAN_STDDEV);
+	{
+		double num;
+		do
+		{
+			num = (gsl_ran_gaussian(r, GAUSSIAN_STDDEV) + GAUSSIAN_MEAN)*GAUSSIAN_FACTOR;
+		} while (num < 0.0);
+
+		VECTOR(v, i) = num;
+	}
 
 	return (v);
 }
