@@ -20,7 +20,7 @@
 #
 # Number of threads.
 #
-NTHREADS=12
+NTHREADS=4
 
 #
 # Simultaneos Multithreading?
@@ -45,7 +45,7 @@ RUN_SIMULATOR=false
 #
 # Run benchmark?
 #
-RUN_BENCHMARK=true
+RUN_BENCHMARK=false
 
 #
 # Run kernels?
@@ -73,7 +73,8 @@ POPSIZE=1000
 # $2 Probability distribution to use.
 # $3 Seed to use.
 #
-function run_generator {
+function run_generator
+{
 	GSL_RNG_SEED=$3                                 \
 	$BINDIR/generator --ntasks $1 --distribution $2 \
 		1> /dev/null 2> $OUTDIR/$2-$1-$3.tasks
@@ -103,10 +104,13 @@ function run_simulator
 # $2 Number of tasks.
 # $3 Probability distribution.
 #
-function run_searcher {
+function run_searcher
+{
+	GSL_RNG_SEED=1                                               \
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
-	--ngen $NGEN --popsize $POPSIZE \
-	1> $OUTDIR/ga-$1-$2-$3.out 2>  $OUTDIR/taskmap-$1-$2-$3-ga-1.out
+		--ngen $NGEN --popsize $POPSIZE                          \
+		1> $OUTDIR/$3-$2-$1.info.searcher
+		2> $OUTDIR/$3-$2-$1.taskmap.searcher
 }
 
 #
