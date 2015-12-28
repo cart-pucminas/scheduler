@@ -103,14 +103,15 @@ function run_simulator
 # $1 Number of threads
 # $2 Number of tasks.
 # $3 Probability distribution.
+# #4 Seed.
 #
 function run_searcher
 {
-	GSL_RNG_SEED=1                                               \
+	GSL_RNG_SEED=$4                                              \
 	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
 		--ngen $NGEN --popsize $POPSIZE                          \
-		1> $OUTDIR/$3-$2-$1.info.searcher
-		2> $OUTDIR/$3-$2-$1.taskmap.searcher
+		1> $OUTDIR/$3-$2-$4-$1.info.searcher                     \
+		2> $OUTDIR/$3-$2-$4-$1.taskmap.searcher
 }
 
 #
@@ -164,15 +165,17 @@ function run_benchmark
 # $1 Kernel.
 # $2 Number of threads.
 # $3 Scheduling strategy.
+# #4 Seed.
 #
 function run_kernel
 {
 	map_threads $2
-
-	LD_LIBRARY_PATH=$LIBGOMP \
-	OMP_SCHEDULE=pedro \
+	
+	GSL_RNG_SEED=$4                            \
+	LD_LIBRARY_PATH=$LIBGOMP                   \
+	OMP_SCHEDULE=pedro                         \
 	$BINDIR/$1.$3 --class $CLASS --nthreads $2 \
-		>> $OUTDIR/$1-$3-$CLASS-$2.out \
+		>> $OUTDIR/$1-$3-$CLASS-$2.out         \
 		2> $OUTDIR/$CLASS-$1.tasks
 }
 
@@ -182,8 +185,8 @@ for it in {1..5}; do
 	rm -rf $OUTDIR
 	mkdir -p $OUTDIR
 	
-	for ntasks in 48 96 192; do
-		for seed in {1..30}; do
+	for seed in {1..30}; do
+		for ntasks in 48 96 192; do
 			for distribution in beta gamma normal poisson random; do
 				for nthreads in 12; do
 					echo running $it $distribution $ntasks $seed
@@ -205,16 +208,16 @@ for it in {1..5}; do
 					if [ $RUN_BENCHMARK == "true" ] ; then
 						run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
 					fi
+					if [ $RUN_SEARCHER == "true" ]; then
+						run_searcher $nthreads $ntasks $distribution $seed
+					fi
 				done
 			done
 		done
-		if [ $RUN_SEARCHER == "true" ]; then
-			run_searcher $nthreads $ntasks $distribution
-		fi
 		if [ $RUN_KERNELS == "true" ]; then
-			for kernel in is; do
+			for kernel in is km; do
 				for scheduler in static dynamic srr; do
-					run_kernel $kernel $NTHREADS $scheduler
+					run_kernel $kernel $NTHREADS $scheduler $seed
 				done
 			done
 		fi
