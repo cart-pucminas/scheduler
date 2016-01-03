@@ -175,8 +175,8 @@ function run_kernel
 	LD_LIBRARY_PATH=$LIBGOMP                   \
 	OMP_SCHEDULE=pedro                         \
 	$BINDIR/$1.$3 --class $CLASS --nthreads $2 \
-		>> $OUTDIR/$1-$3-$CLASS-$2.out         \
-		2> $OUTDIR/$CLASS-$1.tasks
+		>> $OUTDIR/$1-$4-$3-$CLASS-$2.out      \
+		2> $OUTDIR/$1-$4-$3-$CLASS-$2.tasks
 }
 
 # Run the benchmark, simulator and searcher.
