@@ -43,96 +43,28 @@ extern unsigned __ntasks; /* Number of tasks. */
  */
 #define exch(a, b, t) \
 	{ (t) = (a); (a) = (b); (b) = (t); }
-
-/*
- * Compare and exchange two numbers.
- */
-#define compexgh(a, b, t)    \
-	if ((b) < (a))           \
-		exch((b), (a), (t)); \
-
-#ifdef _USE_QUICKSORT_
-
-/*
- * Quicksort partition.
- */
-static unsigned partition(unsigned *map, unsigned *a, unsigned l, unsigned r)
-{
-	unsigned t;     /* Temporary value.  */
-	unsigned i, j;  /* Scanning indexes. */
-	unsigned pivot; /* Pivot.            */
-	
-	pivot = a[r];
-	i = l;
-	j = r - 1;
-	
-	while (1)
-	{
-		while (a[i] > pivot)
-			i++;
-			
-		while (a[j] < pivot)
-		{
-			if (j == l)
-				break;
-			j--;
-		}
-		
-		if (i >= j)
-			break;
-		
-		exch(a[i], a[j], t);
-		exch(map[i], map[j], t);
-	}
-		
-	exch(a[i], a[r], t);
-	exch(map[i], map[r], t);
-	
-	return (i);
-}
-
-/*
- * Quicksort. 
- */
-static void quicksort(unsigned *map, unsigned *a, unsigned l, unsigned r)
-{
-	unsigned p;
-	
-	if (r <= l)
-		return;
-	
-	p = partition(map, a, l, r);
-	quicksort(map, a, l, p - 1);
-	quicksort(map, a, p + 1, r);
-}
-
-#else
-
 /*
  * Insertion sort.
  */
-static void insertion(unsigned *map, unsigned *a, unsigned l, unsigned r)
+static void insertion(unsigned *map, unsigned *a, unsigned n)
 {
-	unsigned n;    /* Array size.      */
 	unsigned t;    /* Temporary value. */
 	unsigned i, j; /* Loop indexes.    */
 	
-	n = r - l;
-	
-	for (i = 1; i < n; i++)
+	/* Sort. */
+	for (i = 0; i < (n - 1); i++)
 	{
-		for (j = i; j > 0; j--)
+		for (j = i + 1; j < n; j++)
 		{
-			if (a[j - 1] < a[j])
-				break;
-			
-			exch(a[j - 1], a[j], t);
-			exch(map[j - 1], map[j], t);
+			/* Swap. */
+			if (a[j] < a[i])
+			{
+				exch(a[i], a[j], t);
+				exch(map[i], map[j], t);
+			}
 		}
 	}
 }
-
-#endif
 
 /*
  * Sorts an array of numbers.
@@ -148,11 +80,7 @@ unsigned *sort(unsigned *a, unsigned n)
 	for (i = 0; i < n; i++)
 		map[i] = i;
 
-#ifdef _USE_QUICKSORT_
-	quicksort(map, a, 0, n);
-#else
-	insertion(map, a, 0, n);
-#endif
+	insertion(map, a, n);
 
 	return (map);
 } 
