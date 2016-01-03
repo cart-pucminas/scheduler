@@ -186,9 +186,9 @@ for it in {1..5}; do
 	mkdir -p $OUTDIR
 	
 	for seed in {1..30}; do
-		for ntasks in 48 96 192; do
-			for distribution in beta gamma normal poisson random; do
-				for nthreads in 12; do
+		for nthreads in 12; do
+			for ntasks in 48 96 192; do
+				for distribution in beta gamma normal poisson random; do
 					echo running $it $distribution $ntasks $seed
 					run_generator $ntasks $distribution $seed
 					for chunksize in 1 2 4; do
@@ -213,14 +213,14 @@ for it in {1..5}; do
 					fi
 				done
 			done
-		done
-		if [ $RUN_KERNELS == "true" ]; then
-			for kernel in is km; do
-				for scheduler in static dynamic srr; do
-					run_kernel $kernel $NTHREADS $scheduler $seed
+			if [ $RUN_KERNELS == "true" ]; then
+				for kernel in is km; do
+					for scheduler in static dynamic srr; do
+						run_kernel $kernel $nthreads $scheduler $seed
+					done
 				done
-			done
-		fi
+			fi
+		done
 	done
 	
 	tar -cjvf $OUTDIR-$it.tar.bz2 $OUTDIR/*
