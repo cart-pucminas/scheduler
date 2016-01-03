@@ -149,9 +149,9 @@ unsigned *sort(unsigned *a, unsigned n)
 		map[i] = i;
 
 #ifdef _USE_QUICKSORT_
-	quicksort(map, a, 0, n - 1);
+	quicksort(map, a, 0, n);
 #else
-	insertion(map, a, 0, n - 1);
+	insertion(map, a, 0, n);
 #endif
 
 	return (map);
