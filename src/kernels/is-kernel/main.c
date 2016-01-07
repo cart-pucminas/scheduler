@@ -159,11 +159,7 @@ int main(int argc, char **argv)
 	/* Benchmark initialization. */
 	a = smalloc(p->n*sizeof(int));
 	for (int i = 0; i < p->n; i++)
-	{
 		a[i] = (int)ceil(gsl_ran_beta(r, BETA_A, BETA_B)*p->n);
-		
-		fprintf(stderr, "%d\n", a[i]);
-	}
 	
 	/* Cluster data. */
 	start = timer_get();

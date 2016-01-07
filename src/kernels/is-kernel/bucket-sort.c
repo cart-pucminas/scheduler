@@ -10,8 +10,6 @@
 
 #include "list.h"
 
-#define NBUCKETS 8192
-
 extern int verbose;
 extern int nthreads;
 
@@ -344,9 +342,8 @@ void bucketsort(int *array, int n, int nbuckets)
 				tasks2[i] = tasks1[i] = list_length(buckets[i]);
 				ptrs[j] = ptrs[j - 1] + list_length(buckets[i]);
 				
-				if (verbose){
+				if (verbose)
 					fprintf(stderr, "%u\n", tasks1[i]);
-				}
 			}
 
 			__tasks = tasks1;
