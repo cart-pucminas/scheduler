@@ -35,7 +35,7 @@ struct problem
 /* Problem sizes. */
 static struct problem tiny        = {  33554432, 48};
 static struct problem small       = {  67108864, 48};
-static struct problem workstation = { 134217728, 96};
+static struct problem workstation = { 134217728, 48};
 static struct problem standard    = { 268435456, 96};
 static struct problem large       = { 536870912, 192};
 
@@ -145,6 +145,7 @@ int main(int argc, char **argv)
 	uint64_t start; /* Start time.         */
 	gsl_rng * r;
 	const gsl_rng_type * T;
+	double num;
 	
 	/* Setup random number generator. */
 	gsl_rng_env_setup();
@@ -160,7 +161,11 @@ int main(int argc, char **argv)
 	a = smalloc(p->n*sizeof(int));
 	for (int i = 0; i < p->n; i++)
 	{
-		a[i] = (int)ceil(gsl_ran_beta(r, BETA_A, BETA_B)*p->n);
+		do
+		{
+			num = gsl_ran_poisson(r, POISSON_MU);
+		} while (num < 0.0);
+		a[i] = (int)ceil(num*100000);
 		
 		fprintf(stderr, "%d\n", a[i]);
 	}
