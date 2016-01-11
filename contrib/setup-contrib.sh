@@ -24,3 +24,13 @@ make -j 4
 make install
 cd ..
 rm -rf gsl-1.16
+
+tar -xjvf papi-5.4.1.tar.bz2
+cd papi-5.4.1/src
+./configure --prefix=$PWD/../../
+make -j 4
+make install
+cd ../../
+rm -rf papi-5.4.1.tar.bz2
+
+

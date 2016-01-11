@@ -8,10 +8,9 @@ results/*
 *.o
 *.lo
 /libsrc/libgomp/libgomp/build/*
-!/libsrc/libgomp/libgomp/build/gstdint.h
-!/libsrc/libgomp/libgomp/build/libgomp.ver
-!/libsrc/libgomp/libgomp/build/libgfortran.spec
 contrib/bin
 contrib/lib
 contrib/include
 contrib/share
+contrib/man
+contrib/papi-5.4.1
