@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 	{
 		do
 		{
-			num = gsl_ran_poisson(r, POISSON_MU);
+			num = gsl_ran_gamma(r, GAMMA_A, GAMMA_B);
 		} while (num < 0.0);
 		a[i] = (int)ceil(num*100000);
 	}
