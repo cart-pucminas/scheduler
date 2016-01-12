@@ -58,9 +58,9 @@ void benchmark(
 	unsigned scheduler,
 	unsigned chunksize)
 {
-	double time[nthreads];
-	double total_time = 0;
-	double elapsed_time = 0;
+	unsigned loads[nthreads];
+	
+	memset(loads, 0, nthreads*sizeof(unsigned));
 
 	for (unsigned k = 0; k < niterations; k++)
 	{	
@@ -69,17 +69,16 @@ void benchmark(
 		{
 			#pragma omp parallel num_threads(nthreads)
 			{
-				uint64_t end;
-				uint64_t start;
+				int tid;
 
-				start = timer_get();
+				tid = omp_get_thread_num();
 
 				#pragma omp for schedule(dynamic, chunksize) nowait
 				for (unsigned i = 0; i < ntasks; i++)
+				{
+					loads[tid] += tasks[i];
 					kernel(tasks[i], load);
-	
-				end = timer_get();
-				time[omp_get_thread_num()] += (end - start)/1000.0;
+				}
 			}
 		}
 		
@@ -92,17 +91,16 @@ void benchmark(
 			
 			#pragma omp parallel num_threads(nthreads)
 			{
-				uint64_t end;
-				uint64_t start;
+				int tid;
 
-				start = timer_get();
+				tid = omp_get_thread_num();
 
 				#pragma omp for schedule(runtime) nowait
 				for (unsigned i = 0; i < ntasks; i++)
+				{
+					loads[tid] += tasks[i];
 					kernel(tasks[i], load);
-	
-				end = timer_get();
-				time[omp_get_thread_num()] += (end - start)/1000.0;
+				}
 			}
 			free(__tasks);
 		}
@@ -112,27 +110,21 @@ void benchmark(
 		{
 			#pragma omp parallel num_threads(nthreads)
 			{
-				uint64_t end;
-				uint64_t start;
+				int tid;
 
-				start = timer_get();
+				tid = omp_get_thread_num();
 
 				#pragma omp for schedule(static, chunksize) nowait
 				for (unsigned i = 0; i < ntasks; i++)
+				{
+					loads[tid] += tasks[i];
 					kernel(tasks[i], load);
-	
-				end = timer_get();
-				time[omp_get_thread_num()] += (end - start)/1000.0;
+				}
 			}
 		}
 	}
 
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-	{
-		elapsed_time = (time[i] > elapsed_time) ? time[i] : elapsed_time;
-		total_time += time[i];
-		printf("thread %d: %.2lf\n", i, time[i]);
-	}
-	printf("%.2lf %.2lf\n", total_time, elapsed_time);
+		printf("thread %d: %u\n", i, loads[i]);
 }
