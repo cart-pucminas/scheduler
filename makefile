@@ -32,6 +32,7 @@ export MYLIB = mylib-0.6
 export LIBS  = $(LIBDIR)/libmy.a
 export LIBS += $(CONTRIBDIR)/lib/libgsl.a
 export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a
+export LIBS += $(CONTRIBDIR)/lib/libpapi.a
 export LIBS += -lm
 
 # Toolchain.

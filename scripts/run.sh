@@ -186,11 +186,10 @@ for it in {1..5}; do
 	mkdir -p $OUTDIR
 	
 	for seed in {1..30}; do
-		for nthreads in 12; do
+		for (( nthreads=1; nthreads<=$NTHREADS; nthreads++ )); do
 			for ntasks in 48 96 192; do
 				for distribution in beta gamma normal poisson random; do
 					echo running $it $distribution $ntasks $seed
-					run_generator $ntasks $distribution $seed
 					for chunksize in 1 2 4; do
 						if [ $RUN_SIMULATOR == "true" ]; then
 							run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed

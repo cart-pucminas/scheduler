@@ -13,6 +13,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <papi.h>
+
 #include <mylib/util.h>
 
 #include "vector.h"
@@ -149,6 +151,8 @@ int main(int argc, char **argv)
 	uint64_t start; /* Start time.      */
 	vector_t *data; /* Data points.     */
 	int *map;       /* Map of clusters. */
+	int events[2] = { PAPI_L1_DCM, PAPI_L2_DCM};
+	long long hwcounters[2];
 	const gsl_rng_type * T;
 	
 	/* Setup random number generator. */
@@ -169,11 +173,28 @@ int main(int argc, char **argv)
 		vector_random(data[i]);
 	}
 	
+	/* Setup PAPI. */
+	if (PAPI_start_counters(events, 2) != PAPI_OK)
+	{
+		fprintf(stderr, "failed to setup PAPI\n");
+		exit(EXIT_FAILURE);
+	}
+	
 	/* Cluster data. */
 	start = timer_get();
 	map = kmeans(data, p->npoints, p->ncentroids, p->mindistance);
 	end = timer_get();
-	printf("%f\n", (end - start)/1000.0);
+	
+	/* Exit PAPI. */
+	if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
+	{
+		fprintf(stderr, "failed to read hardware counters\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	printf("L1 Misses: %lld\n", hwcounters[0]);
+	printf("L2 Misses: %lld\n", hwcounters[1]);
+	printf("Time:      %f\n", (end - start)/1000.0);
 	
 	/* House keeping. */
 	gsl_rng_free(r);
