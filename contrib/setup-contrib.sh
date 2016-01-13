@@ -31,6 +31,6 @@ cd papi-5.4.1/src
 make -j 4
 make install
 cd ../../
-rm -rf papi-5.4.1.tar.bz2
+rm -rf papi-5.4.1/
 
 
