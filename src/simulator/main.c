@@ -211,7 +211,6 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
-	unsigned total = 0;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
@@ -224,25 +223,15 @@ int main(int argc, const const char **argv)
 	
 		schedule(tasks, ntasks, nthreads, scheduler);
 		
-		/* Print statistics. */
-		if (niterations == 1)
-		{
-			for (unsigned i = 0; i < ntasks; i++)
-				fprintf(stderr, "%u\n", tasks[i]);
-		}
-		
 		/* House keeping. */
 		free(tasks);
 	}
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < nthreads; i++)
-	{
-		total = (threads[i].workload > total) ? threads[i].workload : total;
-		printf("%u;%u\n", threads[i].tid, threads[i].workload);
-	}
-	printf("%u\n", total);
+		printf("thread %u: %u\n", threads[i].tid, threads[i].workload);
 	
+	/* House keeping. */
 	threads_join();
 	
 	return (EXIT_SUCCESS);

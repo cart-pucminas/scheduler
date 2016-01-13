@@ -94,7 +94,8 @@ function run_simulator
 {
 	GSL_RNG_SEED=$6                                                                 \
 	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 \
-	1> $OUTDIR/$3-$2-$6-$4-$5-$1.simulator 2> /dev/null
+		1> $OUTDIR/$3-$2-$6-$4-$5-$1.simulator \
+		2> /dev/null
 }
 
 #
@@ -180,16 +181,15 @@ function run_kernel
 }
 
 # Run the benchmark, simulator and searcher.
-for it in {1..5}; do
+for it in {1..10}; do
 	
 	rm -rf $OUTDIR
 	mkdir -p $OUTDIR
 	
-	for seed in {1..30}; do
+	for seed in {1..20}; do
 		for (( nthreads=1; nthreads<=$NTHREADS; nthreads++ )); do
 			for ntasks in 48 96 192; do
 				for distribution in beta gamma normal poisson random; do
-					echo running $it $distribution $ntasks $seed
 					for chunksize in 1 2 4; do
 						if [ $RUN_SIMULATOR == "true" ]; then
 							run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed
