@@ -151,7 +151,7 @@ function run_benchmark
 {
 	map_threads $1
 
-	GSL_RNG_SEED=$7                                                               \
+	GSL_RNG_SEED=$6                                                               \
 	LD_LIBRARY_PATH=$LIBGOMP                                                      \
 	OMP_SCHEDULE=pedro                                                            \
 	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
