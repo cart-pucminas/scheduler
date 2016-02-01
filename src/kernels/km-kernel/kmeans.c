@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <papi.h>
+
 #include <mylib/util.h>
 
 #include "vector.h"
@@ -314,14 +316,6 @@ static void compute_centroids(void)
 	{
 		if (!dirty[i])
 			__tasks[i] = 0;
-		
-		if (verbose){
-			fprintf(stderr, "%u\n", __tasks[i]);
-		}
-	}
-	
-	if (verbose){
-		fprintf(stderr, "\n");
 	}
 	
 	/* Compute means. */
@@ -374,6 +368,8 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 {
 	int i, j;  /* Loop indexes. */
 	int again; /* Loop again?   */
+	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
+	long long hwcounters[4];
 
 	((void)__tasks);
 	((void)__ntasks);
@@ -414,6 +410,16 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 	/* Cluster data. */
 	do
 	{
+		if (verbose)
+		{
+			/* Setup PAPI. */
+			if (PAPI_start_counters(events, 4) != PAPI_OK)
+			{
+				fprintf(stderr, "failed to setup PAPI\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		
 		populate();
 		compute_centroids();
 
@@ -426,6 +432,21 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 		}
 
 		again = (i < nthreads) ? 1 : 0;
+		
+		if (verbose)
+		{
+			/* Exit PAPI. */
+			if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
+			{
+				fprintf(stderr, "failed to read hardware counters\n");
+				exit(EXIT_FAILURE);
+			}
+			
+			printf("L1 Misses:   %lld\n", hwcounters[0]);
+			printf("L2 Misses:   %lld\n", hwcounters[1]);
+			printf("L2 Accesses: %lld\n", hwcounters[2]);
+			printf("L3 Accesses: %lld\n", hwcounters[3]);
+		}
 
 	} while (again);
 	
