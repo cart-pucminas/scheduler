@@ -102,6 +102,11 @@ static void compute_centroids(void)
 	int tid;        /* Thread ID.          */
 	int i, j;       /* Loop indexes.       */
 	int population; /* Cluster population. */
+	int max, min, sum;
+	int load[nthreads];
+	
+	if (verbose)
+		memset(load, 0, nthreads*sizeof(int));
 	
 	memset(has_changed, 0, nthreads*sizeof(int));
 	
@@ -136,8 +141,26 @@ static void compute_centroids(void)
 			if (population > 1)
 				vector_mult(centroids[i], 1.0/population);
 			
+			
+			if (verbose)
+				load[omp_get_thread_num()] += population;
+			
 			has_changed[tid] = 1;
 		}
+	}
+	
+	if (verbose)
+	{
+		sum = 0; min = INT_MAX; max = INT_MIN;
+		for (i = 0; i < nthreads;i++)
+		{
+			sum += load[i];
+			if (load[i] < min)
+				min = load[i];
+			if (load[i] > max)
+				max = load[i];
+		}
+		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
 	}
 }
 
@@ -201,6 +224,11 @@ static void compute_centroids(void)
 	int tid;        /* Thread ID.          */
 	int i, j;       /* Loop indexes.       */
 	int population; /* Cluster population. */
+	int max, min, sum;
+	int load[nthreads];
+	
+	if (verbose)
+		memset(load, 0, nthreads*sizeof(int));
 	
 	memset(has_changed, 0, nthreads*sizeof(int));
 	
@@ -235,8 +263,25 @@ static void compute_centroids(void)
 			if (population > 1)
 				vector_mult(centroids[i], 1.0/population);
 			
+			if (verbose)
+				load[omp_get_thread_num()] += population;
+			
 			has_changed[tid] = 1;
 		}
+	}
+	
+	if (verbose)
+	{
+		sum = 0; min = INT_MAX; max = INT_MIN;
+		for (i = 0; i < nthreads;i++)
+		{
+			sum += load[i];
+			if (load[i] < min)
+				min = load[i];
+			if (load[i] > max)
+				max = load[i];
+		}
+		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
 	}
 }
 
@@ -308,6 +353,11 @@ static void compute_centroids(void)
 	int i, j;            /* Loop indexes.        */
 	int pop;             /* Centroid population. */
 	unsigned *tmp__tasks; /* Used for swap.       */
+	int max, min, sum;
+	int load[nthreads];
+	
+	if (verbose)
+		memset(load, 0, nthreads*sizeof(int));
 	
 	memset(has_changed, 0, nthreads*sizeof(int));
 	
@@ -349,8 +399,25 @@ static void compute_centroids(void)
 			if (!vector_equal(tmp[tid], centroids[i]))
 				has_changed[tid] = 1;
 			
+			if (verbose)
+				load[omp_get_thread_num()] += pop;
+			
 			__tasks2[i] = pop;
 		}
+	}
+	
+	if (verbose)
+	{
+		sum = 0; min = INT_MAX; max = INT_MIN;
+		for (i = 0; i < nthreads;i++)
+		{
+			sum += load[i];
+			if (load[i] < min)
+				min = load[i];
+			if (load[i] > max)
+				max = load[i];
+		}
+		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
 	}
 	
 	/* Black magic =) */
@@ -442,8 +509,8 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 				exit(EXIT_FAILURE);
 			}
 			
-			printf("L1 Misses:   %lld\n", hwcounters[0]);
-			printf("L2 Misses:   %lld\n", hwcounters[1]);
+			printf("L1 Misses: %lld\n", hwcounters[0]);
+			printf("L2 Misses: %lld\n", hwcounters[1]);
 			printf("L2 Accesses: %lld\n", hwcounters[2]);
 			printf("L3 Accesses: %lld\n", hwcounters[3]);
 		}
