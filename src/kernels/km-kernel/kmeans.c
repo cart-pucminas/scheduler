@@ -509,10 +509,10 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 				exit(EXIT_FAILURE);
 			}
 			
-			printf("L1 Misses: %lld\n", hwcounters[0]);
-			printf("L2 Misses: %lld\n", hwcounters[1]);
-			printf("L2 Accesses: %lld\n", hwcounters[2]);
-			printf("L3 Accesses: %lld\n", hwcounters[3]);
+			fprintf(stderr, "L1 Misses: %lld\n", hwcounters[0]);
+			fprintf(stderr, "L2 Misses: %lld\n", hwcounters[1]);
+			fprintf(stderr, "L2 Accesses: %lld\n", hwcounters[2]);
+			fprintf(stderr, "L3 Accesses: %lld\n", hwcounters[3]);
 		}
 
 	} while (again);
