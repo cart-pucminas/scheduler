@@ -376,6 +376,10 @@ static void compute_centroids(void)
 		#pragma omp for schedule(runtime)
 		for (i = 0; i < ncentroids; i++)
 		{
+			/* Cluster did not change. */
+			if (!dirty[i])
+				continue;
+				
 			/* Initialize temporary vector.*/
 			vector_assign(tmp[tid], centroids[i]);
 			vector_clear(centroids[i]);
@@ -437,6 +441,7 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 	int again; /* Loop again?   */
 	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
 	long long hwcounters[4];
+	int niterations = 0;
 
 	((void)__tasks);
 	((void)__ntasks);
@@ -501,7 +506,7 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 		again = (i < nthreads) ? 1 : 0;
 		
 		if (verbose)
-		{
+		{			
 			/* Exit PAPI. */
 			if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
 			{
@@ -515,7 +520,10 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 			fprintf(stderr, "L3 Accesses: %lld\n", hwcounters[3]);
 		}
 
+		niterations++;
 	} while (again);
+	
+	fprintf(stderr, "niterations: %d\n", niterations);
 	
 	
 	/* House keeping.  */
