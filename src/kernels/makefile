@@ -29,13 +29,11 @@ static:
 dynamic:
 	cd fn-kernel && $(MAKE) dynamic
 	cd is-kernel && $(MAKE) dynamic
-	cd km-kernel && $(MAKE) dynamic
 
 # Builds runtime kernels.
 smart-round-robin:
 	cd fn-kernel && $(MAKE) smart-round-robin
 	cd is-kernel && $(MAKE) smart-round-robin
-	cd km-kernel && $(MAKE) smart-round-robin
 
 # Cleans compilation files.
 clean:

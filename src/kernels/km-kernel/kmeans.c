@@ -1,548 +1,233 @@
-/*
- * Copyright(C) 2014 Pedro H. Penna <pedrohenriquepenna@gmail.com>
- * 
- * kmeans.c - kmeans() implementation.
- */
+/*****************************************************************************/
+/*IMPORTANT:  READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.         */
+/*By downloading, copying, installing or using the software you agree        */
+/*to this license.  If you do not agree to this license, do not download,    */
+/*install, copy or use the software.                                         */
+/*                                                                           */
+/*                                                                           */
+/*Copyright (c) 2005 Northwestern University                                 */
+/*All rights reserved.                                                       */
+
+/*Redistribution of the software in source and binary forms,                 */
+/*with or without modification, is permitted provided that the               */
+/*following conditions are met:                                              */
+/*                                                                           */
+/*1       Redistributions of source code must retain the above copyright     */
+/*        notice, this list of conditions and the following disclaimer.      */
+/*                                                                           */
+/*2       Redistributions in binary form must reproduce the above copyright   */
+/*        notice, this list of conditions and the following disclaimer in the */
+/*        documentation and/or other materials provided with the distribution.*/ 
+/*                                                                            */
+/*3       Neither the name of Northwestern University nor the names of its    */
+/*        contributors may be used to endorse or promote products derived     */
+/*        from this software without specific prior written permission.       */
+/*                                                                            */
+/*THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS    */
+/*IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED      */
+/*TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT AND         */
+/*FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL          */
+/*NORTHWESTERN UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,       */
+/*INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES          */
+/*(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR          */
+/*SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)          */
+/*HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,         */
+/*STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN    */
+/*ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE             */
+/*POSSIBILITY OF SUCH DAMAGE.                                                 */
+/******************************************************************************/
+
+/*************************************************************************/
+/**   File:         example.c                                           **/
+/**   Description:  Takes as input a file:                              **/
+/**                 ascii  file: containing 1 data point per line       **/
+/**                 binary file: first int is the number of objects     **/
+/**                              2nd int is the no. of features of each **/
+/**                              object                                 **/
+/**                 This example performs a fuzzy c-means clustering    **/
+/**                 on the data. Fuzzy clustering is performed using    **/
+/**                 min to max clusters and the clustering that gets    **/
+/**                 the best score according to a compactness and       **/
+/**                 separation criterion are returned.                  **/
+/**   Author:  Wei-keng Liao                                            **/
+/**            ECE Department Northwestern University                   **/
+/**            email: wkliao@ece.northwestern.edu                       **/
+/**                                                                     **/
+/**   Edited by: Jay Pisharath                                          **/
+/**              Northwestern University.                               **/
+/**                                                                     **/
+/**   ================================================================  **/
+/**																		**/
+/**   Edited by: Sang-Ha  Lee											**/
+/**				 University of Virginia									**/
+/**																		**/
+/**   Description:	No longer supports fuzzy c-means clustering;	 	**/
+/**					only regular k-means clustering.					**/
+/**					Simplified for main functionality: regular k-means	**/
+/**					clustering.											**/
+/**                                                                     **/
+/*************************************************************************/
 
 #include <stdio.h>
-#include <math.h>
-#include <omp.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+#include <math.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <omp.h>
+#include <unistd.h>
 
-#include <papi.h>
+#include "kmeans.h"
 
-#include <mylib/util.h>
+extern double wtime(void);
 
-#include "vector.h"
+int num_omp_threads = 1;
 
-extern int verbose;
-extern int nthreads;
-
-/*
- * For now, libgomp hopes that we will
- * fill these structures. A better
- * way to achieve the same think would
- * be to do something like:
- * 
- *   #pragma omp paralell for tasks(myarray, ntasks)
- */
-unsigned *__tasks;
-unsigned __ntasks;
-
-/* Kmeans data. */
-float mindistance;   /* Minimum distance.             */
-int npoints;         /* Number of points.             */
-vector_t *data;      /* Data being clustered.         */
-int ncentroids;      /* Number of clusters.           */
-int *map;            /* Map of clusters.              */
-vector_t *centroids; /* Data centroids.               */
-vector_t *tmp;       /* Temporary centroids.          */
-int *dirty;          /* Dirty centroid?               */
-int *too_far;        /* Are there any points too far? */
-int *has_changed;    /* has any centroid change?      */
-
-#if defined(_STATIC_SCHEDULE_)
-
-/*
- * Populates clusters.
- */
-static void populate(void)
-{
-	int tid;        /* Thread ID.          */
-	int i, j;       /* Loop indexes.       */
-	float tmp;      /* Auxiliary variable. */
-	float distance; /* Distance.           */
-	
-	memset(too_far, 0, nthreads*sizeof(int));
-	memset(dirty, 0, ncentroids*sizeof(int));
-	
-	/* Iterate over data points. */
-	#pragma omp parallel private(i, j, tmp, distance, tid) default(shared)
-	{
-		tid = omp_get_thread_num();
-		
-		#pragma omp for
-		for (i = 0; i < npoints; i++)
-		{	
-			distance = vector_distance(centroids[map[i]], data[i]);
-			
-			/* Look for closest cluster. */
-			for (j = 0; j < ncentroids; j++)
-			{	
-				/* Point is in this cluster. */
-				if (j == map[i])
-					continue;
-					
-				tmp = vector_distance(centroids[j], data[i]);
-				
-				/* Found. */
-				if (tmp < distance)
-				{
-					map[i] = j;
-					distance = tmp;
-					
-					#pragma omp critical
-					dirty[j] = 1;
-				}
-			}
-			
-			/* Cluster is too far away. */
-			if (distance > mindistance)
-				too_far[tid] = 1;
-		}
-	}
+/*---< usage() >------------------------------------------------------------*/
+void usage(char *argv0) {
+    char *help =
+        "Usage: %s [switches] -i filename\n"
+        "       -i filename     		: file containing data to be clustered\n"
+        "       -b                 	: input file is in binary format\n"
+		"       -k                 	: number of clusters (default is 5) \n"
+        "       -t threshold		: threshold value\n"
+		"       -n no. of threads	: number of threads\n";
+    fprintf(stderr, help, argv0);
+    exit(-1);
 }
 
-/*
- * Computes cluster's centroids.
- */
-static void compute_centroids(void)
-{
-	int tid;        /* Thread ID.          */
-	int i, j;       /* Loop indexes.       */
-	int population; /* Cluster population. */
-	int max, min, sum;
-	int load[nthreads];
+/*---< main() >-------------------------------------------------------------*/
+int main(int argc, char **argv) {
+           int     opt;
+    extern char   *optarg;
+    extern int     optind;
+           int     nclusters=5;
+           char   *filename = 0;           
+           float  *buf;
+           float **attributes;
+           float **cluster_centres=NULL;
+           int     i, j;
+                
+           int     numAttributes;
+           int     numObjects;        
+           char    line[1024];           
+           int     isBinaryFile = 0;
+           int     nloops = 1;
+           float   threshold = 0.001;
+		   double  timing;		   
+
+	while ( (opt=getopt(argc,argv,"i:k:t:b:n:?"))!= EOF) {
+		switch (opt) {
+            case 'i': filename=optarg;
+                      break;
+            case 'b': isBinaryFile = 1;
+                      break;
+            case 't': threshold=atof(optarg);
+                      break;
+            case 'k': nclusters = atoi(optarg);
+                      break;			
+			case 'n': num_omp_threads = atoi(optarg);
+					  break;
+            case '?': usage(argv[0]);
+                      break;
+            default: usage(argv[0]);
+                      break;
+        }
+    }
+
+
+    if (filename == 0) usage(argv[0]);
+
+    numAttributes = numObjects = 0;
+
+    /* from the input file, get the numAttributes and numObjects ------------*/
+   
+    if (isBinaryFile) {
+        int infile;
+        if ((infile = open(filename, O_RDONLY, "0600")) == -1) {
+            fprintf(stderr, "Error: no such file (%s)\n", filename);
+            exit(1);
+        }
+        (void)(read(infile, &numObjects,    sizeof(int)) + 1);
+        (void)(read(infile, &numAttributes, sizeof(int)) + 1);
+   
+
+        /* allocate space for attributes[] and read attributes of all objects */
+        buf           = (float*) malloc(numObjects*numAttributes*sizeof(float));
+        attributes    = (float**)malloc(numObjects*             sizeof(float*));
+        attributes[0] = (float*) malloc(numObjects*numAttributes*sizeof(float));
+        for (i=1; i<numObjects; i++)
+            attributes[i] = attributes[i-1] + numAttributes;
+
+        (void)(read(infile, buf, numObjects*numAttributes*sizeof(float)) + 1);
+
+        close(infile);
+    }
+    else {
+        FILE *infile;
+        if ((infile = fopen(filename, "r")) == NULL) {
+            fprintf(stderr, "Error: no such file (%s)\n", filename);
+            exit(1);
+        }
+        while (fgets(line, 1024, infile) != NULL)
+            if (strtok(line, " \t\n") != 0)
+                numObjects++;
+        rewind(infile);
+        while (fgets(line, 1024, infile) != NULL) {
+            if (strtok(line, " \t\n") != 0) {
+                /* ignore the id (first attribute): numAttributes = 1; */
+                while (strtok(NULL, " ,\t\n") != NULL) numAttributes++;
+                break;
+            }
+        }
+     
+
+        /* allocate space for attributes[] and read attributes of all objects */
+        buf           = (float*) malloc(numObjects*numAttributes*sizeof(float));
+        attributes    = (float**)malloc(numObjects*             sizeof(float*));
+        attributes[0] = (float*) malloc(numObjects*numAttributes*sizeof(float));
+        for (i=1; i<numObjects; i++)
+            attributes[i] = attributes[i-1] + numAttributes;
+        rewind(infile);
+        i = 0;
+        while (fgets(line, 1024, infile) != NULL) {
+            if (strtok(line, " \t\n") == NULL) continue; 
+            for (j=0; j<numAttributes; j++) {
+                buf[i] = atof(strtok(NULL, " ,\t\n"));
+                i++;
+            }
+        }
+        fclose(infile);
+    }     
+	printf("I/O completed\n");	
+
+	memcpy(attributes[0], buf, numObjects*numAttributes*sizeof(float));
+
+	timing = omp_get_wtime();
+    for (i=0; i<nloops; i++) {
+        
+        cluster_centres = NULL;
+        cluster(numObjects,
+                numAttributes,
+                attributes,           /* [numObjects][numAttributes] */                
+                nclusters,
+                threshold,
+                &cluster_centres   
+               );
+     
+    }
+    timing = omp_get_wtime() - timing;
 	
-	if (verbose)
-		memset(load, 0, nthreads*sizeof(int));
-	
-	memset(has_changed, 0, nthreads*sizeof(int));
-	
-	/* Compute means. */
-	#pragma omp parallel private(i, j, population, tid) default(shared) 
-	{	
-		tid = omp_get_thread_num();
-		
-		#pragma omp for schedule(static)
-		for (i = 0; i < ncentroids; i++)
-		{
-			/* Cluster did not change. */
-			if (!dirty[i])
-				continue;
-				
-			/* Initialize temporary vector.*/
-			vector_assign(tmp[tid], centroids[i]);
-			vector_clear(centroids[i]);
-			
-			/* Compute cluster's mean. */
-			population = 0;
-			for (j = 0; j < npoints; j++)
-			{
-				/* Not a member of this cluster. */
-				if (map[j] != i)
-					continue;			
-				
-				vector_add(centroids[i], data[j]);
-					
-				population++;
-			}		
-			if (population > 1)
-				vector_mult(centroids[i], 1.0/population);
-			
-			/* Cluster mean has changed. */
-			if (!vector_equal(tmp[tid], centroids[i]))
-				has_changed[tid] = 1;
-			
-			if (verbose)
-				load[omp_get_thread_num()] += population;
-		}
-	}
-	
-	if (verbose)
-	{
-		sum = 0; min = INT_MAX; max = INT_MIN;
-		for (i = 0; i < nthreads;i++)
-		{
-			sum += load[i];
-			if (load[i] < min)
-				min = load[i];
-			if (load[i] > max)
-				max = load[i];
-		}
-		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
-	}
+
+	printf("number of Clusters %d\n",nclusters); 
+	printf("number of Attributes %d\n\n",numAttributes); 
+	printf("Time for process: %f\n", timing);
+
+    free(attributes);
+    free(cluster_centres[0]);
+    free(cluster_centres);
+    free(buf);
+    return(0);
 }
 
-#elif defined(_DYNAMIC_SCHEDULE_)
-
-/*
- * Populates clusters.
- */
-static void populate(void)
-{
-	int tid;        /* Thread ID.          */
-	int i, j;       /* Loop indexes.       */
-	float tmp;      /* Auxiliary variable. */
-	float distance; /* Distance.           */
-	
-	memset(too_far, 0, nthreads*sizeof(int));
-	memset(dirty, 0, ncentroids*sizeof(int));
-	
-	/* Iterate over data points. */
-	#pragma omp parallel private(i, j, tmp, distance, tid) default(shared)
-	{
-		tid = omp_get_thread_num();
-		
-		#pragma omp for
-		for (i = 0; i < npoints; i++)
-		{	
-			distance = vector_distance(centroids[map[i]], data[i]);
-			
-			/* Look for closest cluster. */
-			for (j = 0; j < ncentroids; j++)
-			{	
-				/* Point is in this cluster. */
-				if (j == map[i])
-					continue;
-					
-				tmp = vector_distance(centroids[j], data[i]);
-				
-				/* Found. */
-				if (tmp < distance)
-				{
-					map[i] = j;
-					distance = tmp;
-					
-					#pragma omp critical
-					dirty[j] = 1;
-				}
-			}
-			
-			/* Cluster is too far away. */
-			if (distance > mindistance)
-				too_far[tid] = 1;
-		}
-	}
-}
-
-/*
- * Computes cluster's centroids.
- */
-static void compute_centroids(void)
-{
-	int tid;        /* Thread ID.          */
-	int i, j;       /* Loop indexes.       */
-	int population; /* Cluster population. */
-	int max, min, sum;
-	int load[nthreads];
-	
-	if (verbose)
-		memset(load, 0, nthreads*sizeof(int));
-	
-	memset(has_changed, 0, nthreads*sizeof(int));
-	
-	/* Compute means. */
-	#pragma omp parallel private(i, j, population, tid) default(shared) 
-	{	
-		tid = omp_get_thread_num();
-		
-		#pragma omp for schedule(dynamic)
-		for (i = 0; i < ncentroids; i++)
-		{
-			/* Cluster did not change. */
-			if (!dirty[i])
-				continue;
-				
-			/* Initialize temporary vector.*/
-			vector_assign(tmp[tid], centroids[i]);
-			vector_clear(centroids[i]);
-			
-			/* Compute cluster's mean. */
-			population = 0;
-			for (j = 0; j < npoints; j++)
-			{
-				/* Not a member of this cluster. */
-				if (map[j] != i)
-					continue;			
-				
-				vector_add(centroids[i], data[j]);
-					
-				population++;
-			}		
-			if (population > 1)
-				vector_mult(centroids[i], 1.0/population);
-			
-			/* Cluster mean has changed. */
-			if (!vector_equal(tmp[tid], centroids[i]))
-				has_changed[tid] = 1;
-			
-			if (verbose)
-				load[omp_get_thread_num()] += population;
-		}
-	}
-	
-	if (verbose)
-	{
-		sum = 0; min = INT_MAX; max = INT_MIN;
-		for (i = 0; i < nthreads;i++)
-		{
-			sum += load[i];
-			if (load[i] < min)
-				min = load[i];
-			if (load[i] > max)
-				max = load[i];
-		}
-		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
-	}
-}
-
-#elif defined(_RUNTIME_SCHEDULE_)
-
-unsigned *__tasks2;
-
-/*
- * Populates clusters.
- */
-static void populate(void)
-{
-	int tid;            /* Thread ID.          */
-	int i, j;           /* Loop indexes.       */
-	float tmp_distance; /* Auxiliary variable. */
-	float distance;     /* Distance.           */
-
-	memset(too_far, 0, nthreads*sizeof(int));
-	memset(dirty, 0, ncentroids*sizeof(int));
-	
-	/* Iterate over data points. */
-	#pragma omp parallel private(i, j, tmp_distance, distance, tid) default(shared)
-	{
-		tid = omp_get_thread_num();
-		
-		#pragma omp for
-		for (i = 0; i < npoints; i++)
-		{	
-			distance = vector_distance(centroids[map[i]], data[i]);
-			
-			/* Look for closest cluster. */
-			for (j = 0; j < ncentroids; j++)
-			{	
-				/* Point is in this cluster. */
-				if (j == map[i])
-					continue;
-					
-				tmp_distance = vector_distance(centroids[j], data[i]);
-				
-				/* Found. */
-				if (tmp_distance < distance)
-				{
-					#pragma omp critical
-					{
-						
-						__tasks[map[i]]--;
-						__tasks[j]++;
-						dirty[j] = 1;
-					}
-					
-					distance = tmp_distance;
-					map[i] = j;
-				}
-			}
-			
-			/* Cluster is too far away. */
-			if (distance > mindistance)
-				too_far[tid] = 1;
-		}
-	}
-}
-
-/*
- * Computes cluster's centroids.
- */
-static void compute_centroids(void)
-{
-	int tid;             /* Thread ID.           */
-	int i, j;            /* Loop indexes.        */
-	int pop;             /* Centroid population. */
-	unsigned *tmp__tasks; /* Used for swap.       */
-	int max, min, sum;
-	int load[nthreads];
-	
-	if (verbose)
-		memset(load, 0, nthreads*sizeof(int));
-	
-	memset(has_changed, 0, nthreads*sizeof(int));
-	
-	/* Remove clean tasks. */
-	for (i = 0; i < ncentroids; i++)
-	{
-		if (!dirty[i])
-			__tasks[i] = 0;
-	}
-	
-	/* Compute means. */
-	#pragma omp parallel private(i, j, pop, tid) default(shared) 
-	{	
-		tid = omp_get_thread_num();
-		
-		#pragma omp for schedule(runtime)
-		for (i = 0; i < ncentroids; i++)
-		{
-			/* Cluster did not change. */
-			if (!dirty[i])
-				continue;
-				
-			/* Initialize temporary vector.*/
-			vector_assign(tmp[tid], centroids[i]);
-			vector_clear(centroids[i]);
-			
-			/* Compute cluster's mean. */
-			pop = 0;
-			for (j = 0; j < npoints; j++)
-			{
-				/* Not a member of this cluster. */
-				if (map[j] != i)
-					continue;			
-				
-				vector_add(centroids[i], data[j]);
-					
-				pop++;
-			}		
-			if (pop > 1)
-				vector_mult(centroids[i], 1.0/pop);
-			
-			/* Cluster mean has changed. */
-			if (!vector_equal(tmp[tid], centroids[i]))
-				has_changed[tid] = 1;
-			
-			if (verbose)
-				load[omp_get_thread_num()] += pop;
-			
-			__tasks2[i] = pop;
-		}
-	}
-	
-	if (verbose)
-	{
-		sum = 0; min = INT_MAX; max = INT_MIN;
-		for (i = 0; i < nthreads;i++)
-		{
-			sum += load[i];
-			if (load[i] < min)
-				min = load[i];
-			if (load[i] > max)
-				max = load[i];
-		}
-		fprintf(stderr, "Load Imbalance: %f\n", ((float)(max - min))/sum);
-	}
-	
-	/* Black magic =) */
-	tmp__tasks = __tasks;
-	__tasks = __tasks2;
-	__tasks2 = tmp__tasks;
-}
-
-#endif
-
-/*
- * Clusters data. 
- */
-int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
-{
-	int i, j;  /* Loop indexes. */
-	int again; /* Loop again?   */
-	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
-	long long hwcounters[4];
-	int niterations = 0;
-
-	((void)__tasks);
-	((void)__ntasks);
-	
-	/* Setup parameters. */
-	data = _data;
-	npoints = _npoints;
-	ncentroids = _ncentroids;
-	mindistance = _mindistance;
-	
-	/* Create auxiliary structures. */
-	map  = scalloc(npoints, sizeof(int));
-	too_far = smalloc(nthreads*sizeof(int));
-	has_changed = smalloc(nthreads*sizeof(int));
-	dirty = smalloc(ncentroids*sizeof(int));
-	centroids = smalloc(ncentroids*sizeof(vector_t));
-#ifdef _RUNTIME_SCHEDULE_
-	__ntasks = ncentroids;
-	__tasks = scalloc(ncentroids, sizeof(unsigned));
-	__tasks2 = smalloc(ncentroids*sizeof(unsigned));
-	__tasks[0] = npoints;
-#endif
-	for (i = 0; i < ncentroids; i++)
-	{
-		j = randnum()%npoints;
-		centroids[i] = vector_create(vector_size(data[0]));
-		vector_assign(centroids[i], data[j]);
-		map[j] = i;
-#ifdef _RUNTIME_SCHEDULE_
-		__tasks[i]++; __tasks2[i]++;
-		__tasks[0]--; __tasks2[0]--;
-#endif
-	}
-	tmp = smalloc(nthreads*sizeof(vector_t));
-	for (i = 0; i < nthreads; i++)
-		tmp[i] = vector_create(vector_size(data[0]));
-	
-	/* Cluster data. */
-	do
-	{
-		if (verbose)
-		{
-			/* Setup PAPI. */
-			if (PAPI_start_counters(events, 4) != PAPI_OK)
-			{
-				fprintf(stderr, "failed to setup PAPI\n");
-				exit(EXIT_FAILURE);
-			}
-		}
-		
-		populate();
-		compute_centroids();
-
-		/* Check if we need to loop. */
-		for (i = 0; i < nthreads; i++)
-		{
-			/* We will need another iteration. */
-			if (too_far[i] && has_changed[i])
-				break;		
-		}
-
-		again = (i < nthreads) ? 1 : 0;
-		
-		if (verbose)
-		{			
-			/* Exit PAPI. */
-			if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
-			{
-				fprintf(stderr, "failed to read hardware counters\n");
-				exit(EXIT_FAILURE);
-			}
-			
-			fprintf(stderr, "L1 Misses: %lld\n", hwcounters[0]);
-			fprintf(stderr, "L2 Misses: %lld\n", hwcounters[1]);
-			fprintf(stderr, "L2 Accesses: %lld\n", hwcounters[2]);
-			fprintf(stderr, "L3 Accesses: %lld\n", hwcounters[3]);
-		}
-
-		niterations++;
-	} while (again);
-	
-	fprintf(stderr, "niterations: %d\n", niterations);
-	
-	
-	/* House keeping.  */
-	for (i = 0; i < ncentroids; i++)
-		vector_destroy(centroids[i]);
-	free(centroids);
-	for (i = 0; i < nthreads; i++)
-		vector_destroy(tmp[i]);
-	free(tmp);
-	free(too_far);
-	free(has_changed);
-	free(dirty);
-#ifdef _RUNTIME_SCHEDULE_
-	free(__tasks);
-	free(__tasks2);
-#endif
-
-	return (map);
-}
