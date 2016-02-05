@@ -160,6 +160,7 @@ void bucketsort(int *array, int n, int nbuckets)
 	struct list **buckets;       /* Buckets.                 */
 	unsigned ptrs[nbuckets + 1]; /* Cumulative bucket sizes. */
 	omp_lock_t locks[nbuckets];
+	double start, end;
 
 	((void)__tasks);
 	((void)__ntasks);
@@ -227,18 +228,21 @@ void bucketsort(int *array, int n, int nbuckets)
 			for (j = 1; j < (nbuckets + 1); j++)
 				ptrs[j] = ptrs[j - 1] + list_length(buckets[j - 1]);
 		}
-		#pragma omp barrier
+	}
+
 		
 		/* Sort Each bucket. */
-		#pragma omp for schedule(dynamic)
+		start = omp_get_wtime();
+		#pragma omp parallel for schedule(dynamic) private(i, j)
 		for (i = 0; i < nbuckets; i++)
 		{
 			if (!list_empty(buckets[i]))
 					mergesort(buckets[i]);
 		}
+		end = omp_get_wtime();
 		
 		/* Rebuild array. */
-		#pragma omp for schedule(dynamic)
+		#pragma omp parallel for schedule(dynamic) private(i, j)
 		for (i = 0; i < nbuckets; i++)
 		{
 			j = ptrs[i];
@@ -246,8 +250,9 @@ void bucketsort(int *array, int n, int nbuckets)
 			while (!list_empty(buckets[i]))
 				array[j++] = list_pop(buckets[i]);
 		}
-	}
 	
+	printf("time: %lf\n", end - start);
+
 	/* House keeping. */
 	for (i = 0; i < nbuckets; i++)
 	{
@@ -276,6 +281,7 @@ void bucketsort(int *array, int n, int nbuckets)
 	omp_lock_t locks[nbuckets];
 	unsigned tasks1[nbuckets];
 	unsigned tasks2[nbuckets];
+	double start, end;
 
 	__ntasks = nbuckets;
 	
@@ -348,22 +354,22 @@ void bucketsort(int *array, int n, int nbuckets)
 
 			__tasks = tasks1;
 		}
-		#pragma omp barrier
+	}
 		
 		/* Sort Each bucket. */
-		#pragma omp for schedule(runtime)
+		start = omp_get_wtime();
+		#pragma omp parallel for schedule(runtime) private(i, j)
 		for (i = 0; i < nbuckets; i++)
 		{
 			if (!list_empty(buckets[i]))
 				mergesort(buckets[i]);
 		}
+		end = omp_get_wtime();
 		
-		#pragma omp master
 		__tasks = tasks2;
-		#pragma omp barrier
 		
 		/* Rebuild array. */
-		#pragma omp for schedule(runtime)
+		#pragma omp parallel for schedule(runtime) private(i, j)
 		for (i = 0; i < nbuckets; i++)
 		{
 			j = ptrs[i];
@@ -371,8 +377,9 @@ void bucketsort(int *array, int n, int nbuckets)
 			while (!list_empty(buckets[i]))
 				array[j++] = list_pop(buckets[i]);
 		}
-	}
 	
+	printf("time: %lf\n", end - start);
+
 	/* House keeping. */
 	for (i = 0; i < nbuckets; i++)
 	{

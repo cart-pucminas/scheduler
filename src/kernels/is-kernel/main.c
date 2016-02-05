@@ -33,11 +33,11 @@ struct problem
 };
 
 /* Problem sizes. */
-static struct problem tiny        = {  33554432, 48};
-static struct problem small       = {  67108864, 48};
-static struct problem workstation = { 134217728, 48};
-static struct problem standard    = { 268435456, 96};
-static struct problem large       = { 536870912, 192};
+static struct problem tiny        = {  33554432, 24};
+static struct problem small       = {  67108864, 24};
+static struct problem workstation = { 134217728, 24};
+static struct problem standard    = { 268435456, 24};
+static struct problem large       = { 536870912, 24};
 
 /* Benchmark parameters. */
 int verbose = 0;                  /* Be verbose?        */
@@ -141,8 +141,6 @@ static void readargs(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	int *a;         /* Array to be sorted. */
-	uint64_t end;   /* End time.           */
-	uint64_t start; /* Start time.         */
 	gsl_rng * r;
 	const gsl_rng_type * T;
 	double num;
@@ -163,16 +161,13 @@ int main(int argc, char **argv)
 	{
 		do
 		{
-			num = gsl_ran_gamma(r, GAMMA_A, GAMMA_B);
+			num = gsl_ran_gaussian(r, GUASSIAN_STDDEV) + GUASSIAN_MEAN;
 		} while (num < 0.0);
 		a[i] = (int)ceil(num*100000);
 	}
 	
 	/* Cluster data. */
-	start = timer_get();
 	bucketsort(a, p->n, p->nbuckets);
-	end = timer_get();
-	printf("%f\n", (end - start)/1000.0);
 	
 	/* House keeping. */
 	free(a);
