@@ -72,6 +72,10 @@
 #define FLT_MAX 3.40282347e+38
 #endif
 
+
+unsigned __ntasks;
+unsigned *__tasks;
+
 extern double wtime(void);
 extern int num_omp_threads;
 
