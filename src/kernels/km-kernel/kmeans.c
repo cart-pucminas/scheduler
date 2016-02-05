@@ -145,11 +145,8 @@ static void compute_centroids(void)
 			if (!vector_equal(tmp[tid], centroids[i]))
 				has_changed[tid] = 1;
 			
-			
 			if (verbose)
 				load[omp_get_thread_num()] += population;
-			
-			has_changed[tid] = 1;
 		}
 	}
 	
@@ -273,8 +270,6 @@ static void compute_centroids(void)
 			
 			if (verbose)
 				load[omp_get_thread_num()] += population;
-			
-			has_changed[tid] = 1;
 		}
 	}
 	
@@ -479,8 +474,8 @@ int *kmeans(vector_t *_data, int _npoints, int _ncentroids, float _mindistance)
 		vector_assign(centroids[i], data[j]);
 		map[j] = i;
 #ifdef _RUNTIME_SCHEDULE_
-		__tasks[i]++;
-		__tasks[0]--;
+		__tasks[i]++; __tasks2[i]++;
+		__tasks[0]--; __tasks2[0]--;
 #endif
 	}
 	tmp = smalloc(nthreads*sizeof(vector_t));
