@@ -141,6 +141,10 @@ static void compute_centroids(void)
 			if (population > 1)
 				vector_mult(centroids[i], 1.0/population);
 			
+			/* Cluster mean has changed. */
+			if (!vector_equal(tmp[tid], centroids[i]))
+				has_changed[tid] = 1;
+			
 			
 			if (verbose)
 				load[omp_get_thread_num()] += population;
@@ -262,6 +266,10 @@ static void compute_centroids(void)
 			}		
 			if (population > 1)
 				vector_mult(centroids[i], 1.0/population);
+			
+			/* Cluster mean has changed. */
+			if (!vector_equal(tmp[tid], centroids[i]))
+				has_changed[tid] = 1;
 			
 			if (verbose)
 				load[omp_get_thread_num()] += population;
