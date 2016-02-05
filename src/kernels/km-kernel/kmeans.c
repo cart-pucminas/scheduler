@@ -88,7 +88,7 @@ int num_omp_threads = 1;
 void usage(char *argv0) {
     char *help =
         "Usage: %s [switches] -i filename\n"
-        "       -i filename     		: file containing data to be clustered\n"
+        "       -i filename         : file containing data to be clustered\n"
         "       -b                 	: input file is in binary format\n"
 		"       -k                 	: number of clusters (default is 5) \n"
         "       -t threshold		: threshold value\n"

@@ -29,6 +29,7 @@ static:
 dynamic:
 	cd fn-kernel && $(MAKE) dynamic
 	cd is-kernel && $(MAKE) dynamic
+	cd km-kernel && $(MAKE) dynamic
 
 # Builds runtime kernels.
 smart-round-robin:

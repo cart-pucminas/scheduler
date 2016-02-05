@@ -185,12 +185,20 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		#pragma omp parallel \
                 shared(feature,clusters,membership,partial_new_centers,partial_new_centers_len)
         {
-            int tid = omp_get_thread_num();				
+            int tid = omp_get_thread_num();
+#ifdef _DYNAMIC_SCHEDULE_
+            #pragma omp for \
+                        private(i,j,index) \
+                        firstprivate(npoints,nclusters,nfeatures) \
+                        schedule(dynamic) \
+                        reduction(+:delta)
+#else
             #pragma omp for \
                         private(i,j,index) \
                         firstprivate(npoints,nclusters,nfeatures) \
                         schedule(static) \
                         reduction(+:delta)
+#endif
             for (i=0; i<npoints; i++) {
 	        /* find the index of nestest cluster centers */					
 	        index = find_nearest_point(feature[i],
