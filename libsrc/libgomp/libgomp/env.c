@@ -114,6 +114,11 @@ parse_schedule (void)
       env += 5;
     }
   /* END PEDRO */
+  else if (strncasecmp (env, "oracle", 6) == 0)
+    {
+      gomp_global_icv.run_sched_var = GFS_ORACLE;
+      env += 6;
+    }
   else if (strncasecmp (env, "auto", 4) == 0)
     {
       gomp_global_icv.run_sched_var = GFS_AUTO;
@@ -1081,6 +1086,9 @@ handle_omp_display_env (unsigned long stacksize, int wait_policy)
       break;
     case GFS_PEDRO:
       fputs ("PEDRO", stderr);
+      break;
+    case GFS_ORACLE:
+      fputs ("ORACLE", stderr);
       break;
     case GFS_STATIC:
       fputs ("STATIC", stderr);

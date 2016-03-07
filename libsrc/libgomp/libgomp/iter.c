@@ -295,6 +295,38 @@ found:
 
 /* END PEDRO */
 
+bool
+gomp_iter_oracle_next (long *pstart, long *pend)
+{
+  int i;                      /* Loop index.           */
+  int tid;                    /* Thread ID.            */
+  int start;                  /* Start of search.      */
+  struct gomp_thread *thr;    /* Thread.               */
+  struct gomp_work_share *ws; /* Work-Share construct. */
+  
+  thr = gomp_thread();
+  ws = thr->ts.work_share;
+  tid = omp_get_thread_num();
+
+  /* Search for next task. */
+  start = ws->thread_start[tid];
+  for (i = start; i < __ntasks; i++)
+  {
+     if (ws->taskmap[i] == tid)
+       goto found;
+  }
+
+  return (false);
+
+found:
+
+	ws->thread_start[tid] = i + 1;
+	*pstart = ws->loop_start + i;
+	*pend = ws->loop_start + i + 1;
+
+	return (true);
+}
+
 #endif /* HAVE_SYNC_BUILTINS */
 
 

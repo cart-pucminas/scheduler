@@ -194,7 +194,7 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
    * Setup internal GFS_PEDRO
    * variables and balances workload.
    */
-  if (sched == GFS_PEDRO) {
+  else if (sched == GFS_PEDRO) {
     if (num_threads == 0)
     {
 	  struct gomp_thread *thr = gomp_thread ();
@@ -208,6 +208,20 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
 	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));
   }
   /* END PEDRO */
+  
+  else if (sched == GFS_ORACLE) {
+    if (num_threads == 0)
+    {
+	  struct gomp_thread *thr = gomp_thread ();
+	  struct gomp_team *team = thr->ts.team;
+	  num_threads = (team != NULL) ? team->nthreads : 1;
+	}
+	
+	ws->taskmap = __tasks;
+	
+	ws->loop_start = start;
+	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));
+  }
 }
 
 /* The *_start routines are called when first encountering a loop construct
@@ -318,6 +332,25 @@ gomp_loop_pedro_start (long start, long end, long incr, long chunk_size,
 
 /* END PEDRO */
 
+static bool
+gomp_loop_oracle_start (long start, long end, long incr, long chunk_size,
+		       long *istart, long *iend)
+{
+  struct gomp_thread *thr = gomp_thread ();
+  bool ret;
+
+  if (gomp_work_share_start (false))
+    {
+      gomp_loop_init (thr->ts.work_share, start, end, incr,
+		      GFS_ORACLE, chunk_size, 0);
+      gomp_work_share_init_done ();
+    }
+
+  ret = gomp_iter_oracle_next (istart, iend);
+
+  return ret;
+}
+
 bool
 GOMP_loop_runtime_start (long start, long end, long incr,
 			 long *istart, long *iend)
@@ -342,6 +375,8 @@ GOMP_loop_runtime_start (long start, long end, long incr,
     case GFS_PEDRO:
       return gomp_loop_pedro_start (start, end, incr, icv->run_sched_modifier, istart, iend);
       /* END PEDRO */
+    case GFS_ORACLE:
+      return gomp_loop_oracle_start (start, end, incr, icv->run_sched_modifier, istart, iend);
 
     case GFS_AUTO:
       /* For now map to schedule(static), later on we could play with feedback
@@ -510,6 +545,12 @@ gomp_loop_pedro_next (long *istart, long *iend)
 }
 /* END PEDRO */
 
+static bool
+gomp_loop_oracle_next (long *istart, long *iend)
+{
+  return gomp_iter_oracle_next (istart, iend);
+}
+
 bool
 GOMP_loop_runtime_next (long *istart, long *iend)
 {
@@ -526,6 +567,8 @@ GOMP_loop_runtime_next (long *istart, long *iend)
       return gomp_loop_guided_next (istart, iend);
     case GFS_PEDRO:
       return gomp_loop_pedro_next (istart, iend);
+    case GFS_ORACLE:
+      return gomp_loop_oracle_next (istart, iend);
     default:
       abort ();
     }

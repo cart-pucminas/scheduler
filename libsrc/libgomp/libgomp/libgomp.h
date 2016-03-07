@@ -75,6 +75,7 @@ enum gomp_schedule_type
   /* BEGIN PEDRO */
   GFS_PEDRO,
   /* END PEDRO */
+  GFS_ORACLE,
 
   GFS_AUTO
 };
@@ -551,6 +552,7 @@ extern bool gomp_iter_guided_next (long *, long *);
    iter.c file. */
 extern bool gomp_iter_pedro_next (long *, long *);
 /* END PEDRO */
+extern bool gomp_iter_oracle_next (long *, long *);
 #endif
 
 /* iter_ull.c */
