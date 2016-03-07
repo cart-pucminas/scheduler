@@ -28,7 +28,7 @@ export LIBSRCDIR  = $(CURDIR)/libsrc
 export SRCDIR     = $(CURDIR)/src
 
 # Libraries.
-export MYLIB = mylib-0.6
+export MYLIB = mylib-0.7
 export LIBS  = $(LIBDIR)/libmy.a
 export LIBS += $(CONTRIBDIR)/lib/libgsl.a
 export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a

@@ -167,6 +167,19 @@ static gene_t gene_mutate(gene_t gen)
 }
 
 /**
+ * @brief Compares two genes.
+ * 
+ * @param gen1 First gene.
+ * @param gen2 Second gene.
+ * 
+ * @returns One if the two genes are equal and zero otherwise.
+ */
+static int gene_equal(gene_t gen1, gene_t gen2)
+{
+	return (!memcmp(gen1, gen2, ntasks*sizeof(int)));
+}
+
+/**
  * @brief Genetic algorithm problem.
  */
 static struct genome problem = {
@@ -175,11 +188,12 @@ static struct genome problem = {
 	0.01, /* Elitism rate.     */
 	0.90, /* Replacement rate. */
 	0,    /* Tournament size.  */
-	&gene_generate,  /* generate()  */
-	&gene_evaluate,  /* evaluate()  */
-	&gene_crossover, /* crossover() */
-	&gene_mutate,    /* mutation()  */
-	&gene_destroy    /* destroy()   */
+	&gene_generate,  /* generate()   */
+	&gene_evaluate,  /* evaluate()   */
+	&gene_crossover, /* crossover()  */
+	&gene_mutate,    /* mutation()   */
+	&gene_destroy,   /* destroy()    */
+	&gene_equal      /* gene_equal() */
 };
 
 /**
