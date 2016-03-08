@@ -19,12 +19,9 @@
 
 #ifndef _SEARCHER_H_
 #define _SEARCHER_H_
-
-	/* Forward definitions. */
-	extern unsigned nthreads;
-	extern unsigned ntasks;
 	
 	/* Forward definitions. */
-	extern void ga(const unsigned *, unsigned, unsigned);
+	extern void ga(const unsigned *, unsigned, unsigned, unsigned, unsigned,
+					double, double, double, double);
 
 #endif /* _SEARCHER_H_ */

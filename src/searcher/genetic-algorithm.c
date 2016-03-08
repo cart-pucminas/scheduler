@@ -37,6 +37,16 @@
 static const unsigned *tasks = NULL;
 
 /**
+ * @brief Number of tasks.
+ */
+static unsigned ntasks = 0;
+
+/**
+ * @brief Number of threads.
+ */
+static unsigned nthreads = 0;
+
+/**
  * @brief Destroys a gene.
  * 
  * @param gen Gene.
@@ -199,11 +209,27 @@ static struct genome problem = {
 /**
  * @brief Genetic algorithm for searching a good loop scheduling.
  */
-void ga(const unsigned *_tasks, unsigned popsize, unsigned ngen)
+void ga(
+	const unsigned *_tasks,
+	unsigned _ntasks,
+	unsigned _nthreads,
+	unsigned popsize,
+	unsigned ngen,
+	double crossover,
+	double elitism,
+	double mutation,
+	double replacement)
 {
 	gene_t bestgen;
 	
 	tasks = _tasks;
+	ntasks = _ntasks;
+	nthreads = _nthreads;
+	
+	problem.c_rate = crossover;
+	problem.e_rate = elitism;
+	problem.m_rate = mutation;
+	problem.r_rate = replacement;
 	
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);

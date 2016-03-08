@@ -28,21 +28,37 @@
 #include "searcher.h"
 
 /**
- * @name Searching Parameters
+ * @name Program arguments.
  */
 /**@{*/
-unsigned nthreads = 0;            /**< Number of threads.        */
-unsigned ntasks = 0;              /**< Number of tasks.          */
-static unsigned distribution = 0; /**< Probability distribution. */
-static unsigned ngen = 0;         /**< Number of generations.    */
-static unsigned popsize = 0;      /**< Population size.          */
-/**@}*/
-
-
-/**
- * @brief Input data file.
- */
-static const char *infile = NULL;
+struct
+{
+	/**
+	 * @name Synthetic Workload Arguments
+	 */
+	/**@{*/
+	const char *infile;  /**< Input data file.                           */
+	unsigned ntasks;     /**< Number of tasks.                           */
+	unsigned nthreads;   /**< Number of threads.                         */
+	const char *pdfname; /**< Input Probability density function name.   */
+	unsigned pdfnum;     /**< Input Probability density function number. */
+	/**@}*/
+	
+	/**
+	 * @name Genetic Algorithm Arguments
+	 */
+	/**@{*/
+	double crossover;   /**< Crossover rate.        */
+	double elitism;     /**< Elitism rate.          */
+	double mutation;    /**< Mutation rate.         */
+	unsigned ngen;      /**< Number of generations. */
+	unsigned popsize;   /**< Population size.       */
+	double replacement; /**< Replacement rate.      */
+	/**@}*/
+} args = {
+	NULL, 0, 0, NULL, 0,
+	0.0, 0.0, 0.0, 0, 0, 0.0
+};
 
 /**
  * @brief Prints program usage and exits.
@@ -54,15 +70,75 @@ static void usage(void)
 	printf("Usage: searcher [options]\n");
 	printf("Brief: searches for a good loop scheduling\n");
 	printf("Options:\n");
-	printf("  --nthreads <num>       Number of threads\n");
-	printf("  --ntasks <num>         Number of tasks\n");
-	printf("  --distribution <name>  Input probability density function\n");
-	printf("  --input <filename>     Use input file as input data");
-	printf("  --ngen <num>           Number of generations\n");
-	printf("  --popsize <num>        Population size\n");
-	printf("  --help                 Display this message\n");
+	printf("  Synthetic Application\n");
+	printf("    --input <filename>     Input data file\n");
+	printf("    --ntasks <num>         Number of tasks\n");
+	printf("    --nthreads <num>       Number of threads\n");
+	printf("    --pdf <name>           Input probability density function\n");
+	printf("  Genetic Algorithm\n");
+	printf("    --crossover <num>      Crossover rate\n");
+	printf("    --elitism <num>        Elitism rate\n");
+	printf("    --mutation <num>       Mutation rate\n");
+	printf("    --ngen <num>           Number of generations\n");
+	printf("    --popsize <num>        Population size\n");
+	printf("    --replacement <num>    Replacement rate\n");
+	printf("  Other Options\n");
+	printf("    --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
+}
+
+/**
+ * @brief Checks program arguments.
+ * 
+ * @details Checks program arguments and terminates execution if they are not 
+ *          valid.
+ */
+static void checkargs(void)
+{
+	if (args.infile == NULL)
+	{
+		if (args.pdfname == NULL)
+			error("invalid input probability density function");
+		else
+		{
+			for (int i = 0; i < NDISTRIBUTIONS; i++)
+			{
+				if (!strcmp(args.pdfname, distributions[i]))
+				{
+					args.pdfnum = i;
+					goto out;
+				}
+			}
+			
+			printf("unknown input probability density function");
+		}
+	}
+out:
+	
+	if (args.ntasks == 0)
+		error("invalid number of tasks");
+		
+	if (args.nthreads == 0)
+		error("invalid number of threads");
+	
+	if ((args.crossover <= 0.0) || (args.crossover >= 1.0))
+		error("invalid crossover rate");
+	
+	if ((args.elitism <= 0.0) || (args.elitism >= 1.0))
+		error("invalid elitism rate");
+	
+	if ((args.mutation <= 0.0) || (args.mutation >= 1.0))
+		error("invalid mutation rate");
+	
+	if (args.ngen == 0)
+		error("invalid number of generations");
+		
+	if (args.popsize == 0)
+		error("invalid population size");
+	
+	if ((args.replacement <= 0.0) || (args.replacement >= 1.0))
+		error("invalid replacement rate");
 }
 
 /**
@@ -73,19 +149,22 @@ static void usage(void)
 static void readargs(int argc, const char **argv)
 {
 	enum states{
-		STATE_READ_ARG,         /* Read argument.             */
-		STATE_SET_NTHREADS,     /* Set number of threads.     */
-		STATE_SET_NTASKS,       /* Set number of tasks.       */
-		STATE_SET_DISTRIBUTION, /* Set distribution.          */
-		STATE_SET_NGEN,         /* Set number of generations. */
-		STATE_SET_POPSIZE,      /* Population size.           */
-		STATE_SET_INPUT};       /* Set input data.            */
+		STATE_READ_ARG,       /* Read argument.                    */
+		STATE_SET_PDF,        /* Set probability density function. */
+		STATE_SET_INFILE,     /* Set input data file.              */
+		STATE_SET_NTASKS,     /* Set number of tasks.              */
+		STATE_SET_NTHREADS,   /* Set number of threads.            */
+		STATE_SET_CROSSOVER,  /* Set crossover rate.               */
+		STATE_SET_ELITISM,    /* Set elitism rate.                 */
+		STATE_SET_MUTATION,   /* Set mutation rate.                */
+		STATE_SET_NGEN,       /* Set number of generations.        */
+		STATE_SET_POPSIZE,    /* Set population size.              */
+		STATE_SET_REPLACEMENT /* Set replacement rate.             */
+	};
 	
-	unsigned state;                /* Current state.     */
-	const char *distribution_name; /* Distribution name. */
+	unsigned state;
 	
 	state = STATE_READ_ARG;
-	distribution_name = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -97,28 +176,44 @@ static void readargs(int argc, const char **argv)
 		{
 			switch (state)
 			{
-				case STATE_SET_NTHREADS:
-					nthreads = atoi(arg);
+				case STATE_SET_PDF:
+					args.pdfname = arg;
 					break;
 				
+				case STATE_SET_INFILE:
+					args.infile = arg;
+					break;
+					
 				case STATE_SET_NTASKS:
-					ntasks = atoi(arg);
+					args.ntasks = atoi(arg);
+					break;
+					
+				case STATE_SET_NTHREADS:
+					args.nthreads = atoi(arg);
 					break;
 				
-				case STATE_SET_DISTRIBUTION:
-					distribution_name = arg;
+				case STATE_SET_CROSSOVER:
+					args.crossover = atof(arg);
+					break;
+				
+				case STATE_SET_ELITISM:
+					args.elitism = atof(arg);
+					break;
+				
+				case STATE_SET_MUTATION:
+					args.mutation = atof(arg);
 					break;
 					
 				case STATE_SET_NGEN:
-					ngen = atoi(arg);
+					args.ngen = atoi(arg);
 					break;
 				
 				case STATE_SET_POPSIZE:
-					popsize = atoi(arg);
+					args.popsize = atoi(arg);
 					break;
-					
-				case STATE_SET_INPUT:
-					infile = arg;
+				
+				case STATE_SET_REPLACEMENT:
+					args.replacement = atof(arg);
 					break;
 			}
 			
@@ -128,59 +223,40 @@ static void readargs(int argc, const char **argv)
 		}
 		
 		/* Parse command. */
-		if (!strcmp(arg, "--nthreads"))
-			state = STATE_SET_NTHREADS;
+		if (!strcmp(arg, "--input"))
+			state = STATE_SET_INFILE;
 		else if (!strcmp(arg, "--ntasks"))
 			state = STATE_SET_NTASKS;
-		else if (!strcmp(arg, "--distribution"))
-			state = STATE_SET_DISTRIBUTION;
+		else if (!strcmp(arg, "--nthreads"))
+			state = STATE_SET_NTHREADS;
+		else if (!strcmp(arg, "--pdf"))
+			state = STATE_SET_PDF;
+		else if (!strcmp(arg, "--crossover"))
+			state = STATE_SET_CROSSOVER;
+		else if (!strcmp(arg, "--elitism"))
+			state = STATE_SET_ELITISM;
+		else if (!strcmp(arg, "--mutation"))
+			state = STATE_SET_MUTATION;
 		else if (!strcmp(arg, "--ngen"))
 			state = STATE_SET_NGEN;
 		else if (!strcmp(arg, "--popsize"))
 			state = STATE_SET_POPSIZE;
-		else if (!strcmp(arg, "--input"))
-			state = STATE_SET_INPUT;
-		else if (!strcmp(arg, "--help"))
+		else if (!strcmp(arg, "--replacement"))
+			state = STATE_SET_REPLACEMENT;
+		else
 			usage();
 	}
 	
-	/* Check parameters. */
-	if (nthreads == 0)
-		error("invalid number of threads");
-	else if (ntasks == 0)
-		error("invalid number of tasks");
-	else if (ngen == 0)
-		error("invalid number of generations");
-	else if (popsize == 0)
-		error("invalid population size");
-	if (distribution_name == NULL)
-	{
-		if (infile == NULL)
-			error("invalid input file");
-	}
-	else
-	{
-		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
-		{
-			if (!strcmp(distribution_name, distributions[i]))
-			{
-				distribution = i;
-				goto out;
-			}
-		}
-		error("unknown distribution");
-	}
-
-out:
-	return;
+	checkargs();
 }
 
 /**
  * @brief Reads input file
  * 
  * @param infile Input filename.
+ * @param ntasks Number of tasks.
  */
-static unsigned *readfile(const char *infile)
+static unsigned *readfile(const char *infile, unsigned ntasks)
 {
 	FILE *fp;
 	unsigned *tasks;
@@ -225,10 +301,18 @@ int main(int argc, const const char **argv)
 	
 	srandnum(time(NULL));
 	
-	tasks = (infile != NULL) ?
-		readfile(infile) : create_tasks(distribution, ntasks);
+	tasks = (args.infile != NULL) ? readfile(args.infile, args.ntasks) :
+	                                create_tasks(args.pdfnum, args.ntasks);
 	
-	ga(tasks, popsize, ngen);
+	ga(tasks,
+	   args.ntasks,
+	   args.nthreads,
+	   args.popsize,
+	   args.ngen,
+	   args.crossover,
+	   args.elitism,
+	   args.mutation,
+	   args.replacement);
 		
 	/* House keeping. */
 	free(tasks);
