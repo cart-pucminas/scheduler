@@ -184,7 +184,7 @@ static int gene_equal(gene_t gen1, gene_t gen2)
  */
 static struct genome problem = {
 	0.10, /* Mutation rate.    */
-	0.80, /* Crossover rate.   */
+	0.60, /* Crossover rate.   */
 	0.01, /* Elitism rate.     */
 	0.90, /* Replacement rate. */
 	0,    /* Tournament size.  */
@@ -202,21 +202,16 @@ static struct genome problem = {
 void ga(const unsigned *_tasks, unsigned popsize, unsigned ngen)
 {
 	gene_t bestgen;
-	unsigned *workload;
 	
 	tasks = _tasks;
-	workload = scalloc(nthreads, sizeof(unsigned));
 	
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
 	
 	/* Print statistics. */
 	for (unsigned i = 0; i < ntasks; i++)
-		workload[GENE(bestgen)[i]] += tasks[i];
-	for (unsigned i = 0; i < nthreads; i++)
-		fprintf(stderr, "%u;%u\n", i, workload[i]);
-	
+		printf("%u\n", GENE(bestgen)[i]);
+		
 	/* House keeping. */
-	free(workload);
 	free(bestgen);
 }
