@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,12 +30,18 @@
  * @name Searching Parameters
  */
 /**@{*/
-unsigned nthreads = 32;           /**< Number of threads.        */
-unsigned ntasks = 1024;           /**< Number of tasks.          */
+unsigned nthreads = 0;            /**< Number of threads.        */
+unsigned ntasks = 0;              /**< Number of tasks.          */
 static unsigned distribution = 0; /**< Probability distribution. */
 static unsigned ngen = 0;         /**< Number of generations.    */
 static unsigned popsize = 0;      /**< Population size.          */
 /**@}*/
+
+
+/**
+ * @brief Input data file.
+ */
+static const char *infile = NULL;
 
 /**
  * @brief Prints program usage and exits.
@@ -49,6 +56,7 @@ static void usage(void)
 	printf("  --nthreads <num>       Number of threads\n");
 	printf("  --ntasks <num>         Number of tasks\n");
 	printf("  --distribution <name>  Input probability density function\n");
+	printf("  --input <filename>     Use input file as input data");
 	printf("  --ngen <num>           Number of generations\n");
 	printf("  --popsize <num>        Population size\n");
 	printf("  --help                 Display this message\n");
@@ -69,7 +77,8 @@ static void readargs(int argc, const char **argv)
 		STATE_SET_NTASKS,       /* Set number of tasks.       */
 		STATE_SET_DISTRIBUTION, /* Set distribution.          */
 		STATE_SET_NGEN,         /* Set number of generations. */
-		STATE_SET_POPSIZE};     /* Population size.           */
+		STATE_SET_POPSIZE,      /* Population size.           */
+		STATE_SET_INPUT};       /* Set input data.            */
 	
 	unsigned state;                /* Current state.     */
 	const char *distribution_name; /* Distribution name. */
@@ -89,29 +98,30 @@ static void readargs(int argc, const char **argv)
 			{
 				case STATE_SET_NTHREADS:
 					nthreads = atoi(arg);
-					state = STATE_READ_ARG;
 					break;
 				
 				case STATE_SET_NTASKS:
 					ntasks = atoi(arg);
-					state = STATE_READ_ARG;
 					break;
 				
 				case STATE_SET_DISTRIBUTION:
 					distribution_name = arg;
-					state = STATE_READ_ARG;
 					break;
 					
 				case STATE_SET_NGEN:
 					ngen = atoi(arg);
-					state = STATE_READ_ARG;
 					break;
 				
 				case STATE_SET_POPSIZE:
 					popsize = atoi(arg);
-					state = STATE_READ_ARG;
+					break;
+					
+				case STATE_SET_INPUT:
+					infile = arg;
 					break;
 			}
+			
+			state = STATE_READ_ARG;
 			
 			continue;
 		}
@@ -127,6 +137,8 @@ static void readargs(int argc, const char **argv)
 			state = STATE_SET_NGEN;
 		else if (!strcmp(arg, "--popsize"))
 			state = STATE_SET_POPSIZE;
+		else if (!strcmp(arg, "--input"))
+			state = STATE_SET_INPUT;
 		else if (!strcmp(arg, "--help"))
 			usage();
 	}
@@ -140,7 +152,12 @@ static void readargs(int argc, const char **argv)
 		error("invalid number of generations");
 	else if (popsize == 0)
 		error("invalid population size");
-	if (distribution_name != NULL)
+	if (distribution_name == NULL)
+	{
+		if (infile == NULL)
+			error("invalid input file");
+	}
+	else
 	{
 		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
 		{
@@ -158,6 +175,45 @@ out:
 }
 
 /**
+ * @brief Reads input file
+ * 
+ * @param infile Input filename.
+ */
+static unsigned *readfile(const char *infile)
+{
+	FILE *fp;
+	unsigned *tasks;
+	
+	tasks = smalloc(ntasks*sizeof(unsigned));
+	
+	fp = fopen(infile, "r");
+	assert(fp != NULL);
+	
+	/* Read file. */
+	for (unsigned i = 0; i < ntasks; i++)
+	{
+		if (fscanf(fp, "%u", &tasks[i]) == EOF)
+		{
+			if (feof(fp))
+				error("unexpected end of file");
+			else if (ferror(fp))
+				error("cannot read file");
+			else
+				error("unknown error");
+			break;
+		}
+	}
+	
+	/* I/O error. */
+	if (ferror(fp))
+		error("cannot read input file");
+	
+	fclose(fp);
+	
+	return (tasks);
+}
+
+/**
  * @brief Searches for a good loop scheduling.
  */
 int main(int argc, const const char **argv)
@@ -166,7 +222,8 @@ int main(int argc, const const char **argv)
 	
 	readargs(argc, argv);
 	
-	tasks = create_tasks(distribution, ntasks);
+	tasks = (infile != NULL) ?
+		readfile(infile) : create_tasks(distribution, ntasks);
 	
 	ga(tasks, popsize, ngen);
 		
