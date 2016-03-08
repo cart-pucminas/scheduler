@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <mylib/util.h>
 #include <common.h>
@@ -221,6 +222,8 @@ int main(int argc, const const char **argv)
 	unsigned *tasks;
 	
 	readargs(argc, argv);
+	
+	srandnum(time(NULL));
 	
 	tasks = (infile != NULL) ?
 		readfile(infile) : create_tasks(distribution, ntasks);
