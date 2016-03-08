@@ -193,8 +193,8 @@ static int gene_equal(gene_t gen1, gene_t gen2)
  * @brief Genetic algorithm problem.
  */
 static struct genome problem = {
-	0.10, /* Mutation rate.    */
-	0.60, /* Crossover rate.   */
+	0.50, /* Mutation rate.    */
+	0.70, /* Crossover rate.   */
 	0.01, /* Elitism rate.     */
 	0.90, /* Replacement rate. */
 	0,    /* Tournament size.  */
