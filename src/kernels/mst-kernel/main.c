@@ -66,6 +66,11 @@ int main(int argc, char **argv)
 	struct point *data[24];
 	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
 	long long hwcounters[4];
+#ifdef _SCHEDULE_ORACLE
+	unsigned taskmap[24] = {7,  8, 10, 1, 6,  1, 10, 11, 6, 8, 0, 8,
+		                    7, 11,  3, 2, 1, 10,  2,  3, 7, 5, 4, 9};
+		            
+#endif
 
 	__tasks=smalloc(24*sizeof(unsigned));
 
@@ -95,6 +100,10 @@ int main(int argc, char **argv)
 	#pragma omp parallel for schedule(dynamic) num_threads(n) default(shared)
 #elif defined(_SCHEDULE_SRR_)
 	memcpy(__tasks, densities, 24*sizeof(unsigned));
+	__ntasks = 24;
+	#pragma omp parallel for schedule(runtime) num_threads(n) default(shared)
+#elif defined(_SCHEDULE_ORACLE)
+	memcpy(__tasks, taskmap, 24*sizeof(unsigned));
 	__ntasks = 24;
 	#pragma omp parallel for schedule(runtime) num_threads(n) default(shared)
 #endif
