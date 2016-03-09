@@ -17,6 +17,10 @@ dynamic:
 smart-round-robin:
 	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_SRR_ -o $(BINDIR)/$(EXEC).srr $(LIBS)
 
+# Builds oracle version.
+oracle:
+	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_ORACLE_ -o $(BINDIR)/$(EXEC).oracle $(LIBS)
+
 # Cleans compilation files.
 clean:
 	rm -f $(BINDIR)/$(EXEC).*

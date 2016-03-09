@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "libgomp.h"
 
 /*============================================================================*
@@ -217,7 +218,11 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
 	  num_threads = (team != NULL) ? team->nthreads : 1;
 	}
 	
-	ws->taskmap = __tasks;
+	
+	ws->taskmap = malloc(__ntasks*sizeof(unsigned));
+	assert(ws->taskmap != NULL);
+	memcpy(ws->taskmap, __tasks, __ntasks*sizeof(unsigned));
+	
 	
 	ws->loop_start = start;
 	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));
