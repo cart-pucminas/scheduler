@@ -64,8 +64,8 @@
 	 * @name Gaussian Distribution Parameters
 	 */
 	/**@{*/
-	#define GUASSIAN_STDDEV 2.5
-	#define GUASSIAN_MEAN   5.0
+	#define GUASSIAN_STDDEV 0.4
+	#define GUASSIAN_MEAN   0.5
 	/**@}*/
 
 	/**

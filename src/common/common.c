@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 
 #include <mylib/util.h>
 #include <common.h>
@@ -53,6 +54,26 @@ static int cmp(const void *a, const void *b)
 
 #endif
 
+unsigned mkdiscrete(double num)
+{
+	if ((num >= 0.000) && (num < 0.125))
+		return (1024);
+	else if ((num >= 0.125) && (num < 0.250))
+		return (9216);
+	else if ((num >= 0.250) && (num < 0.375))
+		return (17408);
+	else if ((num >= 0.375) && (num < 0.500))
+		return (33792);
+	else if ((num >= 0.500) && (num < 0.625))
+		return (33792);
+	else if ((num >= 0.625) && (num < 0.750))
+		return (58368);
+	else if ((num >= 0.750) && (num < 0.875))
+		return (58368);
+	else
+		return (58368);
+}
+
 /**
  * @brief Generates tasks.
  */
@@ -64,8 +85,10 @@ unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 	
 	/* Setup random number generator. */
 	gsl_rng_env_setup();
+	gsl_rng_default_seed = time(NULL);
 	T = gsl_rng_default;
 	r = gsl_rng_alloc(T);
+	fprintf(stderr, "%u\n", (unsigned) gsl_rng_default_seed);
 	
 	/* Create tasks. */
 	tasks = smalloc(ntasks*sizeof(unsigned));
@@ -88,9 +111,9 @@ unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 				do
 				{
 					num = gsl_ran_gaussian(r, GUASSIAN_STDDEV) + GUASSIAN_MEAN;
-				} while (num < 0.0);
+				} while ((num < 0.0) || (num > 1.0));
 				
-				tasks[i] = (unsigned)(num*FACTOR);
+				tasks[i] = mkdiscrete(num);
 			}
 		} break;
 		
