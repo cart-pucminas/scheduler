@@ -85,10 +85,8 @@ unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 	
 	/* Setup random number generator. */
 	gsl_rng_env_setup();
-	gsl_rng_default_seed = time(NULL);
 	T = gsl_rng_default;
 	r = gsl_rng_alloc(T);
-	fprintf(stderr, "%u\n", (unsigned) gsl_rng_default_seed);
 	
 	/* Create tasks. */
 	tasks = smalloc(ntasks*sizeof(unsigned));
