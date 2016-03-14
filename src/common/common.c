@@ -59,19 +59,19 @@ unsigned mkdiscrete(double num)
 	if ((num >= 0.000) && (num < 0.125))
 		return (1024);
 	else if ((num >= 0.125) && (num < 0.250))
-		return (9216);
+		return (1024 + 8192);
 	else if ((num >= 0.250) && (num < 0.375))
-		return (17408);
+		return (1024 + 16384);
 	else if ((num >= 0.375) && (num < 0.500))
-		return (33792);
+		return (1024 + 24576);
 	else if ((num >= 0.500) && (num < 0.625))
-		return (33792);
+		return (1024 + 32768);
 	else if ((num >= 0.625) && (num < 0.750))
-		return (58368);
+		return (1024 + 40960);
 	else if ((num >= 0.750) && (num < 0.875))
-		return (58368);
+		return (1024 + 49152);
 	else
-		return (58368);
+		return (1024 + 57344);
 }
 
 /**
@@ -85,10 +85,8 @@ unsigned *create_tasks(unsigned distribution, unsigned ntasks)
 	
 	/* Setup random number generator. */
 	gsl_rng_env_setup();
-	gsl_rng_default_seed = time(NULL);
 	T = gsl_rng_default;
 	r = gsl_rng_alloc(T);
-	fprintf(stderr, "%u\n", (unsigned) gsl_rng_default_seed);
 	
 	/* Create tasks. */
 	tasks = smalloc(ntasks*sizeof(unsigned));
