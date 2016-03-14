@@ -17,46 +17,40 @@
  * MA 02110-1301, USA.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <omp.h>
 #include <string.h>
 #include <papi.h>
+#include <stdio.h>
 
 #include "util.h"
 #include "mst.h"
-
-unsigned densities[24] = 
-{
-	1024,
-	2048,
-	4096,
-	8192,
-	8192,
-	16384,
-	16384,
-	32768,
-	32768,
-	32768,
-	65536,
-	1024,
-	2048,
-	4096,
-	8192,
-	8192,
-	16384,
-	16384,
-	32768,
-	32768,
-	32768,
-	65536,
-	65536,
-	65536
-};
 
 static int trace = 0;
 
 unsigned __ntasks;
 unsigned *__tasks;
+
+
+unsigned *readfile(const char *filename, int ntasks)
+{
+	FILE *infile;
+	unsigned *data;
+	
+	infile = fopen(filename, "r");
+	assert(infile != NULL);
+	
+	data = smalloc(ntasks*sizeof(unsigned));
+	
+	for (int i = 0; i < ntasks; i++)
+		assert (fscanf(infile, "%u", &data[i]) == 1);
+		
+	/* House keeping. */
+	fclose(infile);
+		
+	return (data);
+}
 
 
 int main(int argc, char **argv)
@@ -66,11 +60,12 @@ int main(int argc, char **argv)
 	struct point *data[24];
 	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
 	long long hwcounters[4];
+	unsigned *densities;
 #ifdef _SCHEDULE_ORACLE_
-	unsigned taskmap[24] = {7,  8, 10, 1, 6,  1, 10, 11, 6, 8, 0, 8,
-		                    7, 11,  3, 2, 1, 10,  2,  3, 7, 5, 4, 9};
-		            
+	unsigned *taskmap = readfile(argv[3], 24);
 #endif
+
+	densities = readfile(argv[2], 24);
 
 	__tasks=smalloc(24*sizeof(unsigned));
 
@@ -133,9 +128,13 @@ int main(int argc, char **argv)
 	printf("L3 Accesses: %lld\n", hwcounters[3]);
 	
 	/* House keeping. */
+	free(densities);
 	for (int i = 0; i < 24; i++)
 		free(data[i]);
 	free(__tasks);
+#ifdef _SCHEDULE_ORACLE_
+	free(taskmap);
+#endif
 	
 	return (EXIT_SUCCESS);
 }
