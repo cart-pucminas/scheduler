@@ -143,7 +143,7 @@
 #define  SIZE_OF_BUFFERS     NUM_KEYS  
                                            
 
-#define  MAX_ITERATIONS      10
+#define  MAX_ITERATIONS      50
 #define  TEST_ARRAY_SIZE     5
 
 
@@ -839,8 +839,7 @@ int main( int argc, char **argv )
                      0,
                      MAX_ITERATIONS,
                      timecounter,
-                     ((double) (MAX_ITERATIONS*TOTAL_KEYS))
-                                                  /timecounter/1000000.,
+                     ((MAX_ITERATIONS/timecounter)*(TOTAL_KEYS/timecounter))/10000000.,
                      "keys ranked", 
                      passed_verification,
                      NPBVERSION,
