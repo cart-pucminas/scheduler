@@ -40,6 +40,8 @@
  *                                                                       * 
  *************************************************************************/
 
+#define _OPENMP
+
 #include "npbparams.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,6 +49,8 @@
 #include <omp.h>
 #endif
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 /*****************************************************************/
 /* For serial IS, buckets are not really req'd to solve NPB1 IS  */
@@ -62,8 +66,7 @@
 #define USE_BUCKETS
 
 /* Uncomment below for cyclic schedule */
-/*#define SCHED_CYCLIC*/
-
+#define SCHED_CYCLIC
 
 /******************/
 /* default values */
@@ -79,7 +82,7 @@
 #if CLASS == 'S'
 #define  TOTAL_KEYS_LOG_2    16
 #define  MAX_KEY_LOG_2       11
-#define  NUM_BUCKETS_LOG_2   9
+#define  NUM_BUCKETS_LOG_2   4
 #endif
 
 
@@ -89,7 +92,7 @@
 #if CLASS == 'W'
 #define  TOTAL_KEYS_LOG_2    20
 #define  MAX_KEY_LOG_2       16
-#define  NUM_BUCKETS_LOG_2   10
+#define  NUM_BUCKETS_LOG_2   4
 #endif
 
 /*************/
@@ -98,7 +101,7 @@
 #if CLASS == 'A'
 #define  TOTAL_KEYS_LOG_2    23
 #define  MAX_KEY_LOG_2       19
-#define  NUM_BUCKETS_LOG_2   10
+#define  NUM_BUCKETS_LOG_2   3
 #endif
 
 
@@ -108,7 +111,7 @@
 #if CLASS == 'B'
 #define  TOTAL_KEYS_LOG_2    25
 #define  MAX_KEY_LOG_2       21
-#define  NUM_BUCKETS_LOG_2   10
+#define  NUM_BUCKETS_LOG_2   4
 #endif
 
 
@@ -118,7 +121,7 @@
 #if CLASS == 'C'
 #define  TOTAL_KEYS_LOG_2    27
 #define  MAX_KEY_LOG_2       23
-#define  NUM_BUCKETS_LOG_2   10
+#define  NUM_BUCKETS_LOG_2   4
 #endif
 
 
@@ -128,7 +131,7 @@
 #if CLASS == 'D'
 #define  TOTAL_KEYS_LOG_2    31
 #define  MAX_KEY_LOG_2       27
-#define  NUM_BUCKETS_LOG_2   10
+#define  NUM_BUCKETS_LOG_2   4
 #endif
 
 
@@ -143,8 +146,7 @@
 #define  SIZE_OF_BUFFERS     NUM_KEYS  
                                            
 
-#define  MAX_ITERATIONS      50
-#define  TEST_ARRAY_SIZE     5
+#define  MAX_ITERATIONS      5
 
 
 /*************************************/
@@ -159,15 +161,6 @@ typedef  int  INT_TYPE;
 #endif
 
 
-/********************/
-/* Some global info */
-/********************/
-INT_TYPE *key_buff_ptr_global;         /* used by full_verify to get */
-                                       /* copies of rank info        */
-
-int      passed_verification;
-                                 
-
 /************************************/
 /* These are the three main arrays. */
 /* See SIZE_OF_BUFFERS def above    */
@@ -175,7 +168,6 @@ int      passed_verification;
 INT_TYPE key_array[SIZE_OF_BUFFERS],    
          key_buff1[MAX_KEY],
          key_buff2[SIZE_OF_BUFFERS],
-         partial_verify_vals[TEST_ARRAY_SIZE],
          **key_buff1_aptr = NULL;
 
 #ifdef USE_BUCKETS
@@ -184,50 +176,16 @@ INT_TYPE **bucket_size,
 #pragma omp threadprivate(bucket_ptrs)
 #endif
 
-
-/**********************/
-/* Partial verif info */
-/**********************/
-INT_TYPE test_index_array[TEST_ARRAY_SIZE],
-         test_rank_array[TEST_ARRAY_SIZE],
-
-         S_test_index_array[TEST_ARRAY_SIZE] = 
-                             {48427,17148,23627,62548,4431},
-         S_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {0,18,346,64917,65463},
-
-         W_test_index_array[TEST_ARRAY_SIZE] = 
-                             {357773,934767,875723,898999,404505},
-         W_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {1249,11698,1039987,1043896,1048018},
-
-         A_test_index_array[TEST_ARRAY_SIZE] = 
-                             {2112377,662041,5336171,3642833,4250760},
-         A_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {104,17523,123928,8288932,8388264},
-
-         B_test_index_array[TEST_ARRAY_SIZE] = 
-                             {41869,812306,5102857,18232239,26860214},
-         B_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {33422937,10244,59149,33135281,99}, 
-
-         C_test_index_array[TEST_ARRAY_SIZE] = 
-                             {44172927,72999161,74326391,129606274,21736814},
-         C_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {61147,882988,266290,133997595,133525895},
-
-         D_test_index_array[TEST_ARRAY_SIZE] = 
-                             {1317351170,995930646,1157283250,1503301535,1453734525},
-         D_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {1,36538729,1978098519,2145192618,2147425337};
-
+/***********************************/
+/* Pseudo Random Number Generator. */
+ /***********************************/
+gsl_rng * r;
+const gsl_rng_type * T;
 
 /***********************/
 /* function prototypes */
 /***********************/
 double	randlc( double *X, double *A );
-
-void full_verify( void );
 
 void c_print_results( char   *name,
                       char   class,
@@ -352,114 +310,33 @@ double	randlc( double *X, double *A )
       T4 = j;
       *X = T3 - T46 * T4;
       return(R46 * *X);
-} 
-
-
-
-
-/*****************************************************************/
-/************   F  I  N  D  _  M  Y  _  S  E  E  D    ************/
-/************                                         ************/
-/************ returns parallel random number seq seed ************/
-/*****************************************************************/
-
-/*
- * Create a random number sequence of total length nn residing
- * on np number of processors.  Each processor will therefore have a
- * subsequence of length nn/np.  This routine returns that random
- * number which is the first random number for the subsequence belonging
- * to processor rank kn, and which is used as seed for proc kn ran # gen.
- */
-
-double   find_my_seed( int kn,        /* my processor rank, 0<=kn<=num procs */
-                       int np,        /* np = num procs                      */
-                       long nn,       /* total num of ran numbers, all procs */
-                       double s,      /* Ran num seed, for ex.: 314159265.00 */
-                       double a )     /* Ran num gen mult, try 1220703125.00 */
-{
-
-      double t1,t2;
-      long   mq,nq,kk,ik;
-
-      if ( kn == 0 ) return s;
-
-      mq = (nn/4 + np - 1) / np;
-      nq = mq * 4 * kn;               /* number of rans to be skipped */
-
-      t1 = s;
-      t2 = a;
-      kk = nq;
-      while ( kk > 1 ) {
-      	 ik = kk / 2;
-         if( 2 * ik ==  kk ) {
-            (void)randlc( &t2, &t2 );
-	    kk = ik;
-	 }
-	 else {
-            (void)randlc( &t1, &t2 );
-	    kk = kk - 1;
-	 }
-      }
-      (void)randlc( &t1, &t2 );
-
-      return( t1 );
-
 }
-
-
 
 /*****************************************************************/
 /*************      C  R  E  A  T  E  _  S  E  Q      ************/
 /*****************************************************************/
 
-void	create_seq( double seed, double a )
+void create_seq(void)
 {
-	double x, s;
-	INT_TYPE i, k;
-
-#pragma omp parallel private(x,s,i,k)
-    {
-	INT_TYPE k1, k2;
-	double an = a;
-	int myid, num_procs;
-        INT_TYPE mq;
-
-#ifdef _OPENMP
-	myid = omp_get_thread_num();
-	num_procs = omp_get_num_threads();
-#else
-	myid = 0;
-	num_procs = 1;
-#endif
-
-	mq = (NUM_KEYS + num_procs - 1) / num_procs;
-	k1 = mq * myid;
-	k2 = k1 + mq;
-	if ( k2 > NUM_KEYS ) k2 = NUM_KEYS;
-
-	KS = 0;
-	s = find_my_seed( myid, num_procs,
-			  (long)4*NUM_KEYS, seed, an );
-
-        k = MAX_KEY/4;
-
-	for (i=k1; i<k2; i++)
+	int i;
+	
+	for (i = 0; i<TOTAL_KEYS; i++)
 	{
-	    x = randlc(&s, &an);
-	    x += randlc(&s, &an);
-    	    x += randlc(&s, &an);
-	    x += randlc(&s, &an);  
+		double num;
+		
+		do
+			num = gsl_ran_exponential(r, 0.5);
+		while (num > 2.0);
 
-            key_array[i] = k*x;
+		key_array[i] = (INT_TYPE)((num/2.0)*MAX_KEY);
+		fprintf(stderr, "%d\n", key_array[i]);
 	}
-    } /*omp parallel*/
 }
-
-
 
 /*****************************************************************/
 /*****************    Allocate Working Buffer     ****************/
 /*****************************************************************/
+
 void *alloc_mem( size_t size )
 {
     void *p;
@@ -510,83 +387,6 @@ void alloc_key_buff( void )
 
 
 /*****************************************************************/
-/*************    F  U  L  L  _  V  E  R  I  F  Y     ************/
-/*****************************************************************/
-
-
-void full_verify( void )
-{
-    INT_TYPE   i, j;
-    INT_TYPE   k, k1, k2;
-
-
-/*  Now, finally, sort the keys:  */
-
-/*  Copy keys into work array; keys in key_array will be reassigned. */
-
-#ifdef USE_BUCKETS
-
-    /* Buckets are already sorted.  Sorting keys within each bucket */
-#ifdef SCHED_CYCLIC
-    #pragma omp parallel for private(i,j,k,k1) schedule(static,1)
-#else
-    #pragma omp parallel for private(i,j,k,k1) schedule(dynamic)
-#endif
-    for( j=0; j< NUM_BUCKETS; j++ ) {
-
-        k1 = (j > 0)? bucket_ptrs[j-1] : 0;
-        for ( i = k1; i < bucket_ptrs[j]; i++ ) {
-            k = --key_buff_ptr_global[key_buff2[i]];
-            key_array[k] = key_buff2[i];
-        }
-    }
-
-#else
-
-#pragma omp parallel private(i,j,k,k1,k2)
-  {
-    #pragma omp for
-    for( i=0; i<NUM_KEYS; i++ )
-        key_buff2[i] = key_array[i];
-
-    /* This is actual sorting. Each thread is responsible for 
-       a subset of key values */
-    j = omp_get_num_threads();
-    j = (MAX_KEY + j - 1) / j;
-    k1 = j * omp_get_thread_num();
-    k2 = k1 + j;
-    if (k2 > MAX_KEY) k2 = MAX_KEY;
-
-    for( i=0; i<NUM_KEYS; i++ ) {
-        if (key_buff2[i] >= k1 && key_buff2[i] < k2) {
-            k = --key_buff_ptr_global[key_buff2[i]];
-            key_array[k] = key_buff2[i];
-        }
-    }
-  } /*omp parallel*/
-
-#endif
-
-
-/*  Confirm keys correctly sorted: count incorrectly sorted keys, if any */
-
-    j = 0;
-    #pragma omp parallel for reduction(+:j)
-    for( i=1; i<NUM_KEYS; i++ )
-        if( key_array[i-1] > key_array[i] )
-            j++;
-
-    if( j != 0 )
-        printf( "Full_verify: number of keys out of sort: %ld\n", (long)j );
-    else
-        passed_verification++;
-
-}
-
-
-
-
-/*****************************************************************/
 /*************             R  A  N  K             ****************/
 /*****************************************************************/
 
@@ -605,13 +405,6 @@ void rank( int iteration )
 
     key_array[iteration] = iteration;
     key_array[iteration+MAX_ITERATIONS] = MAX_KEY - iteration;
-
-
-/*  Determine where the partial verify test keys are, load into  */
-/*  top of array bucket_size                                     */
-    for( i=0; i<TEST_ARRAY_SIZE; i++ )
-        partial_verify_vals[i] = key_array[test_index_array[i]];
-
 
 /*  Setup pointers to key buffers  */
 #ifdef USE_BUCKETS
@@ -686,7 +479,7 @@ void rank( int iteration )
     a dynamic schedule should improve load balance, thus, performance     */
 
 #ifdef SCHED_CYCLIC
-    #pragma omp for schedule(static,1)
+    #pragma omp for schedule(static)
 #else
     #pragma omp for schedule(dynamic)
 #endif
@@ -765,7 +558,12 @@ void rank( int iteration )
 /*****************************************************************/
 
 int main( int argc, char **argv )
-{
+{	
+	/* Setup random number generator. */
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	
     int             i, iteration, timer_on;
     double          timecounter;
     FILE            *fp;
@@ -794,13 +592,11 @@ int main( int argc, char **argv )
 #ifdef _OPENMP
     printf( " Number of available threads:  %d\n", omp_get_max_threads() );
 #endif
-    printf( "\n" );
 
     if (timer_on) timer_start( 1 );
 
 /*  Generate random number sequence and subsequent keys on all procs */
-    create_seq( 314159265.00,                    /* Random number gen seed */
-                1220703125.00 );                 /* Random number gen mult */
+    create_seq();
 
     alloc_key_buff();
     if (timer_on) timer_stop( 1 );
@@ -810,18 +606,12 @@ int main( int argc, char **argv )
     all data and code pages and respective tables */
     rank( 1 );
 
-    if( CLASS != 'S' ) printf( "\n   iteration\n" );
-
 /*  Start timer  */             
     timer_start( 0 );
 
-
 /*  This is the main iteration */
     for( iteration=1; iteration<=MAX_ITERATIONS; iteration++ )
-    {
-        if( CLASS != 'S' ) printf( "        %d\n", iteration );
-        rank( iteration );
-    }
+		rank( iteration );
 
 
 /*  End of timing, obtain maximum time of all processors */
@@ -841,7 +631,7 @@ int main( int argc, char **argv )
                      timecounter,
                      ((MAX_ITERATIONS/timecounter)*(TOTAL_KEYS/timecounter))/10000000.,
                      "keys ranked", 
-                     passed_verification,
+                     1,
                      NPBVERSION,
                      COMPILETIME,
                      CC,
@@ -872,7 +662,3 @@ int main( int argc, char **argv )
          /**************************/
 }        /*  E N D  P R O G R A M  */
          /**************************/
-
-
-
-

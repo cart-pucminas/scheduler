@@ -1,6 +1,7 @@
 SHELL=/bin/sh
 BENCHMARK=is
 BENCHMARKU=IS
+CONTRIBDIR=$(CURDIR)/../../../../contrib
 
 include ../config/make.def
 
@@ -13,10 +14,10 @@ OBJS = is.o \
 
 
 ${PROGRAM}: config ${OBJS}
-	${CLINK} ${CLINKFLAGS} -o ${PROGRAM} ${OBJS} ${C_LIB}
+	${CLINK} ${CLINKFLAGS} -fopenmp -o ${PROGRAM} ${OBJS} ../../../../contrib/lib/libgsl.a  ${C_LIB}
 
 .c.o:
-	${CCOMPILE} $<
+	${CCOMPILE} -I$(CONTRIBDIR)/include $<
 
 is.o:             is.c  npbparams.h
 

@@ -6,6 +6,10 @@ SFILE=config/suite.def
 default: header
 	@ sys/print_instructions
 
+IS: is		       
+is: header	       
+	cd IS; $(MAKE) CLASS=$(CLASS)
+
 # Awk script courtesy cmg@cray.com, modified by Haoqiang Jin
 suite:
 	@ awk -f sys/suite.awk SMAKE=$(MAKE) $(SFILE) | $(SHELL)
