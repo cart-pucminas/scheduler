@@ -218,6 +218,8 @@ void alloc_key_buff( void )
  *                                     RANK                                   *
  *============================================================================*/
 
+unsigned __ntasks;
+unsigned *__tasks;
 
 void rank( int iteration )
 {
@@ -234,6 +236,9 @@ void rank( int iteration )
 /*  Setup pointers to key buffers  */
     key_buff_ptr2 = key_buff2;
     key_buff_ptr = key_buff1;
+    
+    __tasks = alloc_mem(NUM_BUCKETS*sizeof(unsigned));
+	__ntasks = NUM_BUCKETS;
 
 #pragma omp parallel private(i, k)
   {
@@ -246,13 +251,19 @@ void rank( int iteration )
     work_buff = bucket_size[myid];
 
 /*  Initialize */
-    for( i=0; i<NUM_BUCKETS; i++ )  
+    for( i=0; i<NUM_BUCKETS; i++ )
+    {
+		__tasks[0] = 0;
         work_buff[i] = 0;
+    }
 
 /*  Determine the number of keys in each bucket */
     #pragma omp for schedule(static)
     for( i=0; i<NUM_KEYS; i++ )
+    {
+		__tasks[key_array[i] >> shift]++;
         work_buff[key_array[i] >> shift]++;
+	}
 
 /*  Accumulative bucket sizes are the bucket pointers.
     These are global sizes accumulated upon to each bucket */
@@ -294,6 +305,8 @@ void rank( int iteration )
     #pragma omp for schedule(static, 1)
 #elif defined(_SCHEDULE_DYNAMIC_)
     #pragma omp for schedule(dynamic)
+#elif defined(_SCHEDULE_SRR_)
+	#pragma omp for schedule(runtime)
 #else
 	#error "bad scheduler"
 #endif
@@ -328,6 +341,8 @@ void rank( int iteration )
 	timer_stop(2);
 
   } /*omp parallel*/
+  
+  free(__tasks);
 }
 
 /*============================================================================*
