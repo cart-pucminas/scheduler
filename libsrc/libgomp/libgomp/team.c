@@ -910,6 +910,7 @@ gomp_team_end (void)
     }
 }
 
+int profile_loop = -1;
 
 /* Constructors for this file.  */
 

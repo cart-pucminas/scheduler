@@ -245,6 +245,29 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
    allocated to this thread.  Returns false if all work was assigned to
    other threads prior to this thread's arrival.  */
 
+
+static bool
+gomp_loop_profile_start(long start, long end, long incr, long chunk_size,
+			long *istart, long *iend)
+{
+  struct gomp_thread *thr = gomp_thread ();
+  if (profile_loop == -1) {
+    profile_loop = 1;
+  }
+
+  thr->ts.static_trip = 0;
+  if (gomp_work_share_start (false))
+    {
+      gomp_loop_init (thr->ts.work_share, start, end, incr,
+		      GFS_PROFILE, chunk_size, 0);
+      gomp_work_share_init_done ();
+    }
+
+  t0.tick = 0;
+
+  return !gomp_iter_profile_next (istart, iend);  
+}
+
 static bool
 gomp_loop_static_start (long start, long end, long incr, long chunk_size,
 			long *istart, long *iend)
@@ -363,6 +386,10 @@ GOMP_loop_runtime_start (long start, long end, long incr,
   struct gomp_task_icv *icv = gomp_icv (false);
   switch (icv->run_sched_var)
     {
+    case GFS_PROFILE:
+      return gomp_loop_profile_start(start, end, incr,
+				     icv->run_sched_modifier,
+				     istart, iend);
     case GFS_STATIC:
       return gomp_loop_static_start (start, end, incr, icv->run_sched_modifier,
 				     istart, iend);
@@ -557,12 +584,17 @@ gomp_loop_oracle_next (long *istart, long *iend)
 }
 
 bool
+GOMP_loop_profile_next(long *istart, long *iend);
+
+bool
 GOMP_loop_runtime_next (long *istart, long *iend)
 {
   struct gomp_thread *thr = gomp_thread ();
 
   switch (thr->ts.work_share->sched)
     {
+    case GFS_PROFILE:
+      return GOMP_loop_profile_next(istart, iend);
     case GFS_STATIC:
     case GFS_AUTO:
       return gomp_loop_static_next (istart, iend);
@@ -766,8 +798,12 @@ GOMP_parallel_loop_runtime (void (*fn) (void *), void *data,
 void
 GOMP_loop_end (void)
 {
+  if (profile_loop == 1) {
+    profile_loop = 0;
+  }
   gomp_work_share_end ();
 }
+
 
 bool
 GOMP_loop_end_cancel (void)
@@ -859,6 +895,12 @@ GOMP_loop_ordered_guided_start (long start, long end, long incr,
 {
   return gomp_loop_ordered_guided_start (start, end, incr, chunk_size,
 					 istart, iend);
+}
+
+static bool
+GOMP_loop_profile_next(long *istart, long *iend)
+{
+  return !gomp_iter_profile_next(istart, iend);
 }
 
 bool

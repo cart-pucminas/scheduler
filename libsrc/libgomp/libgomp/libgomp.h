@@ -56,6 +56,21 @@ enum memmodel
   MEMMODEL_SEQ_CST = 5
 };
 
+#define _GET_TICK(t) __asm__ volatile("rdtsc" : "=a" ((t).sub.low), "=d" ((t).sub.high))
+union tick_t
+{
+  uint64_t tick;
+  struct
+  {
+    uint32_t low;
+    uint32_t high;
+  } sub;
+};
+
+union tick_t t0, t1;
+
+extern int profile_loop;
+
 #include "sem.h"
 #include "mutex.h"
 #include "bar.h"
@@ -71,6 +86,7 @@ enum gomp_schedule_type
   GFS_STATIC,
   GFS_DYNAMIC,
   GFS_GUIDED,
+  GFS_PROFILE,
 
   /* BEGIN PEDRO */
   GFS_PEDRO,
@@ -541,6 +557,7 @@ extern void gomp_fatal (const char *, ...)
 /* iter.c */
 
 extern int gomp_iter_static_next (long *, long *);
+extern int gomp_iter_profile_next(long *, long *);
 extern bool gomp_iter_dynamic_next_locked (long *, long *);
 extern bool gomp_iter_guided_next_locked (long *, long *);
 

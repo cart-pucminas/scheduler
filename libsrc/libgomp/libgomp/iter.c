@@ -27,6 +27,9 @@
 
 #include "libgomp.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <inttypes.h>
+#include <assert.h>
 
 
 /* This function implements the STATIC scheduling method.  The caller should
@@ -329,6 +332,34 @@ found:
 
 #endif /* HAVE_SYNC_BUILTINS */
 
+int gomp_iter_profile_next(long *pstart, long *pend)
+{
+  if (profile_loop == 1) {
+    _GET_TICK(t1);
+  }
+  
+  struct gomp_thread *thr = gomp_thread ();
+  struct gomp_work_share *ws = thr->ts.work_share;
+
+  *pstart = ws->next;
+  *pend = ws->next + ws->incr;
+  ws->next += ws->incr;
+  if (profile_loop == 1) {
+    if (t0.tick != 0) {
+      fprintf(stderr,
+	      "%li %" PRIu64 "\n",
+	      *pstart - ws->incr, 
+	      t1.tick - t0.tick);
+    }
+    if (ws->next - ws->incr == ws->end) {
+      profile_loop = 0;
+    }
+
+    _GET_TICK(t0);
+  }
+
+  return ws->next - ws->incr == ws->end;
+}
 
 /* This function implements the GUIDED scheduling method.  Arguments are
    as for gomp_iter_static_next.  This function must be called with the

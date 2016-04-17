@@ -124,6 +124,11 @@ parse_schedule (void)
       gomp_global_icv.run_sched_var = GFS_AUTO;
       env += 4;
     }
+  else if (strncasecmp(env, "profile", 7) == 0)
+    {
+      gomp_global_icv.run_sched_var = GFS_PROFILE;
+      env += 7;
+    }
   else
     goto unknown;
 
@@ -1081,6 +1086,8 @@ handle_omp_display_env (unsigned long stacksize, int wait_policy)
   fprintf (stderr, "  OMP_SCHEDULE = '");
   switch (gomp_global_icv.run_sched_var)
     {
+    case GFS_PROFILE:
+      fputs ("PROFILE", stderr);
     case GFS_RUNTIME:
       fputs ("RUNTIME", stderr);
       break;
