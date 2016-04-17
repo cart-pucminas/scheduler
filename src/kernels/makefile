@@ -21,10 +21,12 @@ all: static dynamic smart-round-robin oracle
 
 # Builds static kernels.
 static:
+	cd is-kernel && $(MAKE) static
 	cd mst-kernel && $(MAKE) static
 
 # Builds dynamic kernels.
 dynamic:
+	cd is-kernel && $(MAKE) dynamic
 	cd mst-kernel && $(MAKE) dynamic
 
 # Builds runtime kernels.
@@ -37,5 +39,6 @@ oracle:
 
 # Cleans compilation files.
 clean:
+	cd is-kernel && $(MAKE) clean
 	cd mst-kernel && $(MAKE) clean
 
