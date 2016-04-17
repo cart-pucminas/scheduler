@@ -36,8 +36,8 @@
  *============================================================================*/
 
 /* Workloads. */
-extern unsigned *__tasks; /* Tasks.           */
-extern unsigned __ntasks; /* Number of tasks. */
+unsigned *__tasks; /* Tasks.           */
+unsigned __ntasks; /* Number of tasks. */
 
 /*
  * Exchange two numbers.
@@ -139,7 +139,13 @@ static unsigned *balance(unsigned *tasks, unsigned ntasks, unsigned nthreads)
 	
 	return (taskmap);
 }
- 
+
+void omp_set_workload(unsigned *tasks, unsigned ntasks)
+{
+	__tasks = tasks;
+	__ntasks = ntasks;
+} 
+
 /*============================================================================*
  *                                                                            *
  *============================================================================*/
@@ -583,8 +589,11 @@ gomp_loop_oracle_next (long *istart, long *iend)
   return gomp_iter_oracle_next (istart, iend);
 }
 
-bool
-GOMP_loop_profile_next(long *istart, long *iend);
+static bool
+gomp_loop_profile_next(long *istart, long *iend)
+{
+  return !gomp_iter_profile_next(istart, iend);
+}
 
 bool
 GOMP_loop_runtime_next (long *istart, long *iend)
@@ -594,7 +603,7 @@ GOMP_loop_runtime_next (long *istart, long *iend)
   switch (thr->ts.work_share->sched)
     {
     case GFS_PROFILE:
-      return GOMP_loop_profile_next(istart, iend);
+      return gomp_loop_profile_next(istart, iend);
     case GFS_STATIC:
     case GFS_AUTO:
       return gomp_loop_static_next (istart, iend);
@@ -895,12 +904,6 @@ GOMP_loop_ordered_guided_start (long start, long end, long incr,
 {
   return gomp_loop_ordered_guided_start (start, end, incr, chunk_size,
 					 istart, iend);
-}
-
-static bool
-GOMP_loop_profile_next(long *istart, long *iend)
-{
-  return !gomp_iter_profile_next(istart, iend);
 }
 
 bool
