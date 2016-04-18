@@ -607,6 +607,9 @@ void full_verify( void )
 /*************             R  A  N  K             ****************/
 /*****************************************************************/
 
+#if (SCHEDULE == SCHEDULE_SRR)
+extern void omp_set_workload(unsigned *, unsigned);
+#endif
 
 void rank( int iteration )
 {
@@ -614,6 +617,12 @@ void rank( int iteration )
     INT_TYPE    i, k;
 	union tick_t t0, t1;
     INT_TYPE    *key_buff_ptr, *key_buff_ptr2;
+
+#if (SCHEDULE == SCHEDULE_SRR)    
+    unsigned *tasks;
+    tasks=alloc_mem(NUM_BUCKETS*sizeof(unsigned));
+    omp_set_workload(tasks, NUM_BUCKETS);
+#endif
 
 #ifdef USE_BUCKETS
     int shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
@@ -659,13 +668,25 @@ void rank( int iteration )
     work_buff = bucket_size[myid];
 
 /*  Initialize */
-    for( i=0; i<NUM_BUCKETS; i++ )  
+    for( i=0; i<NUM_BUCKETS; i++ )
+    {
+
+#if (SCHEDULE == SCHEDULE_SRR)   
+		tasks[i] = 0;
+#endif
         work_buff[i] = 0;
+	}
 
 /*  Determine the number of keys in each bucket */
     #pragma omp for schedule(static)
     for( i=0; i<NUM_KEYS; i++ )
+    {
+
+#if (SCHEDULE == SCHEDULE_SRR)   
+		tasks[key_array[i] >> shift]++;
+#endif
         work_buff[key_array[i] >> shift]++;
+	}
 
 /*  Accumulative bucket sizes are the bucket pointers.
     These are global sizes accumulated upon to each bucket */
@@ -916,6 +937,10 @@ void rank( int iteration )
     if( iteration == MAX_ITERATIONS ) 
         key_buff_ptr_global = key_buff_ptr;
 
+
+#if (SCHEDULE == SCHEDULE_SRR)   
+	free(tasks);
+#endif
 }      
 
 
