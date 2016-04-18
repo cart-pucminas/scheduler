@@ -39,14 +39,29 @@
  *           H. Jin                                                      * 
  *                                                                       * 
  *************************************************************************/
-
+ 
 #include "npbparams.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <inttypes.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+union tick_t
+{
+  uint64_t tick;
+  struct
+  {
+    uint32_t low;
+    uint32_t high;
+  } sub;
+};
+
+#define _GET_TICK(t)           \
+	__asm__ volatile("rdtsc" : \
+		"=a" ((t).sub.low),    \
+		"=d" ((t).sub.high))
 
 /*****************************************************************/
 /* For serial IS, buckets are not really req'd to solve NPB1 IS  */
@@ -517,7 +532,7 @@ void alloc_key_buff( void )
 void full_verify( void )
 {
     INT_TYPE   i, j;
-    INT_TYPE   k, k1, k2;
+    INT_TYPE   k, k1;
 
 
 /*  Now, finally, sort the keys:  */
@@ -595,6 +610,7 @@ void rank( int iteration )
 {
 
     INT_TYPE    i, k;
+	union tick_t t0, t1;
     INT_TYPE    *key_buff_ptr, *key_buff_ptr2;
 
 #ifdef USE_BUCKETS
@@ -679,6 +695,10 @@ void rank( int iteration )
                 bucket_ptrs[i] += bucket_size[k][i];
     }
 
+	#pragma omp barrier
+	
+	#pragma omp master
+	_GET_TICK(t0);
 
 /*  Now, buckets are sorted.  We only need to sort keys inside
     each bucket, which can be done in parallel.  Because the distribution
@@ -716,6 +736,11 @@ void rank( int iteration )
             key_buff_ptr[k] += key_buff_ptr[k-1];
 
     }
+
+	#pragma omp barrier
+	
+	#pragma omp master
+	_GET_TICK(t1);
 
 #else /*USE_BUCKETS*/
 
@@ -757,6 +782,8 @@ void rank( int iteration )
 #endif /*USE_BUCKETS*/
 
   } /*omp parallel*/
+  
+  fprintf(stderr, "%" PRIu64 "\n", t1.tick - t0.tick);
 
 /* This is the partial verify test section */
 /* Observe that test_rank_array vals are   */
