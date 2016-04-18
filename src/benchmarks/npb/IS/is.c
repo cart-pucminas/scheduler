@@ -73,12 +73,20 @@ union tick_t
 /* Example:  SGI Indy5000: 50% slowdown with buckets             */
 /* Example:  SGI O2000:   400% slowdown with buckets (Wow!)      */
 /*****************************************************************/
+
+/* This controls load imbalance. */
+#define  NUM_BUCKETS_LOG_2  3
+
 /* To disable the use of buckets, comment out the following line */
 #define USE_BUCKETS
 
 /* Uncomment below for cyclic schedule */
-/*#define SCHED_CYCLIC*/
+#define SCHEDULE_PROFILE  0
+#define SCHEDULE_STATIC   1
+#define SCHEDULE_DYNAMIC  2
+#define SCHEDULE_SRR      3
 
+#define SCHEDULE SCHEDULE_DYNAMIC
 
 /******************/
 /* default values */
@@ -94,7 +102,6 @@ union tick_t
 #if CLASS == 'S'
 #define  TOTAL_KEYS_LOG_2    16
 #define  MAX_KEY_LOG_2       11
-#define  NUM_BUCKETS_LOG_2   9
 #endif
 
 
@@ -104,7 +111,6 @@ union tick_t
 #if CLASS == 'W'
 #define  TOTAL_KEYS_LOG_2    20
 #define  MAX_KEY_LOG_2       16
-#define  NUM_BUCKETS_LOG_2   10
 #endif
 
 /*************/
@@ -113,7 +119,6 @@ union tick_t
 #if CLASS == 'A'
 #define  TOTAL_KEYS_LOG_2    23
 #define  MAX_KEY_LOG_2       19
-#define  NUM_BUCKETS_LOG_2   10
 #endif
 
 
@@ -123,7 +128,6 @@ union tick_t
 #if CLASS == 'B'
 #define  TOTAL_KEYS_LOG_2    25
 #define  MAX_KEY_LOG_2       21
-#define  NUM_BUCKETS_LOG_2   10
 #endif
 
 
@@ -133,7 +137,6 @@ union tick_t
 #if CLASS == 'C'
 #define  TOTAL_KEYS_LOG_2    27
 #define  MAX_KEY_LOG_2       23
-#define  NUM_BUCKETS_LOG_2   10
 #endif
 
 
@@ -143,7 +146,6 @@ union tick_t
 #if CLASS == 'D'
 #define  TOTAL_KEYS_LOG_2    31
 #define  MAX_KEY_LOG_2       27
-#define  NUM_BUCKETS_LOG_2   10
 #endif
 
 
@@ -705,10 +707,12 @@ void rank( int iteration )
     of the number of keys in the buckets is Gaussian, the use of
     a dynamic schedule should improve load balance, thus, performance     */
 
-#ifdef SCHED_CYCLIC
-    #pragma omp for schedule(static,1)
+#if (SCHEDULE == SCHEDULE_DYNAMIC)
+	#pragma omp for schedule(dynamic)
+#elif (SCHEDULE == SCHEDULE_SRR)
+	#pragma omp for schedule(runtime)
 #else
-    #pragma omp for schedule(dynamic)
+	#pragma omp for schedule(static, 1)
 #endif
     for( i=0; i< NUM_BUCKETS; i++ ) {
 
