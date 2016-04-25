@@ -17,3 +17,4 @@ contrib/papi-5.4.1
 src/kernels/NPB/IS/npbparams.h
 src/kernels/NPB/bin/*
 src/kernels/NPB/sys/setparams
+*.out
