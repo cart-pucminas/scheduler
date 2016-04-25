@@ -75,7 +75,7 @@ union tick_t
 /*****************************************************************/
 
 /* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  3
+#define  NUM_BUCKETS_LOG_2  5
 
 /* To disable the use of buckets, comment out the following line */
 #define USE_BUCKETS
@@ -687,7 +687,11 @@ void rank( int iteration )
 #endif
         work_buff[key_array[i] >> shift]++;
 	}
-
+/*
+	#pragma omp master
+	for (i = 0; i < NUM_BUCKETS; i++)
+			printf("%u\n", tasks[i]);
+*/
 /*  Accumulative bucket sizes are the bucket pointers.
     These are global sizes accumulated upon to each bucket */
     bucket_ptrs[0] = 0;
@@ -1019,8 +1023,8 @@ int main( int argc, char **argv )
     if (timer_on) timer_start( 1 );
 
 /*  Generate random number sequence and subsequent keys on all procs */
-    create_seq( 314159265.00,                    /* Random number gen seed */
-                1220703125.00 );                 /* Random number gen mult */
+    create_seq( atof(argv[2]),                    /* Random number gen seed */
+                1.0 );                 /* Random number gen mult */
 
     alloc_key_buff();
     if (timer_on) timer_stop( 1 );
