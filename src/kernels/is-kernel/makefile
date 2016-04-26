@@ -3,7 +3,7 @@
 #
 
 # CLASS
-CLASS=CLASS_B
+CLASS=CLASS_D
 
 # Executable file.
 EXEC = is

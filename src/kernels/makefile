@@ -31,6 +31,7 @@ dynamic:
 
 # Builds runtime kernels.
 smart-round-robin:
+	cd is-kernel && $(MAKE) smart-round-robin
 	cd mst-kernel && $(MAKE) smart-round-robin
 
 # Builds oracle kernels.

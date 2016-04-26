@@ -159,26 +159,17 @@ union tick_t
 #define  MAX_ITERATIONS      10
 #define  TEST_ARRAY_SIZE     5
 
-
-/*************************************/
-/* Typedef: if necessary, change the */
-/* size of int here by changing the  */
-/* int type to, say, long            */
-/*************************************/
-#if CLASS == 'D'
-typedef  long INT_TYPE;
-#else
-typedef  int  INT_TYPE;
-#endif
+	
+typedef  uint64_t INT_TYPE;
 
 
 /************************************/
 /* These are the three main arrays. */
 /* See SIZE_OF_BUFFERS def above    */
 /************************************/
-INT_TYPE key_array[SIZE_OF_BUFFERS],    
-         key_buff1[MAX_KEY],
-         key_buff2[SIZE_OF_BUFFERS],
+INT_TYPE *key_array,    
+         *key_buff1,
+         *key_buff2,
          **key_buff1_aptr = NULL;
 
 INT_TYPE **bucket_size;
@@ -196,7 +187,7 @@ void create_seq( double seed)
 	
 	srand(seed);
 	
-	for (i = 0; i < SIZE_OF_BUFFERS; i++)
+	for (i = 0L; i < SIZE_OF_BUFFERS; i++)
 	{
 		double x;
 		
@@ -227,7 +218,7 @@ void *alloc_mem( size_t size )
 void alloc_key_buff( void )
 {
     INT_TYPE i;
-    int      num_procs;
+    INT_TYPE num_procs;
 
     num_procs = omp_get_max_threads();
 
@@ -263,7 +254,7 @@ void rank( int iteration )
     omp_set_workload(tasks, NUM_BUCKETS);
 #endif
 
-    int shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
+    INT_TYPE shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
     INT_TYPE num_bucket_keys = (1L << shift);
 
     key_array[iteration] = iteration;
@@ -278,7 +269,7 @@ void rank( int iteration )
 #pragma omp parallel private(i, k)
   {
     INT_TYPE *work_buff, m, k1, k2;
-    int myid = 0, num_procs = 1;
+    INT_TYPE myid = 0, num_procs = 1;
 
     myid = omp_get_thread_num();
     num_procs = omp_get_num_threads();
@@ -409,8 +400,11 @@ void rank( int iteration )
 
 int main( int argc, char **argv )
 {
-	int i;
 	double seed = 0.0;
+	
+	key_array = alloc_mem(SIZE_OF_BUFFERS*sizeof(INT_TYPE));
+	key_buff1 = alloc_mem(MAX_KEY*sizeof(INT_TYPE));
+	key_buff2 = alloc_mem(SIZE_OF_BUFFERS*sizeof(INT_TYPE));
 	
 	if (argc == 2)
 		seed = atof(argv[1]);
@@ -425,8 +419,13 @@ int main( int argc, char **argv )
     
 
 /*  This is the main iteration */
-    for (i = 1; i <= MAX_ITERATIONS; i++)
+    for (int i = 1; i <= MAX_ITERATIONS; i++)
 		rank(i);
+	
+	/* House keeping. */
+	free(key_array);
+	free(key_buff1);
+	free(key_buff2);
 
     return 0;
 }
