@@ -1,71 +1,23 @@
 SHELL=/bin/sh
-CLASS=W
-VERSION=
+CLASS=CLASS_B
 SFILE=config/suite.def
 
-default: header
-	cat sys/print_instructions
+BINDIR = $(CURDIR)/bin
 
-BT: bt
-bt: header
-	cd BT; $(MAKE) CLASS=$(CLASS) VERSION=$(VERSION)
+CC = gcc
+CFLAGS = -fopenmp --std=c99 -O3 -DCLASS=$(CLASS)
+LIBS = -lm ../../../libsrc/libgomp/libgomp/build/.libs/libgomp.a
 
-SP: sp		       
-sp: header	       
-	cd SP; $(MAKE) CLASS=$(CLASS)
+all: is-dynamic is-srr
 
-LU: lu		       
-lu: header	       
-	cd LU; $(MAKE) CLASS=$(CLASS) VERSION=$(VERSION)
+is-dynamic:
+	$(CC) is.c $(CFLAGS) -DSCHEDULE=SCHEDULE_DYNAMIC -o $(BINDIR)/is.$(CLASS).dynamic $(LIBS)
 
-MG: mg		       
-mg: header	       
-	cd MG; $(MAKE) CLASS=$(CLASS)
-
-FT: ft		       
-ft: header	       
-	cd FT; $(MAKE) CLASS=$(CLASS)
-
-IS: is		       
-is: header	       
-	cd IS; $(MAKE) CLASS=$(CLASS)
-
-CG: cg		       
-cg: header	       
-	cd CG; $(MAKE) CLASS=$(CLASS)
-
-EP: ep		       
-ep: header	       
-	cd EP; $(MAKE) CLASS=$(CLASS)
-
-UA: ua
-ua: header	       
-	cd UA; $(MAKE) CLASS=$(CLASS)
-
-DC: dc
-dc: header	       
-	cd DC; $(MAKE) CLASS=$(CLASS)
-
-# Awk script courtesy cmg@cray.com, modified by Haoqiang Jin
-suite:
-	@ awk -f sys/suite.awk SMAKE=$(MAKE) $(SFILE) | $(SHELL)
-
-
-# It would be nice to make clean in each subdirectory (the targets
-# are defined) but on a really clean system this will won't work
-# because those makefiles need config/make.def
+is-srr:
+	$(CC) is.c $(CFLAGS) -DSCHEDULE=SCHEDULE_SRR -o $(BINDIR)/is.$(CLASS).srr $(LIBS)
+	
 clean:
-	- rm -f core 
-	- rm -f *~ */core */*~ */*.o */npbparams.h */*.obj */*.exe
-	- rm -f sys/setparams sys/makesuite sys/setparams.h
-	- rm -rf */rii_files
-
-veryclean: clean
-	- rm -f bin/sp.* bin/lu.* bin/mg.* bin/ft.* bin/bt.* bin/is.*
-	- rm -f bin/ep.* bin/cg.* bin/ua.* bin/dc.*
-
-header:
-	cat sys/print_header
+	@rm -rf $(BINDIR)/*
 
 
 
