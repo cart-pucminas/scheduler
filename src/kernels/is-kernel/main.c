@@ -73,7 +73,7 @@ union tick_t
 /*****************************************************************/
 
 /* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  3
+#define  NUM_BUCKETS_LOG_2  4
 
 /* To disable the use of buckets, comment out the following line */
 #define USE_BUCKETS
@@ -157,7 +157,6 @@ union tick_t
                                            
 
 #define  MAX_ITERATIONS      10
-#define  TEST_ARRAY_SIZE     5
 
 	
 typedef  uint64_t INT_TYPE;
@@ -183,19 +182,12 @@ INT_TYPE bucket_ptrs[NUM_BUCKETS];
 void create_seq( double seed)
 {
 	INT_TYPE i;
-	double lambda = 0.1;
 	
 	srand(seed);
 	
 	for (i = 0L; i < SIZE_OF_BUFFERS; i++)
 	{
-		double x;
-		
-		do
-			x = lambda*exp(-lambda*(rand()%5));
-		while (x > 1.6);
-		
-		key_array[i] = (x/1.6)*MAX_KEY;
+		key_array[i] = (((double)rand())/RAND_MAX)*MAX_KEY;
 	}
 }
 
@@ -241,12 +233,14 @@ void alloc_key_buff( void )
 extern void omp_set_workload(unsigned *, unsigned);
 #endif
 
-void rank( int iteration )
+void rank(int iteration)
 {
 
     INT_TYPE    i, k;
 	union tick_t t0, t1;
     INT_TYPE    *key_buff_ptr, *key_buff_ptr2;
+    
+    ((void) iteration);
 
 #if defined(_SCHEDULE_SRR_)
     unsigned *tasks;
@@ -256,11 +250,7 @@ void rank( int iteration )
 
     INT_TYPE shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
     INT_TYPE num_bucket_keys = (1L << shift);
-
-    key_array[iteration] = iteration;
-    key_array[iteration+MAX_ITERATIONS] = MAX_KEY - iteration;
-
-
+    
 /*  Setup pointers to key buffers  */
 	key_buff_ptr2 = key_buff2;
     key_buff_ptr = key_buff1;
@@ -276,32 +266,31 @@ void rank( int iteration )
 
     work_buff = bucket_size[myid];
 
-/*  Initialize */
+	/* Initialize. */
     for(i = 0; i < NUM_BUCKETS; i++)
-    {
-
-		#if defined(_SCHEDULE_SRR_)
-		tasks[i] = 0;
-		#endif
-        
-        work_buff[i] = 0;
-	}
-
-/*  Determine the number of keys in each bucket */
-    #pragma omp for schedule(static)
-    for( i=0; i<NUM_KEYS; i++ )
-    {
-		#if defined(_SCHEDULE_SRR_)
-		tasks[key_array[i] >> shift]++;
-		#endif
-        
-        work_buff[key_array[i] >> shift]++;
-	}
-
+		work_buff[i] = 0;        
 	#if defined(_SCHEDULE_SRR_)
 	#pragma omp master
-	for (i = 0; i < NUM_BUCKETS; i++)
-		printf("%u\n", tasks[i]);
+    for (i = 0; i < NUM_BUCKETS; i++)
+		tasks[i] = 0;
+	#endif
+		
+	/* Determine the number of keys in each bucket. */
+    #pragma omp for schedule(static)
+    for( i=0; i<NUM_KEYS; i++)
+		work_buff[key_array[i] >> shift]++;
+	#if defined(_SCHEDULE_SRR_)
+	#pragma omp barrier
+	#pragma omp master
+	{
+		for( i=0; i<NUM_KEYS; i++ )
+			tasks[key_array[i] >> shift]++;
+		if (iteration == 0)
+		{
+			for (i = 0; i < NUM_BUCKETS; i++)
+				printf("%u\n", tasks[i]);
+		}
+	}
 	#endif
 
 /*  Accumulative bucket sizes are the bucket pointers.
@@ -415,7 +404,7 @@ int main( int argc, char **argv )
 
 /*  Do one interation for free (i.e., untimed) to guarantee initialization of  
     all data and code pages and respective tables */
-    rank(1);  
+    rank(0);	
     
 
 /*  This is the main iteration */
