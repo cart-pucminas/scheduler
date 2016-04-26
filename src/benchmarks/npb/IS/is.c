@@ -44,9 +44,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
-#ifdef _OPENMP
+#include <math.h>
 #include <omp.h>
-#endif
 
 union tick_t
 {
@@ -75,7 +74,7 @@ union tick_t
 /*****************************************************************/
 
 /* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  5
+#define  NUM_BUCKETS_LOG_2  3
 
 /* To disable the use of buckets, comment out the following line */
 #define USE_BUCKETS
@@ -86,7 +85,7 @@ union tick_t
 #define SCHEDULE_DYNAMIC  2
 #define SCHEDULE_SRR      3
 
-#define SCHEDULE SCHEDULE_DYNAMIC
+#define SCHEDULE SCHEDULE_SRR
 
 /******************/
 /* default values */
@@ -176,13 +175,6 @@ typedef  int  INT_TYPE;
 #endif
 
 
-/********************/
-/* Some global info */
-/********************/
-INT_TYPE *key_buff_ptr_global;         /* used by full_verify to get */
-                                       /* copies of rank info        */
-                                 
-
 /************************************/
 /* These are the three main arrays. */
 /* See SIZE_OF_BUFFERS def above    */
@@ -192,11 +184,9 @@ INT_TYPE key_array[SIZE_OF_BUFFERS],
          key_buff2[SIZE_OF_BUFFERS],
          **key_buff1_aptr = NULL;
 
-#ifdef USE_BUCKETS
-INT_TYPE **bucket_size, 
-         bucket_ptrs[NUM_BUCKETS];
+INT_TYPE **bucket_size;
+INT_TYPE bucket_ptrs[NUM_BUCKETS];
 #pragma omp threadprivate(bucket_ptrs)
-#endif
 
 /*
  *    FUNCTION RANDLC (X, A)
@@ -295,107 +285,29 @@ double	randlc( double *X, double *A )
       T4 = j;
       *X = T3 - T46 * T4;
       return(R46 * *X);
-} 
-
-
-
-
-/*****************************************************************/
-/************   F  I  N  D  _  M  Y  _  S  E  E  D    ************/
-/************                                         ************/
-/************ returns parallel random number seq seed ************/
-/*****************************************************************/
-
-/*
- * Create a random number sequence of total length nn residing
- * on np number of processors.  Each processor will therefore have a
- * subsequence of length nn/np.  This routine returns that random
- * number which is the first random number for the subsequence belonging
- * to processor rank kn, and which is used as seed for proc kn ran # gen.
- */
-
-double   find_my_seed( int kn,        /* my processor rank, 0<=kn<=num procs */
-                       int np,        /* np = num procs                      */
-                       long nn,       /* total num of ran numbers, all procs */
-                       double s,      /* Ran num seed, for ex.: 314159265.00 */
-                       double a )     /* Ran num gen mult, try 1220703125.00 */
-{
-
-      double t1,t2;
-      long   mq,nq,kk,ik;
-
-      if ( kn == 0 ) return s;
-
-      mq = (nn/4 + np - 1) / np;
-      nq = mq * 4 * kn;               /* number of rans to be skipped */
-
-      t1 = s;
-      t2 = a;
-      kk = nq;
-      while ( kk > 1 ) {
-      	 ik = kk / 2;
-         if( 2 * ik ==  kk ) {
-            (void)randlc( &t2, &t2 );
-	    kk = ik;
-	 }
-	 else {
-            (void)randlc( &t1, &t2 );
-	    kk = kk - 1;
-	 }
-      }
-      (void)randlc( &t1, &t2 );
-
-      return( t1 );
-
 }
-
-
 
 /*****************************************************************/
 /*************      C  R  E  A  T  E  _  S  E  Q      ************/
 /*****************************************************************/
 
-void	create_seq( double seed, double a )
+void create_seq( double seed)
 {
-  double x, s;
-  INT_TYPE i, k;
-
-#pragma omp parallel private(x,s,i,k)
-  {
-    INT_TYPE k1, k2;
-    double an = a;
-    int myid, num_procs;
-    INT_TYPE mq;
-
-#ifdef _OPENMP
-    myid = omp_get_thread_num();
-    num_procs = omp_get_num_threads();
-#else
-    myid = 0;
-    num_procs = 1;
-#endif
-
-    mq = (NUM_KEYS + num_procs - 1) / num_procs;
-    k1 = mq * myid;
-    k2 = k1 + mq;
-    if ( k2 > NUM_KEYS ) k2 = NUM_KEYS;
-
-    KS = 0;
-    s = find_my_seed( myid, num_procs,
-        (long)4*NUM_KEYS, seed, an );
-
-    k = MAX_KEY/4;
-
-    for (i=k1; i<k2; i++)
-    {
-      x = randlc(&s, &an);
-      x += randlc(&s, &an);
-      x += randlc(&s, &an);
-      x += randlc(&s, &an);  
-
-      key_array[i] = k*x;
-    }
-  } /*omp parallel*/
+	INT_TYPE i;
+	double lambda = 0.1;
+	
+	srand(seed);
+	
+	for (i = 0; i < SIZE_OF_BUFFERS; i++)
+	{
+		double x;
+		
+		do
+			x = lambda*exp(-lambda*rand());
+		while (x > 5);
+		
+		key_array[i] = (x/5)*MAX_KEY;
+	}
 }
 
 
@@ -420,12 +332,7 @@ void alloc_key_buff( void )
     INT_TYPE i;
     int      num_procs;
 
-
-#ifdef _OPENMP
     num_procs = omp_get_max_threads();
-#else
-    num_procs = 1;
-#endif
 
     bucket_size = (INT_TYPE **)alloc_mem(sizeof(INT_TYPE *) * num_procs);
 
@@ -459,11 +366,8 @@ void rank( int iteration )
     omp_set_workload(tasks, NUM_BUCKETS);
 #endif
 
-#ifdef USE_BUCKETS
     int shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
     INT_TYPE num_bucket_keys = (1L << shift);
-#endif
-
 
     key_array[iteration] = iteration;
     key_array[iteration+MAX_ITERATIONS] = MAX_KEY - iteration;
@@ -479,15 +383,13 @@ void rank( int iteration )
     INT_TYPE *work_buff, m, k1, k2;
     int myid = 0, num_procs = 1;
 
-#ifdef _OPENMP
     myid = omp_get_thread_num();
     num_procs = omp_get_num_threads();
-#endif
 
     work_buff = bucket_size[myid];
 
 /*  Initialize */
-    for( i=0; i<NUM_BUCKETS; i++ )
+    for(i = 0; i < NUM_BUCKETS; i++)
     {
 
 		#if (SCHEDULE == SCHEDULE_SRR)   
@@ -511,7 +413,7 @@ void rank( int iteration )
 	#if (SCHEDULE == SCHEDULE_SRR)
 	#pragma omp master
 	for (i = 0; i < NUM_BUCKETS; i++)
-			printf("%u\n", tasks[i]);
+		printf("%u\n", tasks[i]);
 	#endif
 
 /*  Accumulative bucket sizes are the bucket pointers.
@@ -613,8 +515,7 @@ int main( int argc, char **argv )
 	int i;
 
 /*  Generate random number sequence and subsequent keys on all procs */
-    create_seq( atof(argv[2]),                    /* Random number gen seed */
-                1.0 );                 /* Random number gen mult */
+    create_seq(atof(argv[2]));     /* Random number gen mult */
 
     alloc_key_buff();
 
@@ -629,7 +530,3 @@ int main( int argc, char **argv )
 
     return 0;
 }
-
-
-
-
