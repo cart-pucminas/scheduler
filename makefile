@@ -57,7 +57,6 @@ libs:
 	cd $(MYLIB) &&                                     \
 	$(MAKE) install PREFIX=$(PREFIX)
 	rm -rf $(CONTRIBDIR)/$(MYLIB)
-	cd $(LIBSRCDIR) && $(MAKE) all
 
 # Builds the benchmark.
 benchmark: libs
@@ -86,7 +85,6 @@ kernels: libs
 	
 # Cleans compilation files.
 clean:
-	cd $(LIBSRCDIR) && $(MAKE) clean
 	cd $(SRCDIR) && $(MAKE) clean
 	rm -rf $(INCDIR)/mylib
 	rm -rf $(LIBDIR)
