@@ -190,7 +190,6 @@ INT_TYPE *key_buff_ptr_global;         /* used by full_verify to get */
 INT_TYPE key_array[SIZE_OF_BUFFERS],    
          key_buff1[MAX_KEY],
          key_buff2[SIZE_OF_BUFFERS],
-         partial_verify_vals[TEST_ARRAY_SIZE],
          **key_buff1_aptr = NULL;
 
 #ifdef USE_BUCKETS
@@ -198,75 +197,6 @@ INT_TYPE **bucket_size,
          bucket_ptrs[NUM_BUCKETS];
 #pragma omp threadprivate(bucket_ptrs)
 #endif
-
-
-/**********************/
-/* Partial verif info */
-/**********************/
-INT_TYPE test_index_array[TEST_ARRAY_SIZE],
-         test_rank_array[TEST_ARRAY_SIZE],
-
-         S_test_index_array[TEST_ARRAY_SIZE] = 
-                             {48427,17148,23627,62548,4431},
-         S_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {0,18,346,64917,65463},
-
-         W_test_index_array[TEST_ARRAY_SIZE] = 
-                             {357773,934767,875723,898999,404505},
-         W_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {1249,11698,1039987,1043896,1048018},
-
-         A_test_index_array[TEST_ARRAY_SIZE] = 
-                             {2112377,662041,5336171,3642833,4250760},
-         A_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {104,17523,123928,8288932,8388264},
-
-         B_test_index_array[TEST_ARRAY_SIZE] = 
-                             {41869,812306,5102857,18232239,26860214},
-         B_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {33422937,10244,59149,33135281,99}, 
-
-         C_test_index_array[TEST_ARRAY_SIZE] = 
-                             {44172927,72999161,74326391,129606274,21736814},
-         C_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {61147,882988,266290,133997595,133525895},
-
-         D_test_index_array[TEST_ARRAY_SIZE] = 
-                             {1317351170,995930646,1157283250,1503301535,1453734525},
-         D_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {1,36538729,1978098519,2145192618,2147425337};
-
-
-/***********************/
-/* function prototypes */
-/***********************/
-double	randlc( double *X, double *A );
-
-void c_print_results( char   *name,
-                      char   class,
-                      int    n1, 
-                      int    n2,
-                      int    n3,
-                      int    niter,
-                      double t,
-                      double mops,
-		      char   *optype,
-                      int    passed_verification,
-                      char   *npbversion,
-                      char   *compiletime,
-                      char   *cc,
-                      char   *clink,
-                      char   *c_lib,
-                      char   *c_inc,
-                      char   *cflags,
-                      char   *clinkflags );
-
-
-void    timer_clear( int n );
-void    timer_start( int n );
-void    timer_stop( int n );
-double  timer_read( int n );
-
 
 /*
  *    FUNCTION RANDLC (X, A)
@@ -497,7 +427,6 @@ void alloc_key_buff( void )
     num_procs = 1;
 #endif
 
-#ifdef USE_BUCKETS
     bucket_size = (INT_TYPE **)alloc_mem(sizeof(INT_TYPE *) * num_procs);
 
     for (i = 0; i < num_procs; i++) {
@@ -507,17 +436,6 @@ void alloc_key_buff( void )
     #pragma omp parallel for
     for( i=0; i<NUM_KEYS; i++ )
         key_buff2[i] = 0;
-
-#else /*USE_BUCKETS*/
-
-    key_buff1_aptr = (INT_TYPE **)alloc_mem(sizeof(INT_TYPE *) * num_procs);
-
-    key_buff1_aptr[0] = key_buff1;
-    for (i = 1; i < num_procs; i++) {
-        key_buff1_aptr[i] = (INT_TYPE *)alloc_mem(sizeof(INT_TYPE) * MAX_KEY);
-    }
-
-#endif /*USE_BUCKETS*/
 }
 
 /*****************************************************************/
@@ -551,18 +469,8 @@ void rank( int iteration )
     key_array[iteration+MAX_ITERATIONS] = MAX_KEY - iteration;
 
 
-/*  Determine where the partial verify test keys are, load into  */
-/*  top of array bucket_size                                     */
-    for( i=0; i<TEST_ARRAY_SIZE; i++ )
-        partial_verify_vals[i] = key_array[test_index_array[i]];
-
-
 /*  Setup pointers to key buffers  */
-#ifdef USE_BUCKETS
-    key_buff_ptr2 = key_buff2;
-#else
-    key_buff_ptr2 = key_array;
-#endif
+	key_buff_ptr2 = key_buff2;
     key_buff_ptr = key_buff1;
 
 
@@ -576,21 +484,16 @@ void rank( int iteration )
     num_procs = omp_get_num_threads();
 #endif
 
-
-/*  Bucket sort is known to improve cache performance on some   */
-/*  cache based systems.  But the actual performance may depend */
-/*  on cache size, problem size. */
-#ifdef USE_BUCKETS
-
     work_buff = bucket_size[myid];
 
 /*  Initialize */
     for( i=0; i<NUM_BUCKETS; i++ )
     {
 
-#if (SCHEDULE == SCHEDULE_SRR)   
+		#if (SCHEDULE == SCHEDULE_SRR)   
 		tasks[i] = 0;
-#endif
+		#endif
+        
         work_buff[i] = 0;
 	}
 
@@ -598,17 +501,19 @@ void rank( int iteration )
     #pragma omp for schedule(static)
     for( i=0; i<NUM_KEYS; i++ )
     {
-
-#if (SCHEDULE == SCHEDULE_SRR)   
+		#if (SCHEDULE == SCHEDULE_SRR)
 		tasks[key_array[i] >> shift]++;
-#endif
+		#endif
+        
         work_buff[key_array[i] >> shift]++;
 	}
-/*
+
+	#if (SCHEDULE == SCHEDULE_SRR)
 	#pragma omp master
 	for (i = 0; i < NUM_BUCKETS; i++)
 			printf("%u\n", tasks[i]);
-*/
+	#endif
+
 /*  Accumulative bucket sizes are the bucket pointers.
     These are global sizes accumulated upon to each bucket */
     bucket_ptrs[0] = 0;
@@ -688,55 +593,9 @@ void rank( int iteration )
 	#pragma omp master
 	_GET_TICK(t1);
 
-#else /*USE_BUCKETS*/
-
-
-    work_buff = key_buff1_aptr[myid];
-
-
-/*  Clear the work array */
-    for( i=0; i<MAX_KEY; i++ )
-        work_buff[i] = 0;
-
-
-/*  Ranking of all keys occurs in this section:                 */
-
-/*  In this section, the keys themselves are used as their 
-    own indexes to determine how many of each there are: their
-    individual population                                       */
-
-    #pragma omp for nowait schedule(static)
-    for( i=0; i<NUM_KEYS; i++ )
-        work_buff[key_buff_ptr2[i]]++;  /* Now they have individual key   */
-                                       /* population                     */
-
-/*  To obtain ranks of each key, successively add the individual key
-    population                                          */
-
-    for( i=0; i<MAX_KEY-1; i++ )   
-        work_buff[i+1] += work_buff[i];
-
-    #pragma omp barrier
-
-/*  Accumulate the global key population */
-    for( k=1; k<num_procs; k++ ) {
-        #pragma omp for nowait schedule(static)
-        for( i=0; i<MAX_KEY; i++ )
-            key_buff_ptr[i] += key_buff1_aptr[k][i];
-    }
-
-#endif /*USE_BUCKETS*/
-
   } /*omp parallel*/
   
   fprintf(stderr, "%" PRIu64 "\n", t1.tick - t0.tick);
-
-/*  Make copies of rank info for use by full_verify: these variables
-    in rank are local; making them global slows down the code, probably
-    since they cannot be made register by compiler                        */
-
-    if( iteration == MAX_ITERATIONS ) 
-        key_buff_ptr_global = key_buff_ptr;
 
 
 #if (SCHEDULE == SCHEDULE_SRR)   
@@ -751,61 +610,7 @@ void rank( int iteration )
 
 int main( int argc, char **argv )
 {
-
-    int             i, iteration, timer_on;
-
-    double          timecounter;
-
-    FILE            *fp;
-
-
-/*  Initialize timers  */
-    timer_on = 0;            
-    if ((fp = fopen("timer.flag", "r")) != NULL) {
-        fclose(fp);
-        timer_on = 1;
-    }
-    timer_clear( 0 );
-    if (timer_on) {
-        timer_clear( 1 );
-        timer_clear( 2 );
-        timer_clear( 3 );
-    }
-
-    if (timer_on) timer_start( 3 );
-
-
-/*  Initialize the verification arrays if a valid class */
-    for( i=0; i<TEST_ARRAY_SIZE; i++ )
-        switch( CLASS )
-        {
-            case 'S':
-                test_index_array[i] = S_test_index_array[i];
-                test_rank_array[i]  = S_test_rank_array[i];
-                break;
-            case 'A':
-                test_index_array[i] = A_test_index_array[i];
-                test_rank_array[i]  = A_test_rank_array[i];
-                break;
-            case 'W':
-                test_index_array[i] = W_test_index_array[i];
-                test_rank_array[i]  = W_test_rank_array[i];
-                break;
-            case 'B':
-                test_index_array[i] = B_test_index_array[i];
-                test_rank_array[i]  = B_test_rank_array[i];
-                break;
-            case 'C':
-                test_index_array[i] = C_test_index_array[i];
-                test_rank_array[i]  = C_test_rank_array[i];
-                break;
-            case 'D':
-                test_index_array[i] = D_test_index_array[i];
-                test_rank_array[i]  = D_test_rank_array[i];
-                break;
-        };
-
-    if (timer_on) timer_start( 1 );
+	int i;
 
 /*  Generate random number sequence and subsequent keys on all procs */
     create_seq( atof(argv[2]),                    /* Random number gen seed */
@@ -819,8 +624,8 @@ int main( int argc, char **argv )
     
 
 /*  This is the main iteration */
-    for (iteration = 1; iteration <= MAX_ITERATIONS; iteration++)
-		rank(iteration);
+    for (i = 1; i <= MAX_ITERATIONS; i++)
+		rank(i);
 
     return 0;
 }
