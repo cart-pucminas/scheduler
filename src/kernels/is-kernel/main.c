@@ -201,7 +201,10 @@ void create_seq(void)
 		while ((x == 0.0) || (x == 1.0));
 
 		key_array[i] = ceil(x*MAX_KEY);
+		if (key_array[i] >= MAX_KEY)
+			key_array[i]--;
 	}
+	
 	
 	/* House keeping. */		
 	gsl_rng_free(r);
