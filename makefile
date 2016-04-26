@@ -48,6 +48,10 @@ export CFLAGS += -O3
 # Builds everything.
 all: benchmark simulator searcher generator kernels
 
+# Builds libgomp.
+libgomp:
+	cd $(LIBSRCDIR) && $(MAKE) all
+
 # Builds libraries.
 libs:
 	mkdir -p $(LIBDIR)
