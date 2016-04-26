@@ -193,7 +193,15 @@ void create_seq(void)
 	r = gsl_rng_alloc(T);
 	
 	for (INT_TYPE i = 0L; i < SIZE_OF_BUFFERS; i++)
-		key_array[i] = gsl_ran_beta(r, 0.5, 0.5)*MAX_KEY;
+	{
+		double x;
+		
+		do
+			x = gsl_ran_beta(r, 0.5, 0.5);
+		while ((x == 0.0) || (x == 1.0));
+
+		key_array[i] = ceil(x*MAX_KEY);
+	}
 	
 	/* House keeping. */		
 	gsl_rng_free(r);
