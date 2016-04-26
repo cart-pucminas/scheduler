@@ -46,6 +46,9 @@
 #include <math.h>
 #include <omp.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 union tick_t
 {
   uint64_t tick;
@@ -179,16 +182,21 @@ INT_TYPE bucket_ptrs[NUM_BUCKETS];
 /*************      C  R  E  A  T  E  _  S  E  Q      ************/
 /*****************************************************************/
 
-void create_seq( double seed)
+void create_seq(void)
 {
-	INT_TYPE i;
+	gsl_rng * r;
+	const gsl_rng_type * T;
 	
-	srand(seed);
+	/* Setup random number generator. */
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
 	
-	for (i = 0L; i < SIZE_OF_BUFFERS; i++)
-	{
-		key_array[i] = (((double)rand())/RAND_MAX)*MAX_KEY;
-	}
+	for (INT_TYPE i = 0L; i < SIZE_OF_BUFFERS; i++)
+		key_array[i] = gsl_ran_beta(r, 0.5, 0.5)*MAX_KEY;
+	
+	/* House keeping. */		
+	gsl_rng_free(r);
 }
 
 /*****************************************************************/
@@ -389,16 +397,14 @@ void rank(int iteration)
 
 int main( int argc, char **argv )
 {
-	double seed = 0.0;
+	((void)argc);
+	((void)argv);
 	
 	key_array = alloc_mem(SIZE_OF_BUFFERS*sizeof(INT_TYPE));
 	key_buff1 = alloc_mem(MAX_KEY*sizeof(INT_TYPE));
 	key_buff2 = alloc_mem(SIZE_OF_BUFFERS*sizeof(INT_TYPE));
-	
-	if (argc == 2)
-		seed = atof(argv[1]);
 
-    create_seq(seed);
+    create_seq();
 
     alloc_key_buff();
 
