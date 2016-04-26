@@ -153,7 +153,7 @@ union tick_t
 #endif
 
 
-#if CLASS == 'D'
+#if (CLASS == CLASS_D)
 #define  TOTAL_KEYS          (1L << TOTAL_KEYS_LOG_2)
 #else
 #define  TOTAL_KEYS          (1 << TOTAL_KEYS_LOG_2)
