@@ -244,8 +244,6 @@ INT_TYPE test_index_array[TEST_ARRAY_SIZE],
 /***********************/
 double	randlc( double *X, double *A );
 
-void full_verify( void );
-
 void c_print_results( char   *name,
                       char   class,
                       int    n1, 
@@ -523,85 +521,6 @@ void alloc_key_buff( void )
 
 #endif /*USE_BUCKETS*/
 }
-
-
-
-/*****************************************************************/
-/*************    F  U  L  L  _  V  E  R  I  F  Y     ************/
-/*****************************************************************/
-
-
-void full_verify( void )
-{
-    INT_TYPE   i, j;
-    INT_TYPE   k, k1;
-
-
-/*  Now, finally, sort the keys:  */
-
-/*  Copy keys into work array; keys in key_array will be reassigned. */
-
-#ifdef USE_BUCKETS
-
-    /* Buckets are already sorted.  Sorting keys within each bucket */
-#ifdef SCHED_CYCLIC
-    #pragma omp parallel for private(i,j,k,k1) schedule(static,1)
-#else
-    #pragma omp parallel for private(i,j,k,k1) schedule(dynamic)
-#endif
-    for( j=0; j< NUM_BUCKETS; j++ ) {
-
-        k1 = (j > 0)? bucket_ptrs[j-1] : 0;
-        for ( i = k1; i < bucket_ptrs[j]; i++ ) {
-            k = --key_buff_ptr_global[key_buff2[i]];
-            key_array[k] = key_buff2[i];
-        }
-    }
-
-#else
-
-#pragma omp parallel private(i,j,k,k1,k2)
-  {
-    #pragma omp for
-    for( i=0; i<NUM_KEYS; i++ )
-        key_buff2[i] = key_array[i];
-
-    /* This is actual sorting. Each thread is responsible for 
-       a subset of key values */
-    j = omp_get_num_threads();
-    j = (MAX_KEY + j - 1) / j;
-    k1 = j * omp_get_thread_num();
-    k2 = k1 + j;
-    if (k2 > MAX_KEY) k2 = MAX_KEY;
-
-    for( i=0; i<NUM_KEYS; i++ ) {
-        if (key_buff2[i] >= k1 && key_buff2[i] < k2) {
-            k = --key_buff_ptr_global[key_buff2[i]];
-            key_array[k] = key_buff2[i];
-        }
-    }
-  } /*omp parallel*/
-
-#endif
-
-
-/*  Confirm keys correctly sorted: count incorrectly sorted keys, if any */
-
-    j = 0;
-    #pragma omp parallel for reduction(+:j)
-    for( i=1; i<NUM_KEYS; i++ )
-        if( key_array[i-1] > key_array[i] )
-            j++;
-
-    if( j != 0 )
-        printf( "Full_verify: number of keys out of sort: %ld\n", (long)j );
-    else
-        passed_verification++;
-
-}
-
-
-
 
 /*****************************************************************/
 /*************             R  A  N  K             ****************/
@@ -1056,11 +975,6 @@ int main( int argc, char **argv )
     timecounter = timer_read( 0 );
 
 
-/*  This tests that keys are in sequence: sorting of last ranked key seq
-    occurs here, but is an untimed operation                             */
-    if (timer_on) timer_start( 2 );
-    full_verify();
-    if (timer_on) timer_stop( 2 );
 
     if (timer_on) timer_stop( 3 );
 
@@ -1103,15 +1017,10 @@ int main( int argc, char **argv )
        timecounter = timer_read(0);
        t_percent = timecounter/t_total * 100.;
        printf(" Benchmarking   : %8.3f (%5.2f%%)\n", timecounter, t_percent);
-       timecounter = timer_read(2);
-       t_percent = timecounter/t_total * 100.;
-       printf(" Sorting        : %8.3f (%5.2f%%)\n", timecounter, t_percent);
     }
 
     return 0;
-         /**************************/
-}        /*  E N D  P R O G R A M  */
-         /**************************/
+}
 
 
 
