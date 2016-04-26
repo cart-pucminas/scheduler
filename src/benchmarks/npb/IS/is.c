@@ -181,8 +181,6 @@ typedef  int  INT_TYPE;
 /********************/
 INT_TYPE *key_buff_ptr_global;         /* used by full_verify to get */
                                        /* copies of rank info        */
-
-int      passed_verification;
                                  
 
 /************************************/
@@ -733,126 +731,6 @@ void rank( int iteration )
   
   fprintf(stderr, "%" PRIu64 "\n", t1.tick - t0.tick);
 
-/* This is the partial verify test section */
-/* Observe that test_rank_array vals are   */
-/* shifted differently for different cases */
-    for( i=0; i<TEST_ARRAY_SIZE; i++ )
-    {                                             
-        k = partial_verify_vals[i];          /* test vals were put here */
-        if( 0 < k  &&  k <= NUM_KEYS-1 )
-        {
-            INT_TYPE key_rank = key_buff_ptr[k-1];
-            int failed = 0;
-
-            switch( CLASS )
-            {
-                case 'S':
-                    if( i <= 2 )
-                    {
-                        if( key_rank != test_rank_array[i]+iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-                case 'W':
-                    if( i < 2 )
-                    {
-                        if( key_rank != test_rank_array[i]+(iteration-2) )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-                case 'A':
-                    if( i <= 2 )
-        	    {
-                        if( key_rank != test_rank_array[i]+(iteration-1) )
-                            failed = 1;
-                        else
-                            passed_verification++;
-        	    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-(iteration-1) )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-                case 'B':
-                    if( i == 1 || i == 2 || i == 4 )
-        	    {
-                        if( key_rank != test_rank_array[i]+iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-        	    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-                case 'C':
-                    if( i <= 2 )
-        	    {
-                        if( key_rank != test_rank_array[i]+iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-        	    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-                case 'D':
-                    if( i < 2 )
-        	    {
-                        if( key_rank != test_rank_array[i]+iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-        	    }
-                    else
-                    {
-                        if( key_rank != test_rank_array[i]-iteration )
-                            failed = 1;
-                        else
-                            passed_verification++;
-                    }
-                    break;
-            }
-            if( failed == 1 )
-                printf( "Failed partial verification: "
-                        "iteration %d, test key %d\n", 
-                         iteration, (int)i );
-        }
-    }
-
-
-
-
 /*  Make copies of rank info for use by full_verify: these variables
     in rank are local; making them global slows down the code, probably
     since they cannot be made register by compiler                        */
@@ -927,18 +805,6 @@ int main( int argc, char **argv )
                 break;
         };
 
-        
-
-/*  Printout initial NPB info */
-    printf
-      ( "\n\n NAS Parallel Benchmarks (NPB3.3-OMP) - IS Benchmark\n\n" );
-    printf( " Size:  %ld  (class %c)\n", (long)TOTAL_KEYS, CLASS );
-    printf( " Iterations:  %d\n", MAX_ITERATIONS );
-#ifdef _OPENMP
-    printf( " Number of available threads:  %d\n", omp_get_max_threads() );
-#endif
-    printf( "\n" );
-
     if (timer_on) timer_start( 1 );
 
 /*  Generate random number sequence and subsequent keys on all procs */
@@ -946,78 +812,15 @@ int main( int argc, char **argv )
                 1.0 );                 /* Random number gen mult */
 
     alloc_key_buff();
-    if (timer_on) timer_stop( 1 );
-
 
 /*  Do one interation for free (i.e., untimed) to guarantee initialization of  
     all data and code pages and respective tables */
-    rank( 1 );  
-
-/*  Start verification counter */
-    passed_verification = 0;
-
-    if( CLASS != 'S' ) printf( "\n   iteration\n" );
-
-/*  Start timer  */             
-    timer_start( 0 );
-
+    rank(1);  
+    
 
 /*  This is the main iteration */
-    for( iteration=1; iteration<=MAX_ITERATIONS; iteration++ )
-    {
-        if( CLASS != 'S' ) printf( "        %d\n", iteration );
-        rank( iteration );
-    }
-
-
-/*  End of timing, obtain maximum time of all processors */
-    timer_stop( 0 );
-    timecounter = timer_read( 0 );
-
-
-
-    if (timer_on) timer_stop( 3 );
-
-
-/*  The final printout  */
-    if( passed_verification != 5*MAX_ITERATIONS + 1 )
-        passed_verification = 0;
-    c_print_results( "IS",
-                     CLASS,
-                     (int)(TOTAL_KEYS/64),
-                     64,
-                     0,
-                     MAX_ITERATIONS,
-                     timecounter,
-                     ((double) (MAX_ITERATIONS*TOTAL_KEYS))
-                                                  /timecounter/1000000.,
-                     "keys ranked", 
-                     passed_verification,
-                     NPBVERSION,
-                     COMPILETIME,
-                     CC,
-                     CLINK,
-                     C_LIB,
-                     C_INC,
-                     CFLAGS,
-                     CLINKFLAGS );
-
-
-/*  Print additional timers  */
-    if (timer_on) {
-       double t_total, t_percent;
-
-       t_total = timer_read( 3 );
-       printf("\nAdditional timers -\n");
-       printf(" Total execution: %8.3f\n", t_total);
-       if (t_total == 0.0) t_total = 1.0;
-       timecounter = timer_read(1);
-       t_percent = timecounter/t_total * 100.;
-       printf(" Initialization : %8.3f (%5.2f%%)\n", timecounter, t_percent);
-       timecounter = timer_read(0);
-       t_percent = timecounter/t_total * 100.;
-       printf(" Benchmarking   : %8.3f (%5.2f%%)\n", timecounter, t_percent);
-    }
+    for (iteration = 1; iteration <= MAX_ITERATIONS; iteration++)
+		rank(iteration);
 
     return 0;
 }
