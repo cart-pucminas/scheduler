@@ -33,6 +33,7 @@ export LIBS  = $(LIBDIR)/libmy.a
 export LIBS += $(CONTRIBDIR)/lib/libgsl.a
 export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a
 export LIBS += $(CONTRIBDIR)/lib/libpapi.a
+export LIBS += $(LIBSRCDIR)/libgomp/libgomp/build/.libs/libgomp.a
 export LIBS += -lm
 
 # Toolchain.

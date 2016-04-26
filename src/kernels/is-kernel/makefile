@@ -2,8 +2,14 @@
 # Copyright(C) 2014 Pedro H. Penna <pedrohenriquepenna@gmail.com>
 #
 
+# CLASS
+CLASS=CLASS_B
+
 # Executable file.
 EXEC = is
+
+# Class.
+CFLAGS += -DCLASS=$(CLASS)
 
 # Builds static version.
 static:
@@ -12,6 +18,14 @@ static:
 # Builds dynamic version.
 dynamic:
 	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_DYNAMIC_ -o $(BINDIR)/$(EXEC).dynamic $(LIBS)
+
+# Builds smart-round-robin version.
+smart-round-robin:
+	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_SRR_ -o $(BINDIR)/$(EXEC).srr $(LIBS)
+
+# Builds oracle version.
+oracle:
+	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_ORACLE_ -o $(BINDIR)/$(EXEC).oracle $(LIBS)
 
 # Cleans compilation files.
 clean:
