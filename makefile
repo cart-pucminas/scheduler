@@ -86,7 +86,11 @@ generator: libs
 kernels: libs
 	mkdir -p $(BINDIR)
 	cd $(SRCDIR) && $(MAKE) kernels
-	
+
+# Cleans libgomp.
+libgomp-clean:
+	cd $(LIBSRCDIR) && $(MAKE) clean
+
 # Cleans compilation files.
 clean:
 	cd $(SRCDIR) && $(MAKE) clean
