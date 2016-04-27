@@ -5,11 +5,13 @@
 # CLASS
 CLASS=CLASS_D
 
+NUM_BUCKETS_LOG_2=5
+
 # Executable file.
 EXEC = is
 
 # Class.
-CFLAGS += -DCLASS=$(CLASS)
+CFLAGS += -DCLASS=$(CLASS) -DNUM_BUCKETS_LOG_2=$(NUM_BUCKETS_LOG_2)
 
 # Builds static version.
 static:

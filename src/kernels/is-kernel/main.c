@@ -72,12 +72,6 @@ union tick_t
 /* Example:  SGI O2000:   400% slowdown with buckets (Wow!)      */
 /*****************************************************************/
 
-/* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  5
-
-/* To disable the use of buckets, comment out the following line */
-#define USE_BUCKETS
-
 #define CLASS_S 0
 #define CLASS_W 1
 #define CLASS_A 2
@@ -156,7 +150,7 @@ union tick_t
 #define  SIZE_OF_BUFFERS     NUM_KEYS  
                                            
 
-#define  MAX_ITERATIONS      10
+#define  MAX_ITERATIONS      30
 
 	
 typedef  uint64_t INT_TYPE;
@@ -183,7 +177,7 @@ void create_seq(void)
 {
 	int k;
 	int residual;
-	unsigned workload[NUM_BUCKETS];
+	int workload[NUM_BUCKETS];
 
 	/*
 	 * Generate discrete beta distribution
@@ -192,7 +186,7 @@ void create_seq(void)
 	residual = 0;
 	for (int i = 0; i < NUM_BUCKETS/2; i++)
 	{
-		int work = SIZE_OF_BUFFERS/(1 << (i + 2))
+		int work = SIZE_OF_BUFFERS/(1 << (i + 2));
 		
 		residual += work;
 		workload[i] = work;
