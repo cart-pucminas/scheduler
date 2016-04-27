@@ -181,21 +181,32 @@ INT_TYPE bucket_ptrs[NUM_BUCKETS];
 
 void create_seq(void)
 {
-	int k = 0;
+	int k;
+	int residual;
 	unsigned workload[NUM_BUCKETS];
-	unsigned residual = 0;
 
+	/*
+	 * Generate discrete beta distribution
+	 * with alpa = beta = 0.5.
+	 */
+	residual = 0;
 	for (int i = 0; i < NUM_BUCKETS/2; i++)
-		residual += workload[i] = workload[NUM_BUCKETS - i - 1] = SIZE_OF_BUFFERS/(1 << (i + 2));
+	{
+		int work = SIZE_OF_BUFFERS/(1 << (i + 2))
+		
+		residual += work;
+		workload[i] = work;
+		workload[NUM_BUCKETS - i - 1] = work;
+	}
+	residual = SIZE_OF_BUFFERS - (residual/2);
+	workload[NUM_BUCKETS/2 - 1] += residual/2;
+	workload[NUM_BUCKETS/2 + 0] += residual/2;
 	
-	residual = SIZE_OF_BUFFERS - (residual << 1);
-
-	workload[NUM_BUCKETS/2 - 1] += residual >> 1;
-	workload[NUM_BUCKETS/2 + 0] += residual >> 1;
-	
+	/* Generate input sequence. */
+	k = 0;
 	for (int i = 0; i < NUM_BUCKETS; i++)
 	{
-		for (unsigned j = 0; j < workload[i]; j++)
+		for (int j = 0; j < workload[i]; j++)
 			key_array[k++] = i*(MAX_KEY/NUM_BUCKETS);
 	}
 }
