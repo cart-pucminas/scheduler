@@ -76,10 +76,8 @@ union tick_t
 /*****************************************************************/
 
 /* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  4
-
-/* To disable the use of buckets, comment out the following line */
-#define USE_BUCKETS
+const unsigned NUM_BUCKETS_LOG_2 = 4;
+const unsigned NUM_BUCKETS = (1 << 4);
 
 #define CLASS_S 0
 #define CLASS_W 1
@@ -154,7 +152,6 @@ union tick_t
 #define  TOTAL_KEYS          (1 << TOTAL_KEYS_LOG_2)
 #endif
 #define  MAX_KEY             (1 << MAX_KEY_LOG_2)
-#define  NUM_BUCKETS         (1 << NUM_BUCKETS_LOG_2)
 #define  NUM_KEYS            TOTAL_KEYS
 #define  SIZE_OF_BUFFERS     NUM_KEYS  
                                            
@@ -175,8 +172,6 @@ INT_TYPE *key_array,
          **key_buff1_aptr = NULL;
 
 INT_TYPE **bucket_size;
-INT_TYPE bucket_ptrs[NUM_BUCKETS];
-#pragma omp threadprivate(bucket_ptrs)
 
 /*****************************************************************/
 /*************      C  R  E  A  T  E  _  S  E  Q      ************/
@@ -258,72 +253,73 @@ void rank(int iteration)
     INT_TYPE    i, k;
 	union tick_t t0, t1;
     INT_TYPE    *key_buff_ptr, *key_buff_ptr2;
+    INT_TYPE **bucket_ptrs;
+    INT_TYPE num_procs;
     
     ((void) iteration);
-
-#if defined(_SCHEDULE_SRR_)
-    unsigned *tasks;
-    tasks=alloc_mem(NUM_BUCKETS*sizeof(unsigned));
-    omp_set_workload(tasks, NUM_BUCKETS);
-#endif
 
     INT_TYPE shift = MAX_KEY_LOG_2 - NUM_BUCKETS_LOG_2;
     INT_TYPE num_bucket_keys = (1L << shift);
     
+    num_procs = omp_get_max_threads();
+    
+    bucket_ptrs = alloc_mem(num_procs*sizeof(INT_TYPE *));
+    for (i = 0; i < num_procs; i++)
+		bucket_ptrs[i] = alloc_mem(NUM_BUCKETS*sizeof(INT_TYPE));
+    
 /*  Setup pointers to key buffers  */
 	key_buff_ptr2 = key_buff2;
     key_buff_ptr = key_buff1;
+    
+    /* SRR stuff. */
+	#if defined(_SCHEDULE_SRR_)
+    unsigned *tasks;
+    tasks=alloc_mem(NUM_BUCKETS*sizeof(unsigned));
+    for (i = 0; i < NUM_BUCKETS; i++)
+		tasks[i] = 0;
+	
+	for( i=0; i<NUM_KEYS; i++ )
+		tasks[key_array[i] >> shift]++;
+	if (iteration == 0)
+	{
+		for (i = 0; i < NUM_BUCKETS; i++)
+			fprintf(stderr, "%u\n", tasks[i]);
+	}
+    omp_set_workload(tasks, NUM_BUCKETS);
+	#endif
 
 
 #pragma omp parallel private(i, k)
   {
-    INT_TYPE *work_buff, m, k1, k2;
-    INT_TYPE myid = 0, num_procs = 1;
+
+    INT_TYPE *work_buff;
+    INT_TYPE myid = 0;
 
     myid = omp_get_thread_num();
-    num_procs = omp_get_num_threads();
 
     work_buff = bucket_size[myid];
 
 	/* Initialize. */
     for(i = 0; i < NUM_BUCKETS; i++)
 		work_buff[i] = 0;        
-	#if defined(_SCHEDULE_SRR_)
-	#pragma omp master
-    for (i = 0; i < NUM_BUCKETS; i++)
-		tasks[i] = 0;
-	#endif
 		
 	/* Determine the number of keys in each bucket. */
     #pragma omp for schedule(static)
     for( i=0; i<NUM_KEYS; i++)
 		work_buff[key_array[i] >> shift]++;
-	#if defined(_SCHEDULE_SRR_)
-	#pragma omp barrier
-	#pragma omp master
-	{
-		for( i=0; i<NUM_KEYS; i++ )
-			tasks[key_array[i] >> shift]++;
-		if (iteration == 0)
-		{
-			for (i = 0; i < NUM_BUCKETS; i++)
-				printf("%u\n", tasks[i]);
-		}
-	}
-	#endif
 
 /*  Accumulative bucket sizes are the bucket pointers.
     These are global sizes accumulated upon to each bucket */
-    bucket_ptrs[0] = 0;
+    bucket_ptrs[myid][0] = 0;
     for( k=0; k< myid; k++ )  
-        bucket_ptrs[0] += bucket_size[k][0];
+        bucket_ptrs[myid][0] += bucket_size[k][0];
 
     for( i=1; i< NUM_BUCKETS; i++ ) { 
-        bucket_ptrs[i] = bucket_ptrs[i-1];
+        bucket_ptrs[myid][i] = bucket_ptrs[myid][i-1];
         for( k=0; k< myid; k++ )
-            bucket_ptrs[i] += bucket_size[k][i];
+            bucket_ptrs[myid][i] += bucket_size[k][i];
         for( k=myid; k< num_procs; k++ )
-            bucket_ptrs[i] += bucket_size[k][i-1];
+            bucket_ptrs[myid][i] += bucket_size[k][i-1];
     }
 
 
@@ -332,35 +328,40 @@ void rank(int iteration)
     for( i=0; i<NUM_KEYS; i++ )  
     {
         k = key_array[i];
-        key_buff2[bucket_ptrs[k >> shift]++] = k;
+        key_buff2[bucket_ptrs[myid][k >> shift]++] = k;
     }
 
 /*  The bucket pointers now point to the final accumulated sizes */
     if (myid < num_procs-1) {
         for( i=0; i< NUM_BUCKETS; i++ )
             for( k=myid+1; k< num_procs; k++ )
-                bucket_ptrs[i] += bucket_size[k][i];
+                bucket_ptrs[myid][i] += bucket_size[k][i];
     }
 
-	#pragma omp barrier
-	
-	#pragma omp master
+  } /*omp parallel*/
+  
 	_GET_TICK(t0);
-
+	
 /*  Now, buckets are sorted.  We only need to sort keys inside
     each bucket, which can be done in parallel.  Because the distribution
     of the number of keys in the buckets is Gaussian, the use of
     a dynamic schedule should improve load balance, thus, performance     */
 
 #if defined(_SCHEDULE_DYNAMIC_)
-	#pragma omp for schedule(dynamic)
+	#pragma omp parallel for schedule(dynamic)
 #elif defined(_SCHEDULE_SRR_)
-	#pragma omp for schedule(runtime)
+	#pragma omp parallel for schedule(runtime)
 #else
-	#pragma omp for schedule(static, 1)
+	#pragma omp parallel for schedule(static, 1)
 #endif
     for( i=0; i< NUM_BUCKETS; i++ ) {
 
+    INT_TYPE myid = 0;
+
+    myid = omp_get_thread_num();
+    
+    INT_TYPE m, k1, k2;
+    
 /*  Clear the work array section associated with each bucket */
         k1 = i * num_bucket_keys;
         k2 = k1 + num_bucket_keys;
@@ -372,8 +373,8 @@ void rank(int iteration)
 /*  In this section, the keys themselves are used as their 
     own indexes to determine how many of each there are: their
     individual population                                       */
-        m = (i > 0)? bucket_ptrs[i-1] : 0;
-        for ( k = m; k < bucket_ptrs[i]; k++ )
+        m = (i > 0)? bucket_ptrs[myid][i-1] : 0;
+        for ( k = m; k < bucket_ptrs[myid][i]; k++ )
             key_buff_ptr[key_buff_ptr2[k]]++;  /* Now they have individual key   */
                                        /* population                     */
 
@@ -385,15 +386,10 @@ void rank(int iteration)
             key_buff_ptr[k] += key_buff_ptr[k-1];
 
     }
-
-	#pragma omp barrier
-	
-	#pragma omp master
+    
 	_GET_TICK(t1);
-
-  } /*omp parallel*/
   
-  fprintf(stderr, "%" PRIu64 "\n", t1.tick - t0.tick);
+  printf("%" PRIu64 "\n", t1.tick - t0.tick);
 
 
 #if defined(_SCHEDULE_SRR_)
