@@ -46,9 +46,6 @@
 #include <math.h>
 #include <omp.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 union tick_t
 {
   uint64_t tick;
@@ -76,7 +73,7 @@ union tick_t
 /*****************************************************************/
 
 /* This controls load imbalance. */
-#define  NUM_BUCKETS_LOG_2  4
+#define  NUM_BUCKETS_LOG_2  5
 
 /* To disable the use of buckets, comment out the following line */
 #define USE_BUCKETS
@@ -184,30 +181,23 @@ INT_TYPE bucket_ptrs[NUM_BUCKETS];
 
 void create_seq(void)
 {
-	gsl_rng * r;
-	const gsl_rng_type * T;
-	
-	/* Setup random number generator. */
-	gsl_rng_env_setup();
-	T = gsl_rng_default;
-	r = gsl_rng_alloc(T);
-	
-	for (INT_TYPE i = 0L; i < SIZE_OF_BUFFERS; i++)
-	{
-		double x;
-		
-		do
-			x = gsl_ran_beta(r, 0.5, 0.5);
-		while ((x == 0.0) || (x == 1.0));
+	int k = 0;
+	unsigned workload[NUM_BUCKETS];
+	unsigned residual = 0;
 
-		key_array[i] = ceil(x*MAX_KEY);
-		if (key_array[i] >= MAX_KEY)
-			key_array[i]--;
+	for (int i = 0; i < NUM_BUCKETS/2; i++)
+		residual += workload[i] = workload[NUM_BUCKETS - i - 1] = SIZE_OF_BUFFERS/(1 << (i + 2));
+	
+	residual = SIZE_OF_BUFFERS - (residual << 1);
+
+	workload[NUM_BUCKETS/2 - 1] += residual >> 1;
+	workload[NUM_BUCKETS/2 + 0] += residual >> 1;
+	
+	for (int i = 0; i < NUM_BUCKETS; i++)
+	{
+		for (unsigned j = 0; j < workload[i]; j++)
+			key_array[k++] = i*(MAX_KEY/NUM_BUCKETS);
 	}
-	
-	
-	/* House keeping. */		
-	gsl_rng_free(r);
 }
 
 /*****************************************************************/
@@ -307,7 +297,7 @@ void rank(int iteration)
 		if (iteration == 0)
 		{
 			for (i = 0; i < NUM_BUCKETS; i++)
-				printf("%u\n", tasks[i]);
+				fprintf(stderr, "%u\n", tasks[i]);
 		}
 	}
 	#endif
@@ -393,7 +383,7 @@ void rank(int iteration)
 
   } /*omp parallel*/
   
-  fprintf(stderr, "%" PRIu64 "\n", t1.tick - t0.tick);
+	printf("%" PRIu64 "\n", t1.tick - t0.tick);
 
 
 #if defined(_SCHEDULE_SRR_)
