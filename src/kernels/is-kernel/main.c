@@ -45,6 +45,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <omp.h>
+#include <papi.h>
 
 union tick_t
 {
@@ -243,6 +244,43 @@ void alloc_key_buff( void )
 /*************             R  A  N  K             ****************/
 /*****************************************************************/
 
+/*
+ * Prints an error message and exits.
+ */
+void error(const char *msg)
+{
+	fprintf(stderr, "error: %s\n", msg);
+	exit(EXIT_FAILURE);
+}
+
+long long hwcounters[4];
+int events[4] = {
+	PAPI_L1_DCM, /* L1 data cache miss.   */
+	PAPI_L2_DCM, /* L2 data cache miss.   */
+	PAPI_L2_DCA, /* L2 data cache access. */
+	PAPI_L3_DCA  /* L3 data cache access. */
+};
+	
+void profile_start(void)
+{
+	if (PAPI_start_counters(events, 4) != PAPI_OK)
+		error("failed to setup PAPI");
+}
+
+void profile_end(void)
+{
+	if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
+		error("failed to read hardware counters");
+}
+
+void profile_dump(void)
+{
+	printf("L1 Misses: %lld\n", hwcounters[0]);
+	printf("L2 Misses: %lld\n", hwcounters[1]);
+	printf("L2 Accesses: %lld\n", hwcounters[2]);
+	printf("L3 Accesses: %lld\n", hwcounters[3]);
+}
+
 #if defined(_SCHEDULE_SRR_)
 extern void omp_set_workload(unsigned *, unsigned);
 #endif
@@ -340,7 +378,10 @@ void rank(int iteration)
 	#pragma omp barrier
 	
 	#pragma omp master
-	_GET_TICK(t0);
+	{
+		_GET_TICK(t0);
+		profile_start();
+	}
 
 /*  Now, buckets are sorted.  We only need to sort keys inside
     each bucket, which can be done in parallel.  Because the distribution
@@ -384,11 +425,15 @@ void rank(int iteration)
 	#pragma omp barrier
 	
 	#pragma omp master
-	_GET_TICK(t1);
+	{
+		profile_end();
+		_GET_TICK(t1);
+	}
 
   } /*omp parallel*/
   
-	printf("%" PRIu64 "\n", t1.tick - t0.tick);
+	printf("time: %" PRIu64 "\n", t1.tick - t0.tick);
+	profile_dump();
 
 
 #if defined(_SCHEDULE_SRR_)
