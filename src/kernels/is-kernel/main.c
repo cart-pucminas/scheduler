@@ -244,6 +244,8 @@ void alloc_key_buff( void )
 /*************             R  A  N  K             ****************/
 /*****************************************************************/
 
+#ifdef _PROFILE_
+
 /*
  * Prints an error message and exits.
  */
@@ -280,6 +282,8 @@ void profile_dump(void)
 	printf("L2 Accesses: %lld\n", hwcounters[2]);
 	printf("L3 Accesses: %lld\n", hwcounters[3]);
 }
+
+#endif
 
 #if defined(_SCHEDULE_SRR_)
 extern void omp_set_workload(unsigned *, unsigned);
@@ -380,7 +384,9 @@ void rank(int iteration)
 	#pragma omp master
 	{
 		_GET_TICK(t0);
+#ifdef _PROFILE_
 		profile_start();
+#endif
 	}
 
 /*  Now, buckets are sorted.  We only need to sort keys inside
@@ -426,14 +432,18 @@ void rank(int iteration)
 	
 	#pragma omp master
 	{
+#ifdef _PROFILE_
 		profile_end();
+#endif
 		_GET_TICK(t1);
 	}
 
   } /*omp parallel*/
   
 	printf("time: %" PRIu64 "\n", t1.tick - t0.tick);
+#ifdef _PROFILE_
 	profile_dump();
+#endif
 
 
 #if defined(_SCHEDULE_SRR_)
