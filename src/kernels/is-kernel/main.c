@@ -193,7 +193,7 @@ void create_seq(void)
 		workload[i] = work;
 		workload[NUM_BUCKETS - i - 1] = work;
 	}
-	residual = SIZE_OF_BUFFERS - (residual/2);
+	residual = SIZE_OF_BUFFERS - (residual*2);
 	workload[NUM_BUCKETS/2 - 1] += residual/2;
 	workload[NUM_BUCKETS/2 + 0] += residual/2;
 	
