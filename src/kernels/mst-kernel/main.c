@@ -52,6 +52,10 @@ unsigned *readfile(const char *filename, int ntasks)
 	return (data);
 }
 
+#if defined(_SCHEDULE_SRR_)
+extern void omp_set_workload(unsigned *, unsigned);
+#endif
+
 
 int main(int argc, char **argv)
 {
@@ -96,6 +100,7 @@ int main(int argc, char **argv)
 #elif defined(_SCHEDULE_SRR_)
 	memcpy(__tasks, densities, 24*sizeof(unsigned));
 	__ntasks = 24;
+	omp_set_workload(__tasks, __ntasks);
 	#pragma omp parallel for schedule(runtime) num_threads(n) default(shared)
 #elif defined(_SCHEDULE_ORACLE_)
 	memcpy(__tasks, taskmap, 24*sizeof(unsigned));
