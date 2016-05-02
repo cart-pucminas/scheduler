@@ -32,7 +32,7 @@ static int trace = 0;
 unsigned __ntasks;
 unsigned *__tasks;
 
-
+#define NREGIONS 32
 unsigned *readfile(const char *filename, int ntasks)
 {
 	FILE *infile;
@@ -61,23 +61,25 @@ int main(int argc, char **argv)
 {
 	int n;
 	double start, end;
-	struct point *data[24];
+	struct point *data[NREGIONS];
+#ifdef _PROFILE_
 	int events[4] = { PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L2_DCA, PAPI_L3_DCA };
 	long long hwcounters[4];
+#endif
 	unsigned *densities;
 #ifdef _SCHEDULE_ORACLE_
-	unsigned *taskmap = readfile(argv[3], 24);
+	unsigned *taskmap = readfile(argv[3], NREGIONS);
 #endif
 
-	densities = readfile(argv[2], 24);
+	densities = readfile(argv[2], NREGIONS);
 
-	__tasks=smalloc(24*sizeof(unsigned));
+	__tasks=smalloc(NREGIONS*sizeof(unsigned));
 
 	((void) argc);
 	
 	n = atoi(argv[1]);
 	
-	for (int k = 0; k < 24; k++)
+	for (int k = 0; k < NREGIONS; k++)
 	{
 		data[k] = smalloc(densities[k]*sizeof(struct point));
 		
@@ -88,9 +90,10 @@ int main(int argc, char **argv)
 			data[k][i].y = rand()%10000;
 		}
 	}
-
+#ifdef _PROFILE_
 	if (PAPI_start_counters(events, 4) != PAPI_OK)
 		error("failed to setup PAPI");
+#endif
 	
 	start = omp_get_wtime();
 #if defined(_SCHEDULE_STATIC_)
@@ -98,16 +101,16 @@ int main(int argc, char **argv)
 #elif defined(_SCHEDULE_DYNAMIC_)
 	#pragma omp parallel for schedule(dynamic) num_threads(n) default(shared)
 #elif defined(_SCHEDULE_SRR_)
-	memcpy(__tasks, densities, 24*sizeof(unsigned));
-	__ntasks = 24;
+	memcpy(__tasks, densities, NREGIONS*sizeof(unsigned));
+	__ntasks = NREGIONS;
 	omp_set_workload(__tasks, __ntasks);
 	#pragma omp parallel for schedule(runtime) num_threads(n) default(shared)
 #elif defined(_SCHEDULE_ORACLE_)
-	memcpy(__tasks, taskmap, 24*sizeof(unsigned));
-	__ntasks = 24;
+	memcpy(__tasks, taskmap, NREGIONS*sizeof(unsigned));
+	__ntasks = NREGIONS;
 	#pragma omp parallel for schedule(runtime) num_threads(n) default(shared)
 #endif
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < NREGIONS; i++)
 	{
 		if (trace)
 		{
@@ -123,18 +126,20 @@ int main(int argc, char **argv)
 	}
 	end = omp_get_wtime();
 
+#ifdef _PROFILE_
 	if (PAPI_stop_counters(hwcounters, sizeof(events)) != PAPI_OK)
 		error("failed to read hardware counters");
-	
+#endif	
 	printf("time: %lf\n", end - start);
+#ifdef _PROFILE_
 	printf("L1 Misses: %lld\n", hwcounters[0]);
 	printf("L2 Misses: %lld\n", hwcounters[1]);
 	printf("L2 Accesses: %lld\n", hwcounters[2]);
 	printf("L3 Accesses: %lld\n", hwcounters[3]);
-	
+#endif	
 	/* House keeping. */
 	free(densities);
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < NREGIONS; i++)
 		free(data[i]);
 	free(__tasks);
 #ifdef _SCHEDULE_ORACLE_
