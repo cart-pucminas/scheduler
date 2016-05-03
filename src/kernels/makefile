@@ -17,7 +17,7 @@
 # MA 02110-1301, USA.
 #
 
-all: static dynamic smart-round-robin oracle
+all: static dynamic smart-round-robin oracle guided
 
 # Builds static kernels.
 static:
@@ -28,6 +28,10 @@ static:
 dynamic:
 	cd is-kernel && $(MAKE) dynamic
 	cd mst-kernel && $(MAKE) dynamic
+
+# Builds guided kernels.
+guided:
+	cd is-kernel && $(MAKE) guided
 
 # Builds runtime kernels.
 smart-round-robin:

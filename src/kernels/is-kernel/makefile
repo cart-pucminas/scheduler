@@ -21,6 +21,10 @@ static:
 dynamic:
 	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_DYNAMIC_ -o $(BINDIR)/$(EXEC).dynamic $(LIBS)
 
+# Builds guided version.
+guided:
+	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_GUIDED_ -o $(BINDIR)/$(EXEC).guided $(LIBS)
+
 # Builds smart-round-robin version.
 smart-round-robin:
 	$(CC) *.c $(CFLAGS) -rdynamic -D_SCHEDULE_SRR_ -o $(BINDIR)/$(EXEC).srr $(LIBS)

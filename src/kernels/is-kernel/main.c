@@ -396,6 +396,8 @@ void rank(int iteration)
 
 #if defined(_SCHEDULE_DYNAMIC_)
 	#pragma omp for schedule(dynamic)
+#elif defined(_SCHEDULE_GUIDED_)
+	#pragma omp for schedule(guided)
 #elif defined(_SCHEDULE_SRR_)
 	#pragma omp for schedule(runtime)
 #else

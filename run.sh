@@ -7,7 +7,7 @@ else
 fi
 
 for seed in 1; do
-	for strategy in dynamic srr; do 
+	for strategy in static guided dynamic srr; do 
 			echo "== Running $strategy"
 			for nthreads in {2..16}; do
 				LD_LIBRARY_PATH=libsrc/libgomp/libgomp/build/.libs/ \
