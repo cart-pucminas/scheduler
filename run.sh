@@ -11,11 +11,12 @@ for seed in 1; do
 			echo "== Running $strategy"
 			for nthreads in {2..16}; do
 				LD_LIBRARY_PATH=libsrc/libgomp/libgomp/build/.libs/ \
-				OMP_NUM_THREADS=$nthreads \
-				GOMP_CPU_AFFINITY=$AFFINITY \
-				OMP_SCHEDULE="pedro" \
-				bin/is.$strategy timer.flag $seed  \
-				1> /dev/null
+				OMP_NUM_THREADS=$nthreads                           \
+				GOMP_CPU_AFFINITY=$AFFINITY                         \
+				OMP_SCHEDULE="pedro"                                \
+				bin/is.$strategy timer.flag $seed                   \
+				1> /dev/null                                        \
+				2> is-normal-$strategy-$nthreads.out
 			done
 	done
 done
