@@ -15,8 +15,7 @@ for seed in 1; do
 				GOMP_CPU_AFFINITY=$AFFINITY                         \
 				OMP_SCHEDULE="pedro"                                \
 				bin/is.$strategy timer.flag $seed                   \
-				1> /dev/null                                        \
-				2> is-normal-$strategy-$nthreads.out
+				1> is-normal-$strategy-$nthreads.out
 			done
 	done
 done
