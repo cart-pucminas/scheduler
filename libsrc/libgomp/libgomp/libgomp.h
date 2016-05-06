@@ -88,9 +88,9 @@ enum gomp_schedule_type
   GFS_GUIDED,
   GFS_PROFILE,
 
-  /* BEGIN PEDRO */
-  GFS_PEDRO,
-  /* END PEDRO */
+  /* BEGIN SRR */
+  GFS_SRR,
+  /* END SRR */
   GFS_ORACLE,
 
   GFS_AUTO
@@ -179,7 +179,7 @@ struct gomp_work_share
   };
   
   /*
-   * Used in GFS_PEDRO scheduler.
+   * Used in GFS_SRR scheduler.
    */
   long loop_start;
   unsigned *taskmap;
@@ -564,11 +564,11 @@ extern bool gomp_iter_guided_next_locked (long *, long *);
 #ifdef HAVE_SYNC_BUILTINS
 extern bool gomp_iter_dynamic_next (long *, long *);
 extern bool gomp_iter_guided_next (long *, long *);
-/* BEGIN PEDRO: the gomp_iter_XXX_next
+/* BEGIN SRR: the gomp_iter_XXX_next
    function needs to be visible outside the
    iter.c file. */
-extern bool gomp_iter_pedro_next (long *, long *);
-/* END PEDRO */
+extern bool gomp_iter_srr_next (long *, long *);
+/* END SRR */
 extern bool gomp_iter_oracle_next (long *, long *);
 #endif
 

@@ -253,7 +253,7 @@ gomp_iter_dynamic_next (long *pstart, long *pend)
   return true;
 }
 
-/* BEGIN PEDRO: Implement the function called to assign a range of
+/* BEGIN SRR: Implement the function called to assign a range of
    iterations [*pstart; *pend] to the calling OpenMP thread. The
    function returns true if the scheduler managed to assign some
    iterations to the calling thread. Returning false means there are
@@ -265,7 +265,7 @@ gomp_iter_dynamic_next (long *pstart, long *pend)
 extern unsigned __ntasks; /* Number of tasks. */
 
 bool
-gomp_iter_pedro_next (long *pstart, long *pend)
+gomp_iter_srr_next (long *pstart, long *pend)
 {
   int i;                      /* Loop index.           */
   int tid;                    /* Thread ID.            */
@@ -296,7 +296,7 @@ found:
 	return (true);
 }
 
-/* END PEDRO */
+/* END SRR */
 
 bool
 gomp_iter_oracle_next (long *pstart, long *pend)
