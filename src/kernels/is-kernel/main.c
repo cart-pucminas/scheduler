@@ -244,6 +244,8 @@ void alloc_key_buff( void )
 /*************             R  A  N  K             ****************/
 /*****************************************************************/
 
+static int trace = 1;
+
 #ifdef _PROFILE_
 
 /*
@@ -295,6 +297,7 @@ void rank(int iteration)
     INT_TYPE    i, k;
 	union tick_t t0, t1;
     INT_TYPE    *key_buff_ptr, *key_buff_ptr2;
+	double wtime[omp_get_max_threads()];
     
     ((void) iteration);
 
@@ -314,6 +317,7 @@ void rank(int iteration)
 
 #pragma omp parallel private(i, k)
   {
+	double start, end;
     INT_TYPE *work_buff, m, k1, k2;
     INT_TYPE myid = 0, num_procs = 1;
 
@@ -321,6 +325,7 @@ void rank(int iteration)
     num_procs = omp_get_num_threads();
 
     work_buff = bucket_size[myid];
+	wtime[myid] = 0.0;
 
 	/* Initialize. */
     for(i = 0; i < NUM_BUCKETS; i++)
@@ -401,9 +406,12 @@ void rank(int iteration)
 #elif defined(_SCHEDULE_SRR_)
 	#pragma omp for schedule(runtime)
 #else
-	#pragma omp for schedule(static, 1)
+	#pragma omp for schedule(static)
 #endif
     for( i=0; i< NUM_BUCKETS; i++ ) {
+
+	if (trace)
+		start = omp_get_wtime();
 
 /*  Clear the work array section associated with each bucket */
         k1 = i * num_bucket_keys;
@@ -428,6 +436,12 @@ void rank(int iteration)
         for ( k = k1+1; k < k2; k++ )
             key_buff_ptr[k] += key_buff_ptr[k-1];
 
+	if (trace)
+	{
+		end = omp_get_wtime();
+		wtime[myid] += end - start;
+	}
+
     }
 
 	#pragma omp barrier
@@ -440,8 +454,14 @@ void rank(int iteration)
 		_GET_TICK(t1);
 	}
 
+	if (trace)
+	{
+		#pragma omp critical
+		printf("threads %d: %.4lf\n", (int)myid, wtime[myid]);
+	}
+
   } /*omp parallel*/
-  
+ 
 	printf("time: %" PRIu64 "\n", t1.tick - t0.tick);
 #ifdef _PROFILE_
 	profile_dump();
