@@ -23,27 +23,27 @@ ABOUT
 	This repository contains a suite of tools to analyze and evaluate loop
 	scheduling strategies. Here is a brief description of each tool:
 		
-		* generator : a synthetic workload generator
+		* generator: a synthetic workload generator.
 		
-		* searcher:  outputs the best scheduling solution for a input workload
+		* searcher: outputs the best scheduling solution for a input workload.
 		
-		* simulator : simulates the behavior of several loops scheduling
-		  strategies
+		* simulator: simulates the behavior of several loops scheduling
+		  strategies.
 		  
-		* benchmark : a synthetic benchmark for loop scheduling strategies.
+		* benchmark: a synthetic benchmark for loop scheduling strategies.
 		
-		* mst.* : Minimum Spanning Tree application kernel.
+		* mst.*: Minimum Spanning Tree application kernel.
 		
-		* is.* : IS Kernel derived from the NASA Parallel Benchmarks suite.
+		* is.*: IS Kernel derived from the NASA Parallel Benchmarks suite.
 
 BUILDING
 
-	To build this prohect execute the following commands:
+	To build this project execute the following commands:
 	
 		$ cd contrib            # Change the current directory to 'contrib'.
 		$ bash setup-contrib.sh # Build third-party tools.
 		$ cd ..                 # Go back to the project's root directory.
-		$ make libgomp          # Build modified version of LibGOMP.
+		$ make libgomp          # Build the modified version of LibGOMP.
 		$ make                  # Build software suite.
 		$ bash run.sh           # Runs everything.
 

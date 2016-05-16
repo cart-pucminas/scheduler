@@ -198,10 +198,10 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
     }
 
   /*
-   * Setup internal GFS_PEDRO
+   * Setup internal GFS_SRR
    * variables and balances workload.
    */
-  else if (sched == GFS_PEDRO) {
+  else if (sched == GFS_SRR) {
     if (num_threads == 0)
     {
 	  struct gomp_thread *thr = gomp_thread ();
@@ -214,7 +214,7 @@ gomp_loop_init (struct gomp_work_share *ws, long start, long end, long incr,
 	ws->loop_start = start;
 	ws->thread_start = (unsigned *) calloc(num_threads, sizeof(int));
   }
-  /* END PEDRO */
+  /* END SRR */
   
   else if (sched == GFS_ORACLE) {
     if (num_threads == 0)
@@ -341,12 +341,12 @@ gomp_loop_guided_start (long start, long end, long incr, long chunk_size,
   return ret;
 }
 
-/* BEGIN PEDRO: This function initializes whatever you need to run
-   your loop scheduler, and start the iteration assignement by calling
+/* BEGIN SRR: This function initializes whatever you need to run
+   your loop scheduler, and start the iteration assignment by calling
    gomp_iter_XXX_next(). */
 
 static bool
-gomp_loop_pedro_start (long start, long end, long incr, long chunk_size,
+gomp_loop_srr_start (long start, long end, long incr, long chunk_size,
 		       long *istart, long *iend)
 {
   struct gomp_thread *thr = gomp_thread ();
@@ -355,16 +355,16 @@ gomp_loop_pedro_start (long start, long end, long incr, long chunk_size,
   if (gomp_work_share_start (false))
     {
       gomp_loop_init (thr->ts.work_share, start, end, incr,
-		      GFS_PEDRO, chunk_size, 0);
+		      GFS_SRR, chunk_size, 0);
       gomp_work_share_init_done ();
     }
 
-  ret = gomp_iter_pedro_next (istart, iend);
+  ret = gomp_iter_srr_next (istart, iend);
 
   return ret;
 }
 
-/* END PEDRO */
+/* END SRR */
 
 static bool
 gomp_loop_oracle_start (long start, long end, long incr, long chunk_size,
@@ -406,13 +406,13 @@ GOMP_loop_runtime_start (long start, long end, long incr,
       return gomp_loop_guided_start (start, end, incr, icv->run_sched_modifier,
 				     istart, iend);
 
-      /* BEGIN PEDRO: Make libgomp understand what loop scheduler to
+      /* BEGIN SRR: Make libgomp understand what loop scheduler to
 	 run when executing an OpenMP application with the combination
-	 of both the OMP_SCHEDULE="pedro" environment variable AND the
+	 of both the OMP_SCHEDULE="srr" environment variable AND the
 	 #omp for schedule(runtime) pragma in the application code. */
-    case GFS_PEDRO:
-      return gomp_loop_pedro_start (start, end, incr, icv->run_sched_modifier, istart, iend);
-      /* END PEDRO */
+    case GFS_SRR:
+      return gomp_loop_srr_start (start, end, incr, icv->run_sched_modifier, istart, iend);
+      /* END SRR */
     case GFS_ORACLE:
       return gomp_loop_oracle_start (start, end, incr, icv->run_sched_modifier, istart, iend);
 
@@ -575,13 +575,13 @@ gomp_loop_guided_next (long *istart, long *iend)
   return ret;
 }
 
-/* BEGIN PEDRO: Triggers a call to gomp_iter_pedro_next(). */
+/* BEGIN SRR: Triggers a call to gomp_iter_srr_next(). */
 static bool
-gomp_loop_pedro_next (long *istart, long *iend)
+gomp_loop_srr_next (long *istart, long *iend)
 {
-  return gomp_iter_pedro_next (istart, iend);
+  return gomp_iter_srr_next (istart, iend);
 }
-/* END PEDRO */
+/* END SRR */
 
 static bool
 gomp_loop_oracle_next (long *istart, long *iend)
@@ -611,8 +611,8 @@ GOMP_loop_runtime_next (long *istart, long *iend)
       return gomp_loop_dynamic_next (istart, iend);
     case GFS_GUIDED:
       return gomp_loop_guided_next (istart, iend);
-    case GFS_PEDRO:
-      return gomp_loop_pedro_next (istart, iend);
+    case GFS_SRR:
+      return gomp_loop_srr_next (istart, iend);
     case GFS_ORACLE:
       return gomp_loop_oracle_next (istart, iend);
     default:

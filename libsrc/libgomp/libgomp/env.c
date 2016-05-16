@@ -106,14 +106,14 @@ parse_schedule (void)
       gomp_global_icv.run_sched_var = GFS_GUIDED;
       env += 6;
     }
-  /* BEGIN PEDRO: Get the OMP_SCHEDULE environment variable to
-     understand "pedro". */
-  else if (strncasecmp (env, "pedro", 5) == 0)
+  /* BEGIN SRR: Get the OMP_SCHEDULE environment variable to
+     understand "srr". */
+  else if (strncasecmp (env, "srr", 3) == 0)
     {
-      gomp_global_icv.run_sched_var = GFS_PEDRO;
-      env += 5;
+      gomp_global_icv.run_sched_var = GFS_SRR;
+      env += 3;
     }
-  /* END PEDRO */
+  /* END SRR */
   else if (strncasecmp (env, "oracle", 6) == 0)
     {
       gomp_global_icv.run_sched_var = GFS_ORACLE;
@@ -1091,8 +1091,8 @@ handle_omp_display_env (unsigned long stacksize, int wait_policy)
     case GFS_RUNTIME:
       fputs ("RUNTIME", stderr);
       break;
-    case GFS_PEDRO:
-      fputs ("PEDRO", stderr);
+    case GFS_SRR:
+      fputs ("SRR", stderr);
       break;
     case GFS_ORACLE:
       fputs ("ORACLE", stderr);
