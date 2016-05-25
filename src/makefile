@@ -22,8 +22,6 @@
 .PHONY: simulator
 .PHONY: searcher
 .PHONY: generator
-.PHONY: kernels
-
 # Builds benchmark.
 benchmark: benchmark/*.c common/*.c
 	$(CC) $(CFLAGS) -rdynamic -fopenmp -O0 $^ -o $(BINDIR)/benchmark $(LIBS)
@@ -40,14 +38,9 @@ searcher: searcher/*.c common/*.c
 generator: generator/*.c common/*.c
 	$(CC) $(CFLAGS) $^ -o $(BINDIR)/generator $(LIBS)
 
-# Builds kernels.
-kernels:
-	cd kernels && $(MAKE) all
-
 # Cleans compilation files.
 clean:
 	@rm -f $(BINDIR)/benchmark
 	@rm -f $(BINDIR)/scheduler
 	@rm -f $(BINDIR)/searcher
 	@rm -f $(BINDIR)/generator
-	cd kernels && $(MAKE) clean

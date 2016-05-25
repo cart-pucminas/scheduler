@@ -24,7 +24,6 @@ export CONTRIBDIR = $(CURDIR)/contrib
 export DOCDIR     = $(CURDIR)/doc
 export INCDIR     = $(CURDIR)/include
 export LIBDIR     = $(CURDIR)/lib
-export LIBSRCDIR  = $(CURDIR)/libsrc
 export SRCDIR     = $(CURDIR)/src
 
 # Libraries.
@@ -33,7 +32,6 @@ export LIBS  = $(LIBDIR)/libmy.a
 export LIBS += $(CONTRIBDIR)/lib/libgsl.a
 export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a
 export LIBS += $(CONTRIBDIR)/lib/libpapi.a
-export LIBS += $(LIBSRCDIR)/libgomp/libgomp/build/.libs/libgomp.a
 export LIBS += -lm
 
 # Toolchain.
@@ -46,11 +44,7 @@ export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: benchmark simulator searcher generator kernels
-
-# Builds libgomp.
-libgomp:
-	cd $(LIBSRCDIR) && $(MAKE) all
+all: benchmark simulator searcher generator
 
 # Builds libraries.
 libs:
@@ -81,15 +75,6 @@ searcher: libs
 generator: libs
 	mkdir -p $(BINDIR)
 	cd $(SRCDIR) && $(MAKE) generator
-
-# Builds kernels.
-kernels: libs
-	mkdir -p $(BINDIR)
-	cd $(SRCDIR) && $(MAKE) kernels
-
-# Cleans libgomp.
-libgomp-clean:
-	cd $(LIBSRCDIR) && $(MAKE) clean
 
 # Cleans compilation files.
 clean:
