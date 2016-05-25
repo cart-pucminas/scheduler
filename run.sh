@@ -14,7 +14,7 @@ for seed in 1; do
 				LD_LIBRARY_PATH=libsrc/libgomp/libgomp/build/.libs/ \
 				OMP_NUM_THREADS=$nthreads                           \
 				GOMP_CPU_AFFINITY=$AFFINITY                         \
-				OMP_SCHEDULE="pedro"                                \
+				OMP_SCHEDULE="srr"                                  \
 				bin/is.$strategy timer.flag $seed                   \
 				1> is-normal-$strategy-$nthreads.out
 			done
