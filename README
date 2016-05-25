@@ -31,10 +31,6 @@ ABOUT
 		  strategies.
 		  
 		* benchmark: a synthetic benchmark for loop scheduling strategies.
-		
-		* mst.*: Minimum Spanning Tree application kernel.
-		
-		* is.*: IS Kernel derived from the NASA Parallel Benchmarks suite.
 
 BUILDING
 
@@ -45,10 +41,9 @@ BUILDING
 		$ cd ..                 # Go back to the project's root directory.
 		$ make libgomp          # Build the modified version of LibGOMP.
 		$ make                  # Build software suite.
-		$ bash run.sh           # Runs everything.
 
 LICENSE AND MAINTAINERS
 
-This is an open source software that is under GPL V3 license and is 
-maintained by Pedro H. Penna. Any questions or suggestions send an email to
-him: <pedrohenriquepenna@gmail.com>.
+	This is an open source software that is under GPL V3 license and is 
+	maintained by Pedro H. Penna. Any questions or suggestions send an email to
+	him: <pedrohenriquepenna@gmail.com>.
