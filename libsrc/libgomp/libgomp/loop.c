@@ -39,6 +39,8 @@
 unsigned *__tasks; /* Tasks.           */
 unsigned __ntasks; /* Number of tasks. */
 
+#define N 20
+
 /*
  * Exchange two numbers.
  */
@@ -68,6 +70,40 @@ static void insertion(unsigned *map, unsigned *a, unsigned n)
 }
 
 /*
+ * Quicksort algorithm.
+ */
+void quicksort(unsigned *map, unsigned *a, unsigned n)
+{
+	unsigned i, j;
+	unsigned p, t;
+    
+    /* End recursion. */
+	if (n < N)
+	{
+		insertion(map, a, n);
+		return;
+	}
+    
+	/* Pivot stuff. */
+	p = a[n/2];
+	for (i = 0, j = n - 1; /* noop */ ; i++, j--)
+	{
+		while (a[i] < p)
+			i++;
+		while (p < a[j])
+			j--;
+		if (i >= j)
+			break;
+		exch(a[i], a[j], t);
+		exch(map[i], map[j], t);
+	}
+    
+	quicksort(map, a, i);
+	quicksort(map, a + i, n - i);
+}
+ 
+
+/*
  * Sorts an array of numbers.
  */
 unsigned *sort(unsigned *a, unsigned n)
@@ -81,7 +117,7 @@ unsigned *sort(unsigned *a, unsigned n)
 	for (i = 0; i < n; i++)
 		map[i] = i;
 
-	insertion(map, a, n);
+	quicksort(map, a, n);
 
 	return (map);
 } 
