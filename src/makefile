@@ -18,13 +18,9 @@
 #
 
 # Conflicts.
-.PHONY: benchmark
 .PHONY: simulator
 .PHONY: searcher
 .PHONY: generator
-# Builds benchmark.
-benchmark: benchmark/*.c common/*.c
-	$(CC) $(CFLAGS) -rdynamic -fopenmp -O0 $^ -o $(BINDIR)/benchmark $(LIBS)
 
 # Builds simulator.
 simulator: simulator/*.c common/*.c
@@ -40,7 +36,6 @@ generator: generator/*.c common/*.c
 
 # Cleans compilation files.
 clean:
-	@rm -f $(BINDIR)/benchmark
 	@rm -f $(BINDIR)/scheduler
 	@rm -f $(BINDIR)/searcher
 	@rm -f $(BINDIR)/generator
