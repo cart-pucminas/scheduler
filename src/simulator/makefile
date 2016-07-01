@@ -1,5 +1,5 @@
 #
-# Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com
+# Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,37 +17,16 @@
 # MA 02110-1301, USA.
 #
 
-# Common C source files.
-SRC = $(wildcard $(CURDIR)/common/*.c)
+# Executable file.
+EXEC=scheduler
 
-# Common object files.
-export OBJ = $(SRC:.c=.o)
-
-# Conflicts.
-.PHONY: simulator
-.PHONY: searcher
-.PHONY: generator
+# Tweaks on toolchain.
+CFLAGS += -I include
 
 # Builds simulator.
-simulator: $(OBJ)
-	cd simulator && $(MAKE) all
+all: *.c
+	$(CC) $(CFLAGS) $^ -o $(BINDIR)/$(EXEC) $(OBJ) $(LIBS)
 	
-# Builds searcher.
-searcher: searcher/*.c $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/searcher $(LIBS)
-	
-# Builds generator.
-generator: generator/*.c $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/generator $(LIBS)
-	
-# Builds common objects.
-%.o: %.c
-	$(CC) $< $(CFLAGS) -c -o $@
-
 # Cleans compilation files.
 clean:
-	@rm -f $(OBJ)
-	cd simulator && $(MAKE) clean
-	@rm -f $(BINDIR)/scheduler
-	@rm -f $(BINDIR)/searcher
-	@rm -f $(BINDIR)/generator
+	rm -f $(BINDIR)/$(EXEC)

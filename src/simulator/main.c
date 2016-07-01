@@ -25,7 +25,7 @@
 
 #include <mylib/util.h>
 #include <common.h>
-#include "simulator.h"
+#include <simulator.h>
 
 /**
  * @brief Threads.

@@ -21,7 +21,7 @@
 
 #include <mylib/util.h>
 
-#include "simulator.h"
+#include <simulator.h>
 
 /**
  * @brief Static scheduler data.
