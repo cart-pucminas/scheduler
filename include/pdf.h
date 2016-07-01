@@ -1,5 +1,5 @@
 /*
- * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,18 +17,16 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef PDF_H_
+#define PDF_H_
+	
+	#include <stddef.h>
+	
+	/* Forward definitions. */
+	extern double *beta(int, double);
+	extern double *gamma(int, double);
+	extern double *gaussian(int, double);
+	extern double *poisson(int, double);
+	extern int *isrng(int, long *, int);
 
-	/**
-	 * @name Schedulers
-	 */
-	/**@{*/
-	#define SCHEDULER_NONE              0 /**< Null scheduler.           */
-	#define SCHEDULER_STATIC            1 /**< Static scheduler.         */
-	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.        */
-	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
-	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
-	/**@}*/
-
-#endif /* _COMMON_H_ */
+#endif /* PDF_H_ */
