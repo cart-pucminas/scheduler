@@ -28,11 +28,13 @@
  */
 static struct
 {
-	unsigned ntasks;       /**< Number of tasks.   */
-	unsigned *taskmap;     /**< Task map.          */
-	const unsigned *tasks; /**< Tasks.             */
-	unsigned nthreads;     /**< Number of threads. */
+	unsigned i0;           /**< Last scheduled iteration. */
+	unsigned ntasks;       /**< Number of tasks.          */
+	unsigned *taskmap;     /**< Task map.                 */
+	const unsigned *tasks; /**< Tasks.                    */
+	unsigned nthreads;     /**< Number of threads.        */
 } scheduler_data = {
+	0,
 	0,
 	NULL,
 	NULL,
@@ -56,6 +58,7 @@ void scheduler_dynamic_init
 		return;
 	
 	/* Initialize scheduler data. */
+	scheduler_data.i0 = 0;
 	scheduler_data.ntasks = ntasks;
 	scheduler_data.taskmap = smalloc(ntasks*sizeof(unsigned));
 	scheduler_data.tasks = tasks;
@@ -95,14 +98,13 @@ void scheduler_dynamic_end(void)
  */
 unsigned scheduler_dynamic_sched(unsigned tid)
 {
-	unsigned n;             /* Number of tasks.               */
-	unsigned workload;      /* Workload amount.               */
-	static unsigned i0 = 0; /* Starting point to search from. */
+	unsigned n;        /* Number of tasks. */
+	unsigned workload; /* Workload amount. */
 	
 	/* Get next tasks. */
 	n = 0;
 	workload = 0;
-	for (unsigned i = i0; i < scheduler_data.ntasks; i++)
+	for (unsigned i = scheduler_data.i0; i < scheduler_data.ntasks; i++)
 	{
 		/* Get this task. */
 		if (scheduler_data.taskmap[i] == scheduler_data.nthreads)
@@ -115,7 +117,7 @@ unsigned scheduler_dynamic_sched(unsigned tid)
 			if (scheduler_data.tasks[i] > threads[tid].max)
 				threads[tid].max = scheduler_data.tasks[i];
 			scheduler_data.taskmap[i] = tid;
-			i0 = i;
+			scheduler_data.i0 = i;
 			
 			/* We have already scheduled enough. */
 			if (n >= chunksize)

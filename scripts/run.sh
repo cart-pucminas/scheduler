@@ -39,7 +39,7 @@ STRATEGIES=(workload-aware dynamic srr)
 WORKLOAD=(beta gamma gaussian poisson)
 
 # Workload sorting.
-SORT=(ascending descending)
+SORT=(ascending descending random)
 
 # Skewness
 SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
