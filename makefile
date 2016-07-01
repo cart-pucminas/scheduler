@@ -43,7 +43,7 @@ export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: simulator
+all: simulator generator
 
 # Builds libraries.
 libs:
