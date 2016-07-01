@@ -1,227 +1,145 @@
 #
-# Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
-# 
+# Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#  
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#  
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
-#
+# 
 
 #
-# Number of threads.
+# $1: Number of threads.
+# $2: Number of loop iterations.
 #
-NTHREADS=4
-
-#
-# Simultaneos Multithreading?
-#
-SMT=true
-
-#
-# Kernel class.
-#
-CLASS=small
-
-#
-# Run searcher?
-#
-RUN_SEARCHER=false
-
-#
-# Run simulator?
-#
-RUN_SIMULATOR=false
-
-#
-# Run benchmark?
-#
-RUN_BENCHMARK=false
-
-#
-# Run kernels?
-#
-RUN_KERNELS=false
-
-# Hacked Libgomp.
-LIBGOMP=$(pwd)/libsrc/libgomp/libgomp/build/.libs/
-
-# Benchmark parameters.
-LOAD=200000000
 
 # Directories.
-BINDIR=bin
-OUTDIR=results
+BINDIR=$PWD/bin
+CSVDIR=$PWD/csv
 
-# Genetic Algorithm Parameters
-NGEN=10000
-POPSIZE=1000
+# Number of iterations.
+NITERATIONS=$2
 
-#
-# Runs the task generator.
-# 
-# $1 Number of tasks.
-# $2 Probability distribution to use.
-# $3 Seed to use.
-#
-function run_generator
-{
-	GSL_RNG_SEED=$3                                 \
-	$BINDIR/generator --ntasks $1 --distribution $2 \
-		1> /dev/null 2> $OUTDIR/$2-$1-$3.tasks
-}
+# Kernel type.
+KERNEL_TYPE=linear
 
-#
-# Runs the simulator.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-# $4 Scheduling strategy
-# $5 Chunk size
-# $6 Seed.
-#
-function run_simulator
-{
-	GSL_RNG_SEED=$6                                                                 \
-	$BINDIR/scheduler --nthreads $1 --ntasks $2 --distribution $3 $4 --chunksize $5 \
-		1> $OUTDIR/$3-$2-$6-$4-$5-$1.simulator \
-		2> /dev/null
-}
+# Scheduling strategies.
+STRATEGIES=(static dynamic srr)
 
-#
-# Runs the searcher.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-# #4 Seed.
-#
-function run_searcher
-{
-	GSL_RNG_SEED=$4                                              \
-	$BINDIR/searcher --nthreads $1 --ntasks $2 --distribution $3 \
-		--ngen $NGEN --popsize $POPSIZE                          \
-		1> $OUTDIR/$3-$2-$4-$1.info.searcher                     \
-		2> $OUTDIR/$3-$2-$4-$1.taskmap.searcher
-}
+# Workloads.
+WORKLOAD=(beta gamma gaussian poisson)
+
+# Workload sorting.
+SORT=(ascending)
+
+# Skewness
+SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
+
+#===============================================================================
+#                              UTILITY ROUTINES
+#===============================================================================
 
 #
 # Maps threads on the cores.
 #
 # $1 Number of threads.
+# $2 Is simultaneous multithreading (SMT) enabled?
 #
 function map_threads
 {
 	# Build thread map.
-	if [ $SMT == "true" ]; then
-		for (( i=0; i<$1; i++ )); do
-			map[$i]=$((2*$i))
+	if [ $2 == "true" ]; then
+		for (( i=0; i < $1; i++ )); do
+			AFFINITY[$i]=$((2*$i))
 		done
 	else
-		for (( i=0; i<$1; i++ )); do
-			map[$i]=$i
+		for (( i=0; i < $1; i++ )); do
+			AFFINITY[$i]=$i
 		done
 	fi
 	
 	export OMP_NUM_THREADS=$1
-	export GOMP_CPU_AFFINITY="${map[@]}"
+	export GOMP_CPU_AFFINITY="${AFFINITY[@]}"
+}
+
+#===============================================================================
+#                              PARSING ROUTINES
+#===============================================================================
+
+#
+# Extracts variables from raw results.
+#   $1 Filename prefix.
+#
+function extract_variables
+{	
+	grep "Total Cycles" $1.tmp \
+	| cut -d" " -f 3           \
+	>> $CSVDIR/$1-cycles.csv
+	
+	grep "thread" $1.tmp \
+	| cut -d" " -f 3           \
+	>> $CSVDIR/$1-workload.csv
 }
 
 #
-# Runs the benchmark.
-# 
-# $1 Number of threads
-# $2 Number of tasks.
-# $3 Probability distribution.
-# $4 Scheduling strategy
-# $5 Chunk size
-# $6 Seed.
+# Parses the benchmark.
+#  $1 Scheduling strategy.
+#  $2 Number of threads.
+#  $3 Workload.
+#  $4 Skewness.
+#
+function parse_benchmark
+{
+	extract_variables benchmark-$3-$4-$NITERATIONS-$1-$2
+}
+
+#===============================================================================
+#                                 RUN ROUTINES
+#===============================================================================
+
+#
+# Run synthetic benchmark.
+#  $1 Scheduling strategy.
+#  $2 Number of threads.
+#  $3 Workload.
+#  $4 Skewness
 #
 function run_benchmark
 {
-	map_threads $1
-
-	GSL_RNG_SEED=$6                                                               \
-	LD_LIBRARY_PATH=$LIBGOMP                                                      \
-	OMP_SCHEDULE=pedro                                                            \
-	$BINDIR/benchmark --nthreads $1 --ntasks $2 --distribution $3 --niterations 1 \
-		$4 --chunksize $5 --load $LOAD                                            \
-		>> $OUTDIR/$3-$2-$6-$4-$5-$1.benchmark                                    \
-		2> /dev/null
+	echo "  Benchmark with $2 thread(s)"
+	$BINDIR/scheduler \
+		--kernel $KERNEL_TYPE      \
+		--nthreads $2              \
+		--niterations $NITERATIONS \
+		--pdf $3                   \
+		--skewness $4              \
+		--sort ascending           \
+		$1                         \
+	2>> benchmark-$3-$4-$NITERATIONS-$1-$2.tmp
 }
 
-#
-# Runs the kernel.
-#
-# $1 Kernel.
-# $2 Number of threads.
-# $3 Scheduling strategy.
-# #4 Seed.
-#
-function run_kernel
-{
-	map_threads $2
-	
-	GSL_RNG_SEED=$4                            \
-	LD_LIBRARY_PATH=$LIBGOMP                   \
-	OMP_SCHEDULE=pedro                         \
-	$BINDIR/$1.$3 --class $CLASS --nthreads $2 \
-		>> $OUTDIR/$1-$4-$3-$CLASS-$2.out      \
-		2> $OUTDIR/$1-$4-$3-$CLASS-$2.tasks
-}
+#===============================================================================
+#                                 MAIN ROUTINE
+#===============================================================================
 
-# Run the benchmark, simulator and searcher.
-for it in {1..10}; do
-	
-	rm -rf $OUTDIR
-	mkdir -p $OUTDIR
-	
-	for seed in {1..20}; do
-		for (( nthreads=1; nthreads<=$NTHREADS; nthreads++ )); do
-			for ntasks in 48 96 192; do
-				for distribution in beta gamma normal poisson random; do
-					for chunksize in 1 2 4; do
-						if [ $RUN_SIMULATOR == "true" ]; then
-							run_simulator $nthreads $ntasks $distribution "static" $chunksize $seed
-							run_simulator $nthreads $ntasks $distribution "dynamic" $chunksize $seed
-						fi
-						if [ $RUN_BENCHMARK == "true" ] ; then
-							run_benchmark $nthreads $ntasks $distribution "static" $chunksize $seed
-							run_benchmark $nthreads $ntasks $distribution "dynamic" $chunksize $seed
-						fi
-					done
-					if [ $RUN_SIMULATOR == "true" ]; then
-						run_simulator $nthreads $ntasks $distribution "workload-aware" 1 $seed
-						run_simulator $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
-					fi
-					if [ $RUN_BENCHMARK == "true" ] ; then
-						run_benchmark $nthreads $ntasks $distribution "smart-round-robin" 1 $seed
-					fi
-					if [ $RUN_SEARCHER == "true" ]; then
-						run_searcher $nthreads $ntasks $distribution $seed
-					fi
-				done
-			done
-			if [ $RUN_KERNELS == "true" ]; then
-				for kernel in is km; do
-					for scheduler in static dynamic srr; do
-						run_kernel $kernel $nthreads $scheduler $seed
-					done
-				done
-			fi
+mkdir -p $CSVDIR
+
+for strategy in "${STRATEGIES[@]}"; do
+	for skewness in "${SKEWNESS[@]}"; do
+		for workload in "${WORKLOAD[@]}"; do
+			echo "== Running $strategy $skewness $workload"
+			run_benchmark $strategy $1 $workload $skewness
+			parse_benchmark $strategy $1 $workload $skewness
+			rm -f *.tmp
 		done
 	done
-	
-	tar -cjvf $OUTDIR-$it.tar.bz2 $OUTDIR/*
 done
-
