@@ -39,37 +39,10 @@ STRATEGIES=(static dynamic srr)
 WORKLOAD=(beta gamma gaussian poisson)
 
 # Workload sorting.
-SORT=(ascending)
+SORT=(ascending descending)
 
 # Skewness
 SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
-
-#===============================================================================
-#                              UTILITY ROUTINES
-#===============================================================================
-
-#
-# Maps threads on the cores.
-#
-# $1 Number of threads.
-# $2 Is simultaneous multithreading (SMT) enabled?
-#
-function map_threads
-{
-	# Build thread map.
-	if [ $2 == "true" ]; then
-		for (( i=0; i < $1; i++ )); do
-			AFFINITY[$i]=$((2*$i))
-		done
-	else
-		for (( i=0; i < $1; i++ )); do
-			AFFINITY[$i]=$i
-		done
-	fi
-	
-	export OMP_NUM_THREADS=$1
-	export GOMP_CPU_AFFINITY="${AFFINITY[@]}"
-}
 
 #===============================================================================
 #                              PARSING ROUTINES
@@ -96,10 +69,11 @@ function extract_variables
 #  $2 Number of threads.
 #  $3 Workload.
 #  $4 Skewness.
+#  $5 Sorting
 #
 function parse_benchmark
 {
-	extract_variables benchmark-$3-$4-$NITERATIONS-$1-$2
+	extract_variables benchmark-$3-$4-$5-$NITERATIONS-$1-$2
 }
 
 #===============================================================================
@@ -112,34 +86,55 @@ function parse_benchmark
 #  $2 Number of threads.
 #  $3 Workload.
 #  $4 Skewness
+#  $5 Sorting
 #
 function run_benchmark
 {
-	echo "  Benchmark with $2 thread(s)"
 	$BINDIR/scheduler \
 		--kernel $KERNEL_TYPE      \
 		--nthreads $2              \
 		--niterations $NITERATIONS \
 		--pdf $3                   \
 		--skewness $4              \
-		--sort ascending           \
+		--sort $5                  \
 		$1                         \
-	2>> benchmark-$3-$4-$NITERATIONS-$1-$2.tmp
+	2>> benchmark-$3-$4-$5-$NITERATIONS-$1-$2.tmp
 }
 
 #===============================================================================
 #                                 MAIN ROUTINE
 #===============================================================================
 
+rm -rf $CSVDIR
 mkdir -p $CSVDIR
 
 for strategy in "${STRATEGIES[@]}"; do
 	for skewness in "${SKEWNESS[@]}"; do
 		for workload in "${WORKLOAD[@]}"; do
-			echo "== Running $strategy $skewness $workload"
-			run_benchmark $strategy $1 $workload $skewness
-			parse_benchmark $strategy $1 $workload $skewness
-			rm -f *.tmp
+			for sorting in "${SORT[@]}"; do
+				run_benchmark $strategy $1 $workload $skewness $sorting
+				parse_benchmark $strategy $1 $workload $skewness $sorting
+				rm -f *.tmp
+			done
+		done
+	done
+done
+
+for pdf in "${WORKLOAD[@]}"; do
+	mkdir -p $CSVDIR/$pdf/cycles $CSVDIR/$pdf/workload
+	mv $CSVDIR/*-$pdf-*-cycles.csv $CSVDIR/$pdf/cycles
+	mv $CSVDIR/*-$pdf-*-workload.csv $CSVDIR/$pdf/workload
+	for strategy in "${STRATEGIES[@]}"; do
+		for sorting in "${SORT[@]}"; do
+			echo \
+				"0.50;0.55;0.60;0.65;0.70;0.75;0.80;0.85;0.90" \
+				> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
+				
+			paste -d ";" \
+				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$1-cycles.csv \
+				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
+			
+			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
 		done
 	done
 done

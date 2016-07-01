@@ -500,6 +500,7 @@ int main(int argc, const const char **argv)
 	{
 		if (threads[i].workload > cycles)
 			cycles = threads[i].workload;
+		fprintf(stderr, "thread: %u\n", threads[i].workload);
 	}
 	fprintf(stderr, "Total Cycles: %u\n", cycles);
 	
