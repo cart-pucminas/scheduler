@@ -115,7 +115,6 @@ void schedule
 	ready = smalloc(nthreads*sizeof(struct thread *));
 	for (unsigned i = 0; i < nthreads; i++)
 		ready[i] = &threads[i];
-	
 		
 	/* Schedule. */
 	schedulers_init[scheduler](tasks, ntasks, nthreads);

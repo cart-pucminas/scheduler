@@ -253,19 +253,19 @@ static void readargs(int argc, const char **argv)
 	{	
 		/* Parse command. */
 		if (!strcmp(argv[i], "--nthreads"))
-			args.nthreads = atoi(argv[i + 1]);
+			args.nthreads = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--niterations"))
-			args.ntasks = atoi(argv[i + 1]);
+			args.ntasks = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--pdf"))
-			pdfname = argv[i];
+			pdfname = argv[++i];
 		else if (!strcmp(argv[i], "--skewness"))
-			args.skewness = atof(argv[i + 1]);
+			args.skewness = atof(argv[++i]);
 		else if (!strcmp(argv[i], "--sort"))
-			sortname = argv[i];
+			sortname = argv[++i];
 		else if (!strcmp(argv[i], "--kernel"))
-			kernelname = argv[i];
+			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--chunksize"))
-			chunksize = atoi(argv[i + 1]);
+			chunksize = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 		else
@@ -276,7 +276,7 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = SCHEDULER_DYNAMIC;
 			else if (!strcmp(argv[i], "workload-aware"))
 				args.scheduler = SCHEDULER_WORKLOAD_AWARE;
-			else if (!strcmp(argv[i], "smart-round-robin"))
+			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = SCHEDULER_SMART_ROUND_ROBIN;
 		}
 	}
@@ -481,6 +481,7 @@ static void threads_join(void)
 int main(int argc, const const char **argv)
 {
 	double *h;
+	unsigned cycles;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
@@ -494,8 +495,13 @@ int main(int argc, const const char **argv)
 	schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
 	
 	/* Print statistics. */
+	cycles = 0;
 	for (int i = 0; i < args.nthreads; i++)
-		printf("thread %u: %u\n", threads[i].tid, threads[i].workload);
+	{
+		if (threads[i].workload > cycles)
+			cycles = threads[i].workload;
+	}
+	fprintf(stderr, "Total Cycles: %u\n", cycles);
 	
 	/* House keeping. */
 	threads_join();
