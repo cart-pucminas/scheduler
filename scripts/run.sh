@@ -33,7 +33,7 @@ NITERATIONS=$2
 KERNEL_TYPE=linear
 
 # Scheduling strategies.
-STRATEGIES=(static dynamic srr)
+STRATEGIES=(workload-aware dynamic srr)
 
 # Workloads.
 WORKLOAD=(beta gamma gaussian poisson)
