@@ -24,7 +24,6 @@
 #include <time.h>
 
 #include <mylib/util.h>
-#include <common.h>
 #include "searcher.h"
 
 /**
@@ -40,8 +39,6 @@ struct
 	const char *infile;  /**< Input data file.                           */
 	unsigned ntasks;     /**< Number of tasks.                           */
 	unsigned nthreads;   /**< Number of threads.                         */
-	const char *pdfname; /**< Input Probability density function name.   */
-	unsigned pdfnum;     /**< Input Probability density function number. */
 	/**@}*/
 	
 	/**
@@ -56,7 +53,7 @@ struct
 	double replacement; /**< Replacement rate.      */
 	/**@}*/
 } args = {
-	NULL, 24, 12, NULL, 0,
+	NULL, 24, 12,
 	0.70, 0.01, 0.50, 1000, 100, 0.90
 };
 
@@ -74,7 +71,6 @@ static void usage(void)
 	printf("    --input <filename>     Input data file\n");
 	printf("    --ntasks <num>         Number of tasks\n");
 	printf("    --nthreads <num>       Number of threads\n");
-	printf("    --pdf <name>           Input probability density function\n");
 	printf("  Genetic Algorithm\n");
 	printf("    --crossover <num>      Crossover rate\n");
 	printf("    --elitism <num>        Elitism rate\n");
@@ -97,24 +93,7 @@ static void usage(void)
 static void checkargs(void)
 {
 	if (args.infile == NULL)
-	{
-		if (args.pdfname == NULL)
-			error("invalid input probability density function");
-		else
-		{
-			for (int i = 0; i < NDISTRIBUTIONS; i++)
-			{
-				if (!strcmp(args.pdfname, distributions[i]))
-				{
-					args.pdfnum = i;
-					goto out;
-				}
-			}
-			
-			printf("unknown input probability density function");
-		}
-	}
-out:
+		printf("missing input file");
 	
 	if (args.ntasks == 0)
 		error("invalid number of tasks");
@@ -176,10 +155,6 @@ static void readargs(int argc, const char **argv)
 		{
 			switch (state)
 			{
-				case STATE_SET_PDF:
-					args.pdfname = arg;
-					break;
-				
 				case STATE_SET_INFILE:
 					args.infile = arg;
 					break;
@@ -301,8 +276,7 @@ int main(int argc, const const char **argv)
 	
 	srandnum(time(NULL));
 	
-	tasks = (args.infile != NULL) ? readfile(args.infile, args.ntasks) :
-	                                create_tasks(args.pdfnum, args.ntasks);
+	tasks = readfile(args.infile, args.ntasks);
 	
 	ga(tasks,
 	   args.ntasks,
