@@ -18,16 +18,16 @@
 # 
 
 #
-# $1: Number of threads.
-# $2: Number of loop iterations.
+# Program arguments.
+#   $1: Number of threads.
+#   $2: Number of loop iterations.
 #
+NTHREADS=$1    # Number of threads.
+NITERATIONS=$2 # Number of iterations.
 
 # Directories.
 BINDIR=$PWD/bin
 CSVDIR=$PWD/csv
-
-# Number of iterations.
-NITERATIONS=$2
 
 # Kernel type.
 KERNEL_TYPE=linear
@@ -39,7 +39,7 @@ STRATEGIES=(workload-aware dynamic srr)
 WORKLOAD=(beta gamma gaussian poisson)
 
 # Workload sorting.
-SORT=(ascending descending random)
+SORT=(random)
 
 # Skewness
 SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
@@ -58,7 +58,7 @@ function extract_variables
 	| cut -d" " -f 3           \
 	>> $CSVDIR/$1-cycles.csv
 	
-	grep "thread" $1.tmp \
+	grep "Thread" $1.tmp       \
 	| cut -d" " -f 3           \
 	>> $CSVDIR/$1-workload.csv
 }
@@ -105,36 +105,53 @@ function run_benchmark
 #                                 MAIN ROUTINE
 #===============================================================================
 
+# House keeping.
 rm -rf $CSVDIR
+
+# Create directories.
 mkdir -p $CSVDIR
 
-for strategy in "${STRATEGIES[@]}"; do
-	for skewness in "${SKEWNESS[@]}"; do
-		for workload in "${WORKLOAD[@]}"; do
-			for sorting in "${SORT[@]}"; do
-				run_benchmark $strategy $1 $workload $skewness $sorting
-				parse_benchmark $strategy $1 $workload $skewness $sorting
+for strategy in "${STRATEGIES[@]}";
+do
+	for skewness in "${SKEWNESS[@]}";
+	do
+		for workload in "${WORKLOAD[@]}";
+		do
+			for sorting in "${SORT[@]}";
+			do
+				run_benchmark $strategy $NTHREADS $workload $skewness $sorting
+				parse_benchmark $strategy $NTHREADS $workload $skewness $sorting
+				
+				# House keeping.
 				rm -f *.tmp
 			done
 		done
 	done
 done
 
-for pdf in "${WORKLOAD[@]}"; do
+for pdf in "${WORKLOAD[@]}";
+do
+
+	# Move files.
 	mkdir -p $CSVDIR/$pdf/cycles $CSVDIR/$pdf/workload
 	mv $CSVDIR/*-$pdf-*-cycles.csv $CSVDIR/$pdf/cycles
 	mv $CSVDIR/*-$pdf-*-workload.csv $CSVDIR/$pdf/workload
-	for strategy in "${STRATEGIES[@]}"; do
-		for sorting in "${SORT[@]}"; do
-			echo \
-				"0.50;0.55;0.60;0.65;0.70;0.75;0.80;0.85;0.90" \
-				> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
-				
-			paste -d ";" \
-				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$1-cycles.csv \
-				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
+	
+	for strategy in "${STRATEGIES[@]}";
+	do
+		for sorting in "${SORT[@]}";
+		do
+			# Header.
+			echo ${SKEWNESS[@]} \
+				> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
 			
-			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$1-cycles.csv
+			# Data.
+			paste -d ";" \
+				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv \
+				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
+			
+			# House keeping.
+			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
 		done
 	done
 done

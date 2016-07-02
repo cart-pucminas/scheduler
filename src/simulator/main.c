@@ -82,7 +82,7 @@ static const char *kernelnames[NR_KERNELS] = {
 /**
  * @brief Number of iterations for random sorting.
  */
-#define SORT_NITERATIONS 1000000
+#define SORT_NITERATIONS 1000
 
 /**
  * @name Program Parameters
@@ -509,7 +509,7 @@ int main(int argc, const const char **argv)
 		{
 			if (threads[i].workload > cycles)
 				cycles = threads[i].workload;
-			fprintf(stderr, "thread: %u\n", threads[i].workload);
+			fprintf(stderr, "Thread %u: %u\n", i, threads[i].workload);
 		}
 		fprintf(stderr, "Total Cycles: %u\n", cycles);
 		threads_join();
