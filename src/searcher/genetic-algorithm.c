@@ -254,9 +254,11 @@ void ga(
 	{
 		if (workload[i] > cycles)
 			cycles = workload[i];
+			
+		fprintf(stderr, "Thread %u: %u\n", i, workload[i]);
 	}
 	
-	printf("Total Cycles: %u\n",cycles);
+	fprintf(stderr, "Total Cycles: %u\n",cycles);
 		
 	/* House keeping. */
 	free(bestgen);
