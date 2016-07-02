@@ -82,7 +82,7 @@ static const char *kernelnames[NR_KERNELS] = {
 /**
  * @brief Number of iterations for random sorting.
  */
-#define SORT_NITERATIONS 100
+#define SORT_NITERATIONS 1000000
 
 /**
  * @name Program Parameters
