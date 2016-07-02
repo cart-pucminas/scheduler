@@ -49,27 +49,6 @@ static const char *pdfnames[NR_PDFS] = {
 };
 
 /**
- * @brief Supported kernels.
- */
-/**{@*/
-#define NR_KERNELS         4 /**< Number of supported kernels. */
-#define KERNEL_LINEAR      1 /**< Linear kernel.               */
-#define KERNEL_LOGARITHMIC 2 /**< Logarithmic kernel.          */
-#define KERNEL_QUADRATIC   3 /**< Quadratic kernel.            */
-#define KERNEL_CUBIC       4 /**< Cubic kernel.                */
-/**@}*/
-
-/**
- * @brief Name of supported kernel types.
- */
-static const char *kernelnames[NR_KERNELS] = {
-	"linear",    /* Linear.    */
-	"logarithm", /* Logarithm. */
-	"quadratic", /* Quadratic. */
-	"cubic"      /* Cubic.     */
-};
-
-/**
  * @name Program Parameters
  */
 static struct
@@ -77,8 +56,7 @@ static struct
 	int ntasks;      /**< Number of tasks.                       */
 	int pdf;         /**< Probability density function.          */
 	double skewness; /**< Probability density function skewness. */
-	int kernel;      /**< Kernel type.                           */
-} args = { 0, 0, 0.0, 0 };
+} args = { 0, 0, 0.0 };
 
 /**
  * @brief Chunk size for the dynamic scheduling.
@@ -99,13 +77,7 @@ static void usage(void)
 {
 	printf("Usage: generator [options]\n");
 	printf("Brief: workload generator\n");
-	printf("Scheduler:\n");
-	printf("  static            Simulate static loop scheduling\n");
-	printf("  dynamic           Simulate dynamic loop scheduling\n");
-	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
-	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
-	printf("  --nthreads <number>    Number of threads\n");
 	printf("  --niterations <number> Number iterations in the parallel loop\n");
 	printf("  --pdf <name>           Probability desity function for random numbers.\n");
 	printf("        beta               a = 0.5 and b = 0.5\n");
@@ -113,16 +85,7 @@ static void usage(void)
 	printf("        gaussian           x = 0.0 and std = 1.0\n");
 	printf("        poisson                                \n");
 	printf("  --skewness <number>    PDF skewness\n");
-	printf("  --sort <type>         Loop iteration sorting\n");
-	printf("         ascending      Ascending order\n");
-	printf("         descending     Descending order\n");
-	printf("         random         Random order\n");
-	printf("  --kernel <name>       Kernel type\n");
-	printf("           linear       Linear O(n)\n");
-	printf("           logarithm    Logarithm O(n log n)\n");
-	printf("           quadratic    Quadratic O(n^2)\n");
-	printf("           cubic        Cubic O(n^3)\n");
-	printf("  --help                Display this message\n");
+	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -153,27 +116,6 @@ static int getpdf(const char *pdfname)
 	return (-1);
 }
 
-/**
- * @brief Gets kernel type.
- * 
- * @param kernelname Kernel name.
- * 
- * @returns Kernel type.
- */
-static int getkernel(const char *kernelname)
-{
-	for (int i = 0; i < NR_KERNELS; i++)
-	{
-		if (!strcmp(kernelname, kernelnames[i]))
-			return (i + 1);
-	}
-	
-	error("unsupported kernel type");
-	
-	/* Never gets here. */
-	return (-1);
-}
-
 /*============================================================================*
  *                             Argument Checking                              *
  *============================================================================*/
@@ -181,7 +123,7 @@ static int getkernel(const char *kernelname)
 /**
  * @brief Checks program arguments.
  */
-static void checkargs(const char *pdfname, const char *kernelname)
+static void checkargs(const char *pdfname)
 {
 	/* Check parameters. */
 	if (!(args.ntasks > 0))
@@ -190,8 +132,6 @@ static void checkargs(const char *pdfname, const char *kernelname)
 		error("missing probability density function");
 	else if (!(args.skewness > 0.1))
 		error("invalid skewness for probability density function");
-	else if (kernelname == NULL)
-		error("invalid kernel type");
 }
 
 /**
@@ -201,8 +141,7 @@ static void checkargs(const char *pdfname, const char *kernelname)
  */
 static void readargs(int argc, const char **argv)
 {
-	const char *pdfname = NULL; 
-	const char *kernelname = NULL;
+	const char *pdfname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -214,16 +153,13 @@ static void readargs(int argc, const char **argv)
 			pdfname = argv[++i];
 		else if (!strcmp(argv[i], "--skewness"))
 			args.skewness = atof(argv[++i]);
-		else if (!strcmp(argv[i], "--kernel"))
-			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 	}
 	
-	checkargs(pdfname, kernelname);
+	checkargs(pdfname);
 	
 	args.pdf = getpdf(pdfname);
-	args.kernel = getkernel(kernelname);
 }
 
 /*============================================================================*
