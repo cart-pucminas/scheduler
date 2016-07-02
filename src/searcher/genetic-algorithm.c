@@ -220,6 +220,10 @@ void ga(
 	double mutation,
 	double replacement)
 {
+	unsigned cycles;
+	unsigned *taskmap;
+	unsigned workload[_nthreads];
+	
 	gene_t bestgen;
 	
 	tasks = _tasks;
@@ -234,9 +238,25 @@ void ga(
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
 		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
 	
-	/* Print statistics. */
-	for (unsigned i = 0; i < ntasks; i++)
-		printf("%u\n", GENE(bestgen)[i]);
+	taskmap = GENE(bestgen);
+	
+	/* Initialize workload array. */
+	for (unsigned i = 0; i < _nthreads; i++)
+		workload[i] = 0;
+	
+	/* Compute workload. */
+	for (unsigned i = 0; i < _ntasks; i++)
+		workload[taskmap[i]] += tasks[i];
+	
+	/* Compute maximum number of cycles. */
+	cycles = 0;
+	for (unsigned i = 0; i < nthreads; i++)
+	{
+		if (workload[i] > cycles)
+			cycles = workload[i];
+	}
+	
+	printf("Total Cycles: %u\n",cycles);
 		
 	/* House keeping. */
 	free(bestgen);
