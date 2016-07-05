@@ -1,3 +1,4 @@
+# Skewness
 #
 # Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
 #
@@ -17,7 +18,7 @@
 # MA 02110-1301, USA.
 # 
 
-#
+
 # Program arguments.
 #   $1: Number of threads.
 #   $2: Number of loop iterations.
@@ -27,19 +28,11 @@ NITERATIONS=$2 # Number of iterations.
 
 # Directories.
 BINDIR=$PWD/bin
+INDIR=$PWD/input
 CSVDIR=$PWD/csv
-
-# Kernel type.
-KERNEL_TYPE=linear
-
-# Scheduling strategies.
-STRATEGIES=(workload-aware dynamic srr)
 
 # Workloads.
 WORKLOAD=(gaussian)
-
-# Workload sorting.
-SORT=(random)
 
 # Skewness
 SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
@@ -54,11 +47,11 @@ SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
 #
 function extract_variables
 {	
-	grep "Total Cycles" $1.tmp \
+	grep "Total Cycles" $CSVDIR/$1.tmp \
 	| cut -d" " -f 3           \
 	>> $CSVDIR/$1-cycles.csv
 	
-	grep "Thread" $1.tmp       \
+	grep "Thread" $CSVDIR/$1.tmp       \
 	| cut -d" " -f 3           \
 	>> $CSVDIR/$1-workload.csv
 }
@@ -77,52 +70,31 @@ function parse_benchmark
 }
 
 #===============================================================================
-#                                 RUN ROUTINES
-#===============================================================================
-
-#
-# Run synthetic benchmark.
-#  $1 Scheduling strategy.
-#  $2 Number of threads.
-#  $3 Workload.
-#  $4 Skewness
-#  $5 Sorting
-#
-function run_benchmark
-{
-	$BINDIR/scheduler \
-		--kernel $KERNEL_TYPE      \
-		--nthreads $2              \
-		--niterations $NITERATIONS \
-		--pdf $3                   \
-		--skewness $4              \
-		--sort $5                  \
-		$1                         \
-	2>> benchmark-$3-$4-$5-$NITERATIONS-$1-$2.tmp
-}
-
-#===============================================================================
 #                                 MAIN ROUTINE
 #===============================================================================
 
 # Create directories.
 mkdir -p $CSVDIR
 
-for strategy in "${STRATEGIES[@]}";
+for workload in "${WORKLOAD[@]}";
 do
 	for skewness in "${SKEWNESS[@]}";
 	do
-		for workload in "${WORKLOAD[@]}";
-		do
-			for sorting in "${SORT[@]}";
-			do
-				run_benchmark $strategy $NTHREADS $workload $skewness $sorting
-				parse_benchmark $strategy $NTHREADS $workload $skewness $sorting
-				
-				# House keeping.
-				rm -f *.tmp
-			done
-		done
+		$BINDIR/searcher                                        \
+			--input $INDIR/$workload-$NITERATIONS-$skewness.csv \
+			--ntasks $NITERATIONS                               \
+			--nthreads $NTHREADS                                \
+			--crossover 0.80                                    \
+			--mutation 0.10                                     \
+			--replacement 0.90                                  \
+			--elitism 0.01                                      \
+			--popsize 1000                                      \
+			--ngen 10000                                        \
+		1> $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
+		parse_benchmark ga $NTHREADS $workload $skewness random
+			
+	# House keeping.
+	rm -f $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
 	done
 done
 
@@ -132,23 +104,13 @@ do
 	# Move files.
 	mkdir -p $CSVDIR/$pdf/cycles $CSVDIR/$pdf/workload
 	mv $CSVDIR/*-$pdf-*-cycles.csv $CSVDIR/$pdf/cycles
-	mv $CSVDIR/*-$pdf-*-workload.csv $CSVDIR/$pdf/workload
 	
-	for strategy in "${STRATEGIES[@]}";
-	do
-		for sorting in "${SORT[@]}";
-		do
-			# Header.
-			echo ${SKEWNESS[@]} \
-				> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
+	# Header.
+	echo ${SKEWNESS[@]} \
+		> $CSVDIR/$pdf/cycles/benchmark-$pdf-random-$NITERATIONS-ga-$NTHREADS-cycles.csv
 			
-			# Data.
-			paste -d " " \
-				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv \
-				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
-			
-			# House keeping.
-			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
-		done
-	done
+	# Data.
+	paste -d " " \
+		$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-random-$NITERATIONS-ga-$NTHREADS-cycles.csv \
+		>> $CSVDIR/$pdf/cycles/benchmark-$pdf-random-$NITERATIONS-ga-$NTHREADS-cycles.csv
 done

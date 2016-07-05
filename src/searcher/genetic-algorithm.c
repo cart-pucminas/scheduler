@@ -236,7 +236,7 @@ void ga(
 	problem.r_rate = replacement;
 	
 	bestgen = genetic_algorithm(&problem, popsize, ngen,
-		GA_OPTIONS_STATISTICS | GA_OPTIONS_CONVERGE);
+		GA_OPTIONS_CONVERGE);
 	
 	taskmap = GENE(bestgen);
 	
@@ -255,10 +255,10 @@ void ga(
 		if (workload[i] > cycles)
 			cycles = workload[i];
 			
-		fprintf(stderr, "Thread %u: %u\n", i, workload[i]);
+		printf("Thread %u: %u\n", i, workload[i]);
 	}
 	
-	fprintf(stderr, "Total Cycles: %u\n",cycles);
+	printf("Total Cycles: %u\n", cycles);
 		
 	/* House keeping. */
 	free(bestgen);

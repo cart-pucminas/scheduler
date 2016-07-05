@@ -46,7 +46,7 @@ for workload in "${WORKLOAD[@]}"; do
 			--niterations $NITERATIONS \
 			--pdf $workload            \
 			--skewness $skewness       \
-		2> $OUTDIR/$workload-$NITERATIONS-$skewness.input
+		2> $OUTDIR/$workload-$NITERATIONS-$skewness.csv
 	done
 done
 
