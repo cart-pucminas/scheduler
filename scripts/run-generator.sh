@@ -32,6 +32,9 @@ OUTDIR=$PWD/input
 # Skewness
 SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
 
+# Kernels
+KERNELS=(linear logarithm)
+
 # Workloads.
 WORKLOAD=(beta gamma gaussian poisson)
 
@@ -39,14 +42,20 @@ WORKLOAD=(beta gamma gaussian poisson)
 rm -rf $OUTDIR
 mkdir -p $OUTDIR
 
-for workload in "${WORKLOAD[@]}"; do
-	for skewness in "${SKEWNESS[@]}"; do
-		$BINDIR/generator              \
-			--nthreads $NTHREADS       \
-			--niterations $NITERATIONS \
-			--pdf $workload            \
-			--skewness $skewness       \
-		2> $OUTDIR/$workload-$NITERATIONS-$skewness.csv
+for workload in "${WORKLOAD[@]}";
+do
+	for skewness in "${SKEWNESS[@]}";
+	do
+		for kernel in "${KERNELS[@]}";
+		do
+			$BINDIR/generator              \
+				--nthreads $NTHREADS       \
+				--niterations $NITERATIONS \
+				--pdf $workload            \
+				--skewness $skewness       \
+				--kernel $KERNEL           \
+			2> $OUTDIR/$workload-$NITERATIONS-$skewness-$kernel.csv
+		done
 	done
 done
 
