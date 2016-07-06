@@ -42,7 +42,7 @@ WORKLOAD=(gaussian)
 SORT=(random)
 
 # Skewness
-SKEWNESS=(0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90)
+SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
 
 #===============================================================================
 #                              PARSING ROUTINES
@@ -144,11 +144,11 @@ do
 			
 			# Data.
 			paste -d " " \
-				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv \
+				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv \
 				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
 			
 			# House keeping.
-			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.??-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
+			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
 		done
 	done
 done
