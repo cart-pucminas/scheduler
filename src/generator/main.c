@@ -49,14 +49,36 @@ static const char *pdfnames[NR_PDFS] = {
 };
 
 /**
+ * @brief Number of supported kernels.
+ */
+#define NR_KERNELS 2
+
+/**
+ * @brief Name of supported kernel types.
+ */
+/**@{*/
+#define KERNEL_LINEAR      1 /**< Linear kernel O(n).            */
+#define KERNEL_LOGARITHMIC 2 /**< Logarithmic kernel O(n log n). */
+/**@}*/
+
+/**
+ * @brief Name of supported kernel types.
+ */
+static const char *kernelnames[NR_KERNELS] = {
+	"linear",   /* Linear.    */
+	"logarithm" /* Logarithm. */
+};
+
+/**
  * @name Program Parameters
  */
 static struct
 {
+	int kernel;      /**< Kernel type.                           */
 	int ntasks;      /**< Number of tasks.                       */
 	int pdf;         /**< Probability density function.          */
 	double skewness; /**< Probability density function skewness. */
-} args = { 0, 0, 0.0 };
+} args = { 0, 0, 0, 0.0 };
 
 /**
  * @brief Chunk size for the dynamic scheduling.
@@ -79,6 +101,9 @@ static void usage(void)
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
 	printf("  --niterations <number> Number iterations in the parallel loop\n");
+	printf("  --kernel <name>       Kernel type\n");
+	printf("           linear       Linear O(n)\n");
+	printf("           logarithm    Logarithm O(n log n)\n");
 	printf("  --pdf <name>           Probability desity function for random numbers.\n");
 	printf("        beta               a = 0.5 and b = 0.5\n");
 	printf("        gamma              a = 1.0 and b = 2.0 \n");
@@ -89,7 +114,6 @@ static void usage(void)
 
 	exit(EXIT_SUCCESS);
 }
-
 
 /*============================================================================*
  *                                Get Routines                                *
@@ -116,6 +140,27 @@ static int getpdf(const char *pdfname)
 	return (-1);
 }
 
+/**
+ * @brief Gets kernel type.
+ * 
+ * @param kernelname Kernel name.
+ * 
+ * @returns Kernel type.
+ */
+static int getkernel(const char *kernelname)
+{
+	for (int i = 0; i < NR_KERNELS; i++)
+	{
+		if (!strcmp(kernelname, kernelnames[i]))
+			return (i + 1);
+	}
+	
+	error("unsupported kernel type");
+	
+	/* Never gets here. */
+	return (-1);
+}
+
 /*============================================================================*
  *                             Argument Checking                              *
  *============================================================================*/
@@ -123,7 +168,7 @@ static int getpdf(const char *pdfname)
 /**
  * @brief Checks program arguments.
  */
-static void checkargs(const char *pdfname)
+static void checkargs(const char *pdfname, const char *kernelname)
 {
 	/* Check parameters. */
 	if (!(args.ntasks > 0))
@@ -132,6 +177,8 @@ static void checkargs(const char *pdfname)
 		error("missing probability density function");
 	else if (!(args.skewness > 0.1))
 		error("invalid skewness for probability density function");
+	else if (kernelname == NULL)
+		error("invalid kernel type");
 }
 
 /**
@@ -142,6 +189,7 @@ static void checkargs(const char *pdfname)
 static void readargs(int argc, const char **argv)
 {
 	const char *pdfname = NULL;
+	const char *kernelname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -153,13 +201,16 @@ static void readargs(int argc, const char **argv)
 			pdfname = argv[++i];
 		else if (!strcmp(argv[i], "--skewness"))
 			args.skewness = atof(argv[++i]);
+		else if (!strcmp(argv[i], "--kernel"))
+			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 	}
 	
-	checkargs(pdfname);
+	checkargs(pdfname, kernelname);
 	
 	args.pdf = getpdf(pdfname);
+	args.kernel = getkernel(kernelname);
 }
 
 /*============================================================================*
@@ -233,8 +284,19 @@ static unsigned *tasks_create(const double *h, unsigned ntasks)
 		x = h[i]*FACTOR;
 		
 		/* Check for corner cases. */
-		if (x < 0)
+		if (x < 1)
 			error("bad multiplying factor");
+		
+		switch (args.kernel)
+		{
+			case KERNEL_LOGARITHMIC:
+				x = x*log(x);
+				break;
+			
+			default:
+			case KERNEL_LINEAR:
+				break;
+		}
 		
 		tasks[i] = ceil(x);
 	}
