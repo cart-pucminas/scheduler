@@ -68,7 +68,7 @@ static void usage(void)
 	printf("Brief: searches for a good loop scheduling\n");
 	printf("Options:\n");
 	printf("  Synthetic Application\n");
-	printf("    --input <filename>     Input data file\n");
+	printf("    --input <filename>     Input workload file\n");
 	printf("    --ntasks <num>         Number of tasks\n");
 	printf("    --nthreads <num>       Number of threads\n");
 	printf("  Genetic Algorithm\n");

@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,49 +27,6 @@
 #include <mylib/util.h>
 #include <common.h>
 #include <simulator.h>
-#include <pdf.h>
-
-/**
- * @brief Supported probability density functions.
- */
-/**@{*/
-#define NR_PDFS      4 /**< Number of supported PDFs. */
-#define PDF_BETA     1 /**< Beta.                     */
-#define PDF_GAMMA    2 /**< Gamma.                    */
-#define PDF_GAUSSIAN 3 /**< Gaussian.                 */
-#define PDF_POISSON  4 /**< Poisson.                  */
-/**@}*/
-
-/**
- * @brief Name of supported probability density functions.
- */
-static const char *pdfnames[NR_PDFS] = {
-	"beta",     /* Beta.     */
-	"gamma",    /* Gammma.   */
-	"gaussian", /* Gaussian. */
-	"poisson"   /* Poisson.  */
-};
-
-/**
- * @brief Supported kernels.
- */
-/**{@*/
-#define NR_KERNELS         4 /**< Number of supported kernels. */
-#define KERNEL_LINEAR      1 /**< Linear kernel.               */
-#define KERNEL_LOGARITHMIC 2 /**< Logarithmic kernel.          */
-#define KERNEL_QUADRATIC   3 /**< Quadratic kernel.            */
-#define KERNEL_CUBIC       4 /**< Cubic kernel.                */
-/**@}*/
-
-/**
- * @brief Name of supported kernel types.
- */
-static const char *kernelnames[NR_KERNELS] = {
-	"linear",    /* Linear.    */
-	"logarithm", /* Logarithm. */
-	"quadratic", /* Quadratic. */
-	"cubic"      /* Cubic.     */
-};
 
 /**
  * @brief Sorting order types.
@@ -89,14 +47,12 @@ static const char *kernelnames[NR_KERNELS] = {
  */
 static struct
 {
-	int nthreads;    /**< Number of threads.                     */
-	int ntasks;      /**< Number of tasks.                       */
-	int pdf;         /**< Probability density function.          */
-	double skewness; /**< Probability density function skewness. */
-	int sort;        /**< Sorting order.                         */
-	int kernel;      /**< Kernel type.                           */
-	int scheduler;   /**< Loop scheduler.                        */
-} args = { 0, 0, 0, 0.0, 0, 0, SCHEDULER_NONE};
+	const char *input; /**< Input data file.   */
+	int nthreads;       /**< Number of threads. */
+	int ntasks;         /**< Number of tasks.   */
+	int sort;           /**< Sorting order.     */
+	int scheduler;      /**< Loop scheduler.    */
+} args = { NULL, 0, 0, 0, SCHEDULER_NONE };
 
 /**
  * @brief Chunk size for the dynamic scheduling.
@@ -123,25 +79,15 @@ static void usage(void)
 	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
 	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
+	printf("  --input <filename>     Input workload file\n");
 	printf("  --nthreads <number>    Number of threads\n");
 	printf("  --niterations <number> Number iterations in the parallel loop\n");
-	printf("  --pdf <name>           Probability desity function for random numbers.\n");
-	printf("        beta               a = 0.5 and b = 0.5\n");
-	printf("        gamma              a = 1.0 and b = 2.0 \n");
-	printf("        gaussian           x = 0.0 and std = 1.0\n");
-	printf("        poisson                                \n");
-	printf("  --skewness <number>    PDF skewness\n");
-	printf("  --sort <type>         Loop iteration sorting\n");
-	printf("         ascending      Ascending order\n");
-	printf("         descending     Descending order\n");
-	printf("         random         Random order\n");
-	printf("  --kernel <name>       Kernel type\n");
-	printf("           linear       Linear O(n)\n");
-	printf("           logarithm    Logarithm O(n log n)\n");
-	printf("           quadratic    Quadratic O(n^2)\n");
-	printf("           cubic        Cubic O(n^3)\n");
-	printf("  --chunksize <num>     Chunk size for the dynamic scheduling\n");
-	printf("  --help                Display this message\n");
+	printf("  --sort <type>          Loop iteration sorting\n");
+	printf("         ascending       Ascending order\n");
+	printf("         descending      Descending order\n");
+	printf("         random          Random order\n");
+	printf("  --chunksize <num>      Chunk size for the dynamic scheduling\n");
+	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -173,48 +119,6 @@ static int getsort(const char *sortname)
 	return (-1);
 }
 
-/**
- * @brief Gets PDF id.
- * 
- * @param pdfname PDF name.
- * 
- * @returns PDF id.
- */
-static int getpdf(const char *pdfname)
-{
-	for (int i = 0; i < NR_PDFS; i++)
-	{
-		if (!strcmp(pdfname, pdfnames[i]))
-			return (i + 1);
-	}
-	
-	error("unsupported probability density function");
-	
-	/* Never gets here. */
-	return (-1);
-}
-
-/**
- * @brief Gets kernel type.
- * 
- * @param kernelname Kernel name.
- * 
- * @returns Kernel type.
- */
-static int getkernel(const char *kernelname)
-{
-	for (int i = 0; i < NR_KERNELS; i++)
-	{
-		if (!strcmp(kernelname, kernelnames[i]))
-			return (i + 1);
-	}
-	
-	error("unsupported kernel type");
-	
-	/* Never gets here. */
-	return (-1);
-}
-
 /*============================================================================*
  *                             Argument Checking                              *
  *============================================================================*/
@@ -222,23 +126,19 @@ static int getkernel(const char *kernelname)
 /**
  * @brief Checks program arguments.
  */
-static void checkargs(const char *pdfname, const char *sortname, const char *kernelname)
+static void checkargs(const char *sortname)
 {
 	/* Check parameters. */
 	if (!(args.nthreads > 0))
 		error("invalid number of threads");
 	else if (!(args.ntasks > 0))
 		error("invalid number of iterations in the parallel loop");
-	else if (pdfname == NULL)
-		error("missing probability density function");
-	else if (!(args.skewness > 0.1))
-		error("invalid skewness for probability density function");
 	else if (sortname == NULL)
 		error("invalid tasks sorting type");
-	else if (kernelname == NULL)
-		error("invalid kernel type");
 	else if (args.scheduler == SCHEDULER_NONE)
 		error("invalid scheduler");
+	else if (args.input == NULL)
+		error("missing input workload file");
 }
 
 /**
@@ -249,8 +149,6 @@ static void checkargs(const char *pdfname, const char *sortname, const char *ker
 static void readargs(int argc, const char **argv)
 {
 	const char *sortname = NULL;
-	const char *pdfname = NULL; 
-	const char *kernelname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -260,16 +158,12 @@ static void readargs(int argc, const char **argv)
 			args.nthreads = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--niterations"))
 			args.ntasks = atoi(argv[++i]);
-		else if (!strcmp(argv[i], "--pdf"))
-			pdfname = argv[++i];
-		else if (!strcmp(argv[i], "--skewness"))
-			args.skewness = atof(argv[++i]);
 		else if (!strcmp(argv[i], "--sort"))
 			sortname = argv[++i];
-		else if (!strcmp(argv[i], "--kernel"))
-			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--chunksize"))
 			chunksize = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--input"))
+			args.input = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 		else
@@ -285,61 +179,14 @@ static void readargs(int argc, const char **argv)
 		}
 	}
 	
-	checkargs(pdfname, sortname, kernelname);
+	checkargs(sortname);
 	
-	args.pdf = getpdf(pdfname);
 	args.sort = getsort(sortname);
-	args.kernel = getkernel(kernelname);
 }
 
 /*============================================================================*
  *                           WORKLOAD GENERATOR                               *
  *============================================================================*/
-
-/**
- * @brief Builds tasks histogram.
- * 
- * @param pdf         Probability density functions.
- * @param ntasks Number of tasks.
- * @param skewness    Skewness for probability density function.
- * 
- * @returns tasks histogram.
- */
-static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
-{
-	double *h = NULL;
-	
-	/* Generate input data. */
-	switch (pdf)
-	{
-		/* Beta distribution. */
-		case PDF_BETA:
-			h = beta(ntasks, skewness);
-			break;
-			
-		/* Gamma distribution. */
-		case PDF_GAMMA:
-			h = gamma(ntasks, skewness);
-			break;
-			
-		/* Gaussian distribution. */
-		case PDF_GAUSSIAN:
-			h = gaussian(ntasks, skewness);
-			break;
-			
-		/* Poisson distribution. */
-		case PDF_POISSON:
-			h = poisson(ntasks, skewness);
-			break;
-			
-		/* Shouldn't happen. */
-		default:
-			error("unsupported probability density function");
-			break;
-	}
-	
-	return (h);
-}
 
 /**
  * @brief Greater than.
@@ -417,32 +264,41 @@ static void tasks_sort(unsigned *tasks, unsigned ntasks, int type, int seed)
 }
 
 /**
- * @brief Create tasks.
+ * @brief Reads input file
  * 
- * @param h tasks histogram.
+ * @param input Input filename.
  * @param ntasks Number of tasks.
- * 
- * @returns Tasks.
  */
-static unsigned *tasks_create(const double *h, unsigned ntasks)
+static unsigned *readfile(const char *input, unsigned ntasks)
 {
+	FILE *fp;
 	unsigned *tasks;
-	const unsigned FACTOR = 100000000;
 	
 	tasks = smalloc(ntasks*sizeof(unsigned));
 	
+	fp = fopen(input, "r");
+	assert(fp != NULL);
+	
+	/* Read file. */
 	for (unsigned i = 0; i < ntasks; i++)
 	{
-		double x;
-		
-		x = h[i]*FACTOR;
-		
-		/* Check for corner cases. */
-		if (x < 0)
-			error("bad multiplying factor");
-		
-		tasks[i] = ceil(x);
+		if (fscanf(fp, "%u", &tasks[i]) == EOF)
+		{
+			if (feof(fp))
+				error("unexpected end of file");
+			else if (ferror(fp))
+				error("cannot read file");
+			else
+				error("unknown error");
+			break;
+		}
 	}
+	
+	/* I/O error. */
+	if (ferror(fp))
+		error("cannot read input file");
+	
+	fclose(fp);
 	
 	return (tasks);
 }
@@ -487,13 +343,11 @@ static void threads_join(void)
 int main(int argc, const const char **argv)
 {
 	int i;
-	double *h;
 	unsigned cycles;
 	unsigned *tasks;
 	readargs(argc, argv);
 
-	h = histogram_create(args.pdf, args.ntasks, args.skewness);
-	tasks = tasks_create(h, args.ntasks);
+	tasks = readfile(args.input, args.ntasks);
 
 	i = 0;
 	do
@@ -517,7 +371,6 @@ int main(int argc, const const char **argv)
 	while ((args.sort == SORT_RANDOM) && (++i < SORT_NITERATIONS));
 	
 	/* House keeping. */
-	free(h);
 	free(tasks);
 	
 	return (EXIT_SUCCESS);

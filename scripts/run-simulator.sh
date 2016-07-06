@@ -27,6 +27,7 @@ NITERATIONS=$2 # Number of iterations.
 
 # Directories.
 BINDIR=$PWD/bin
+INDIR=$PWD/input
 CSVDIR=$PWD/csv
 
 # Kernel type.
@@ -91,11 +92,9 @@ function parse_benchmark
 function run_benchmark
 {
 	$BINDIR/scheduler \
-		--kernel $KERNEL_TYPE      \
+		--input $INDIR/$3-$NITERATIONS-$4.csv \
 		--nthreads $2              \
 		--niterations $NITERATIONS \
-		--pdf $3                   \
-		--skewness $4              \
 		--sort $5                  \
 		$1                         \
 	2>> benchmark-$3-$4-$5-$NITERATIONS-$1-$2.tmp
