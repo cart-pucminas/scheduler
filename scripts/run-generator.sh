@@ -28,13 +28,13 @@ BINDIR=$PWD/bin
 OUTDIR=$PWD/input
 
 # Workloads
-WORKLOAD=(beta gamma gaussian poisson)
+WORKLOAD=(beta gamma gaussian)
 
 # Skewness
 SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
 
 # Kernels
-KERNELS=(linear logarithm)
+KERNELS=(linear logarithm quadratic)
 
 # Create directories.
 mkdir -p $OUTDIR

@@ -50,7 +50,7 @@ static const char *pdfnames[NR_PDFS] = {
 /**
  * @brief Number of supported kernels.
  */
-#define NR_KERNELS 2
+#define NR_KERNELS 3
 
 /**
  * @brief Name of supported kernel types.
@@ -58,14 +58,16 @@ static const char *pdfnames[NR_PDFS] = {
 /**@{*/
 #define KERNEL_LINEAR      1 /**< Linear kernel O(n).            */
 #define KERNEL_LOGARITHMIC 2 /**< Logarithmic kernel O(n log n). */
+#define KERNEL_QUADRATIC   3 /**< Quadratic kernel O(n^2).       */
 /**@}*/
 
 /**
  * @brief Name of supported kernel types.
  */
 static const char *kernelnames[NR_KERNELS] = {
-	"linear",   /* Linear.    */
-	"logarithm" /* Logarithm. */
+	"linear",    /* Linear.    */
+	"logarithm", /* Logarithm. */
+	"quadratic"  /* Quadratic. */
 };
 
 /**
@@ -93,6 +95,7 @@ static void usage(void)
 	printf("  --kernel <name>     Kernel type.\n");
 	printf("           linear     Linear O(n)\n");
 	printf("           logarithm  Logarithm O(n log n)\n");
+	printf("           quadratic  Quadratic O(n^2)\n");
 	printf("  --pdf <name>        Probability desity function for random numbers.\n");
 	printf("        beta            a = 0.5 and b = 0.5\n");
 	printf("        gamma           a = 1.0 and b = 2.0 \n");
@@ -262,7 +265,7 @@ static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
 static unsigned *tasks_create(const double *h, unsigned ntasks, int kernel)
 {
 	unsigned *tasks;
-	const unsigned FACTOR = 100000000;
+	const unsigned FACTOR = 10000;
 	
 	tasks = smalloc(ntasks*sizeof(unsigned));
 	
@@ -278,10 +281,17 @@ static unsigned *tasks_create(const double *h, unsigned ntasks, int kernel)
 		
 		switch (kernel)
 		{
+			/* Logarithmic kernel. */
 			case KERNEL_LOGARITHMIC:
 				x = x*log(x);
 				break;
 			
+			/* Quadratic kernel. */
+			case KERNEL_QUADRATIC:
+				x = x*x;
+				break;
+			
+			/* Linear kernel. */
 			default:
 			case KERNEL_LINEAR:
 				break;
