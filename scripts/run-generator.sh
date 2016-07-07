@@ -19,15 +19,16 @@
 
 #
 # Program arguments.
-#   $1: Number of threads.
-#   $2: Number of loop iterations.
+#   $1: Number of loop iterations.
 #
-NTHREADS=$1    # Number of threads.
-NITERATIONS=$2 # Number of iterations.
+NITERATIONS=$1 # Number of iterations.
 
-# Directories.
+# Directories
 BINDIR=$PWD/bin
 OUTDIR=$PWD/input
+
+# Workloads
+WORKLOAD=(beta gamma gaussian poisson)
 
 # Skewness
 SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
@@ -35,13 +36,10 @@ SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
 # Kernels
 KERNELS=(linear logarithm)
 
-# Workloads.
-WORKLOAD=(beta gamma gaussian poisson)
-
 # Create directories.
-rm -rf $OUTDIR
 mkdir -p $OUTDIR
 
+# Run workload generator.
 for workload in "${WORKLOAD[@]}";
 do
 	for skewness in "${SKEWNESS[@]}";
@@ -49,11 +47,10 @@ do
 		for kernel in "${KERNELS[@]}";
 		do
 			$BINDIR/generator              \
-				--nthreads $NTHREADS       \
-				--niterations $NITERATIONS \
+				--ntasks $NITERATIONS      \
 				--pdf $workload            \
 				--skewness $skewness       \
-				--kernel $KERNEL           \
+				--kernel $kernel           \
 			2> $OUTDIR/$workload-$NITERATIONS-$skewness-$kernel.csv
 		done
 	done

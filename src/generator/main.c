@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include <mylib/util.h>
-#include <common.h>
 #include <pdf.h>
 
 /**
@@ -81,16 +80,6 @@ static struct
 } args = { 0, 0, 0, 0.0 };
 
 /**
- * @brief Chunk size for the dynamic scheduling.
- */
-unsigned chunksize = 1;
-
-/**
- * @brief Threads.
- */
-struct thread *threads = NULL;
-
-/**
  * @brief Prints program usage and exits.
  * 
  * @details Prints program usage and exits gracefully.
@@ -100,17 +89,17 @@ static void usage(void)
 	printf("Usage: generator [options]\n");
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
-	printf("  --niterations <number> Number iterations in the parallel loop\n");
-	printf("  --kernel <name>       Kernel type\n");
-	printf("           linear       Linear O(n)\n");
-	printf("           logarithm    Logarithm O(n log n)\n");
-	printf("  --pdf <name>           Probability desity function for random numbers.\n");
-	printf("        beta               a = 0.5 and b = 0.5\n");
-	printf("        gamma              a = 1.0 and b = 2.0 \n");
-	printf("        gaussian           x = 0.0 and std = 1.0\n");
+	printf("  --ntasks <number>   Number tasks.\n");
+	printf("  --kernel <name>     Kernel type.\n");
+	printf("           linear     Linear O(n)\n");
+	printf("           logarithm  Logarithm O(n log n)\n");
+	printf("  --pdf <name>        Probability desity function for random numbers.\n");
+	printf("        beta            a = 0.5 and b = 0.5\n");
+	printf("        gamma           a = 1.0 and b = 2.0 \n");
+	printf("        gaussian        x = 0.0 and std = 1.0\n");
 	printf("        poisson                                \n");
-	printf("  --skewness <number>    PDF skewness\n");
-	printf("  --help                 Display this message\n");
+	printf("  --skewness <number> PDF skewness.\n");
+	printf("  --help              Display this message.\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -195,7 +184,7 @@ static void readargs(int argc, const char **argv)
 	for (int i = 1; i < argc; i++)
 	{	
 		/* Parse command. */
-		if (!strcmp(argv[i], "--niterations"))
+		if (!strcmp(argv[i], "--ntasks"))
 			args.ntasks = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--pdf"))
 			pdfname = argv[++i];
@@ -270,7 +259,7 @@ static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
  * 
  * @returns Tasks.
  */
-static unsigned *tasks_create(const double *h, unsigned ntasks)
+static unsigned *tasks_create(const double *h, unsigned ntasks, int kernel)
 {
 	unsigned *tasks;
 	const unsigned FACTOR = 100000000;
@@ -287,7 +276,7 @@ static unsigned *tasks_create(const double *h, unsigned ntasks)
 		if (x < 1)
 			error("bad multiplying factor");
 		
-		switch (args.kernel)
+		switch (kernel)
 		{
 			case KERNEL_LOGARITHMIC:
 				x = x*log(x);
@@ -318,7 +307,7 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 
 	h = histogram_create(args.pdf, args.ntasks, args.skewness);
-	tasks = tasks_create(h, args.ntasks);
+	tasks = tasks_create(h, args.ntasks, args.kernel);
 	
 	/* Print tasks. */
 	for (int i = 0; i < args.ntasks; i++)
@@ -328,4 +317,3 @@ int main(int argc, const const char **argv)
 	free(h);
 	free(tasks);
 }
-

@@ -18,7 +18,6 @@
 # MA 02110-1301, USA.
 # 
 
-
 # Program arguments.
 #   $1: Number of threads.
 #   $2: Number of loop iterations.
@@ -31,11 +30,14 @@ BINDIR=$PWD/bin
 INDIR=$PWD/input
 CSVDIR=$PWD/csv
 
-# Workloads.
-WORKLOAD=(gaussian)
+# Workloads
+WORKLOAD=(beta gamma gaussian poisson)
 
 # Skewness
 SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
+
+# Kernels
+KERNELS=(linear logarithm)
 
 #===============================================================================
 #                              PARSING ROUTINES
@@ -80,21 +82,25 @@ for workload in "${WORKLOAD[@]}";
 do
 	for skewness in "${SKEWNESS[@]}";
 	do
-		$BINDIR/searcher                                        \
-			--input $INDIR/$workload-$NITERATIONS-$skewness.csv \
-			--ntasks $NITERATIONS                               \
-			--nthreads $NTHREADS                                \
-			--crossover 0.80                                    \
-			--mutation 0.10                                     \
-			--replacement 0.90                                  \
-			--elitism 0.01                                      \
-			--popsize 1000                                      \
-			--ngen 10000                                        \
-		1> $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
-		parse_benchmark ga $NTHREADS $workload $skewness random
-			
-	# House keeping.
-	rm -f $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
+	
+		for kernel in "${KERNELS[@]}";
+		do
+			$BINDIR/searcher                                        \
+				--input $INDIR/$workload-$NITERATIONS-$skewness-$kernel.csv \
+				--ntasks $NITERATIONS                                        \
+				--nthreads $NTHREADS                                         \
+				--crossover 0.80                                             \
+				--mutation 0.10                                              \
+				--replacement 0.90                                           \
+				--elitism 0.01                                               \
+				--popsize 1000                                               \
+				--ngen 10000                                                 \
+			1> $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
+			parse_benchmark ga $NTHREADS $workload $skewness random
+				
+			# House keeping.
+			rm -f $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
+		done
 	done
 done
 

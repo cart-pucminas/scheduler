@@ -37,7 +37,10 @@ KERNEL_TYPE=linear
 STRATEGIES=(workload-aware dynamic srr)
 
 # Workloads.
-WORKLOAD=(gaussian)
+WORKLOAD=(gamma gaussian)
+
+# Kernels
+KERNELS=(linear logarithm)
 
 # Workload sorting.
 SORT=(random)

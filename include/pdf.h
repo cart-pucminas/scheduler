@@ -27,6 +27,5 @@
 	extern double *gamma(int, double);
 	extern double *gaussian(int, double);
 	extern double *poisson(int, double);
-	extern int *isrng(int, long *, int);
 
 #endif /* PDF_H_ */
