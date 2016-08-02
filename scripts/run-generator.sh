@@ -19,14 +19,14 @@
 
 #
 # Program arguments.
-#   $1: Number of loop iterations.
+#   $1: Number of tasks.
 #   $2: Output directory.
 #
-NITERATIONS=$1 # Number of iterations.
+NTASKS=$1 # Number of tasks.
+OUTDIR=$2 # Output directory.
 
 # Directories
 BINDIR=$PWD/bin
-OUTDIR=$2
 
 # Import some variables.
 source scripts/var.sh
@@ -41,12 +41,12 @@ do
 	do
 		for kernel in "${KERNELS[@]}";
 		do
-			$BINDIR/generator              \
-				--ntasks $NITERATIONS      \
-				--pdf $workload            \
-				--skewness $skewness       \
-				--kernel $kernel           \
-			2> $OUTDIR/$workload-$NITERATIONS-$skewness-$kernel.csv
+			$BINDIR/generator        \
+				--ntasks $NTASKS     \
+				--pdf $workload      \
+				--skewness $skewness \
+				--kernel $kernel     \
+			2> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
 		done
 	done
 done

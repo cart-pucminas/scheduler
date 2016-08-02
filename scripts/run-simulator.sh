@@ -20,15 +20,17 @@
 #
 # Program arguments.
 #   $1: Number of threads.
-#   $2: Number of loop iterations.
+#   $2: Number of tasks.
+#   $3: Input directory.
+#   $4: Output directory.
 #
-NTHREADS=$1    # Number of threads.
-NITERATIONS=$2 # Number of iterations.
+NTHREADS=$1 # Number of threads.
+NTASKS=$2   # Number of tasks.
+INDIR=$3   # Input directory.
+OUTDIR=$4   # Output directory.
 
 # Directories.
 BINDIR=$PWD/bin
-INDIR=$PWD/input
-CSVDIR=$PWD/csv
 
 # Import some variables.
 source scripts/var.sh
@@ -45,11 +47,11 @@ function extract_variables
 {	
 	grep "Total Cycles" $1.tmp \
 	| cut -d" " -f 3           \
-	>> $CSVDIR/$1-cycles.csv
+	>> $OUTDIR/$1-cycles.csv
 	
 	grep "Thread" $1.tmp       \
 	| cut -d" " -f 3           \
-	>> $CSVDIR/$1-workload.csv
+	>> $OUTDIR/$1-workload.csv
 }
 
 #
@@ -58,11 +60,12 @@ function extract_variables
 #  $2 Number of threads.
 #  $3 Workload.
 #  $4 Skewness.
-#  $5 Sorting
+#  $5 Kernel.
+#  $6 Sorting
 #
 function parse_benchmark
 {
-	extract_variables benchmark-$3-$4-$5-$NITERATIONS-$1-$2
+	extract_variables benchmark-$3-$4-$6-$NTASKS-$5-$1-$2
 }
 
 #===============================================================================
@@ -74,40 +77,44 @@ function parse_benchmark
 #  $1 Scheduling strategy.
 #  $2 Number of threads.
 #  $3 Workload.
-#  $4 Skewness
-#  $5 Sorting
+#  $4 Skewness.
+#  $5 Kernel.
+#  $6 Sorting.
 #
 function run_benchmark
 {
-	$BINDIR/scheduler \
-		--input $INDIR/$3-$NITERATIONS-$4.csv \
-		--nthreads $2              \
-		--niterations $NITERATIONS \
-		--sort $5                  \
-		$1                         \
-	2>> benchmark-$3-$4-$5-$NITERATIONS-$1-$2.tmp
+	$BINDIR/scheduler                       \
+		--input $INDIR/$3-$NTASKS-$4-$5.csv \
+		--nthreads $2                       \
+		--niterations $NTASKS               \
+		--sort $6                           \
+		$1                                  \
+	2>> benchmark-$3-$4-$6-$NTASKS-$5-$1-$2.tmp
 }
 
 #===============================================================================
 #                                 MAIN ROUTINE
 #===============================================================================
 
-# Create directories.
-mkdir -p $CSVDIR
+# Create output directory.
+mkdir -p $OUTDIR
 
 for strategy in "${STRATEGIES[@]}";
 do
-	for skewness in "${SKEWNESS[@]}";
-	do
-		for workload in "${WORKLOAD[@]}";
+	for workload in "${WORKLOAD[@]}";
+	do	
+		for skewness in "${SKEWNESS[@]}";
 		do
-			for sorting in "${SORT[@]}";
+			for kernel in "${KERNELS[@]}";
 			do
-				run_benchmark $strategy $NTHREADS $workload $skewness $sorting
-				parse_benchmark $strategy $NTHREADS $workload $skewness $sorting
-				
-				# House keeping.
-				rm -f *.tmp
+				for sorting in "${SORT[@]}";
+				do
+					run_benchmark $strategy $NTHREADS $workload $skewness $kernel $sorting
+					parse_benchmark $strategy $NTHREADS $workload $skewness $kernel $sorting
+					
+					# House keeping.
+					rm -f *.tmp
+				done
 			done
 		done
 	done
@@ -115,27 +122,29 @@ done
 
 for pdf in "${WORKLOAD[@]}";
 do
-
 	# Move files.
-	mkdir -p $CSVDIR/$pdf/cycles $CSVDIR/$pdf/workload
-	mv $CSVDIR/*-$pdf-*-cycles.csv $CSVDIR/$pdf/cycles
-	mv $CSVDIR/*-$pdf-*-workload.csv $CSVDIR/$pdf/workload
+	mkdir -p $OUTDIR/$pdf/cycles $OUTDIR/$pdf/workload
+	mv $OUTDIR/*-$pdf-*-cycles.csv $OUTDIR/$pdf/cycles
+	mv $OUTDIR/*-$pdf-*-workload.csv $OUTDIR/$pdf/workload
 	
 	for strategy in "${STRATEGIES[@]}";
 	do
-		for sorting in "${SORT[@]}";
+		for kernel in "${KERNELS[@]}";
 		do
-			# Header.
-			echo ${SKEWNESS[@]} \
-				> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
-			
-			# Data.
-			paste -d " " \
-				$CSVDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv \
-				>> $CSVDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
-			
-			# House keeping.
-			rm -f $CSVDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NITERATIONS-$strategy-$NTHREADS-cycles.csv
+			for sorting in "${SORT[@]}";
+			do
+				# Header.
+				echo ${SKEWNESS[@]} \
+					> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
+				
+				# Data.
+				paste -d " "                                                                                         \
+					$OUTDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv \
+					>> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
+				
+				# House keeping.
+				rm -f $OUTDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
+			done
 		done
 	done
 done
