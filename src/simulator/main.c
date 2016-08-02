@@ -347,11 +347,11 @@ int main(int argc, const const char **argv)
 	unsigned *tasks;
 	readargs(argc, argv);
 
-	tasks = readfile(args.input, args.ntasks);
-
 	i = 0;
 	do
 	{
+		tasks = readfile(args.input, args.ntasks);
+	
 		tasks_sort(tasks, args.ntasks, args.sort, i);
 		
 		threads_spawn();
@@ -367,11 +367,11 @@ int main(int argc, const const char **argv)
 		}
 		fprintf(stderr, "Total Cycles: %u\n", cycles);
 		threads_join();
+
+		/* House keeping. */
+		free(tasks);
 	}
 	while ((args.sort == SORT_RANDOM) && (++i < SORT_NITERATIONS));
-	
-	/* House keeping. */
-	free(tasks);
-	
+		
 	return (EXIT_SUCCESS);
 }
