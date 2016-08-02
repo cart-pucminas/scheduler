@@ -20,12 +20,13 @@
 #
 # Program arguments.
 #   $1: Number of loop iterations.
+#   $2: Output directory.
 #
 NITERATIONS=$1 # Number of iterations.
 
 # Directories
 BINDIR=$PWD/bin
-OUTDIR=$PWD/input
+OUTDIR=$2
 
 # Workloads
 WORKLOAD=(beta gamma gaussian)
