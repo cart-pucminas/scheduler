@@ -17,37 +17,19 @@
 # MA 02110-1301, USA.
 # 
 
-#
-# Program arguments.
-#   $1: Number of loop iterations.
-#   $2: Output directory.
-#
-NITERATIONS=$1 # Number of iterations.
+# Workloads
+WORKLOAD=(beta gamma gaussian)
 
-# Directories
-BINDIR=$PWD/bin
-OUTDIR=$2
+# Skewness
+SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
 
-# Import some variables.
-source scripts/var.sh
+# Kernels
+KERNELS=(linear logarithm quadratic)
 
-# Create directories.
-mkdir -p $OUTDIR
 
-# Run workload generator.
-for workload in "${WORKLOAD[@]}";
-do
-	for skewness in "${SKEWNESS[@]}";
-	do
-		for kernel in "${KERNELS[@]}";
-		do
-			$BINDIR/generator              \
-				--ntasks $NITERATIONS      \
-				--pdf $workload            \
-				--skewness $skewness       \
-				--kernel $kernel           \
-			2> $OUTDIR/$workload-$NITERATIONS-$skewness-$kernel.csv
-		done
-	done
-done
+# Scheduling strategies.
+STRATEGIES=(workload-aware dynamic srr)
 
+
+# Workload sorting.
+SORT=(random)

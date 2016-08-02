@@ -30,23 +30,8 @@ BINDIR=$PWD/bin
 INDIR=$PWD/input
 CSVDIR=$PWD/csv
 
-# Kernel type.
-KERNEL_TYPE=linear
-
-# Scheduling strategies.
-STRATEGIES=(workload-aware dynamic srr)
-
-# Workloads.
-WORKLOAD=(gamma gaussian)
-
-# Kernels
-KERNELS=(linear logarithm)
-
-# Workload sorting.
-SORT=(random)
-
-# Skewness
-SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
+# Import some variables.
+source scripts/var.sh
 
 #===============================================================================
 #                              PARSING ROUTINES

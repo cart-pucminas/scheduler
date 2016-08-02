@@ -30,14 +30,8 @@ BINDIR=$PWD/bin
 INDIR=$PWD/input
 CSVDIR=$PWD/csv
 
-# Workloads
-WORKLOAD=(beta gamma gaussian poisson)
-
-# Skewness
-SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
-
-# Kernels
-KERNELS=(linear logarithm)
+# Import some variables.
+source scripts/var.sh
 
 #===============================================================================
 #                              PARSING ROUTINES
