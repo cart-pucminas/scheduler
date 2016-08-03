@@ -29,6 +29,7 @@
 	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.        */
 	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
 	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
+	#define SCHEDULER_BEST              5 /**< Best scheduler.           */
 	/**@}*/
 
 #endif /* _COMMON_H_ */

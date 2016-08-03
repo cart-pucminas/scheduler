@@ -40,7 +40,7 @@
 /**
  * @brief Number of iterations for random sorting.
  */
-#define SORT_NITERATIONS 1000
+#define SORT_NITERATIONS 100
 
 /**
  * @name Program Parameters
@@ -176,6 +176,8 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = SCHEDULER_WORKLOAD_AWARE;
 			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = SCHEDULER_SMART_ROUND_ROBIN;
+			else if (!strcmp(argv[i], "best"))
+				args.scheduler = SCHEDULER_BEST;
 		}
 	}
 	

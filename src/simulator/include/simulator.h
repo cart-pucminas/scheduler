@@ -72,6 +72,9 @@
 	extern void scheduler_smart_round_robin_init(const unsigned *, unsigned, unsigned);
 	extern unsigned scheduler_smart_round_robin_sched(unsigned);
 	extern void scheduler_smart_round_robin_end(void);
+	extern void scheduler_best_init(const unsigned *, unsigned, unsigned);
+	extern unsigned scheduler_best_sched(unsigned);
+	extern void scheduler_best_end(void);
 
 	/*========================================================================*
 	 *                             Delta Queue                                *
