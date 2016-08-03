@@ -28,7 +28,7 @@ KERNELS=(linear logarithm quadratic)
 
 
 # Scheduling strategies.
-STRATEGIES=(workload-aware dynamic srr best)
+STRATEGIES=(static dynamic workload-aware srr best)
 
 
 # Workload sorting.

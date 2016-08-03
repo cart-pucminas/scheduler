@@ -18,17 +18,20 @@
 # MA 02110-1301, USA.
 # 
 
+#
 # Program arguments.
 #   $1: Number of threads.
-#   $2: Number of loop iterations.
+#   $2: Number of tasks.
+#   $3: Input directory.
+#   $4: Output directory.
 #
-NTHREADS=$1    # Number of threads.
-NITERATIONS=$2 # Number of iterations.
+NTHREADS=$1 # Number of threads.
+NTASKS=$2   # Number of tasks.
+INDIR=$3    # Input directory.
+OUTDIR=$4   # Output directory.
 
 # Directories.
 BINDIR=$PWD/bin
-INDIR=$PWD/input
-CSVDIR=$PWD/csv
 
 # Import some variables.
 source scripts/var.sh
@@ -43,13 +46,13 @@ source scripts/var.sh
 #
 function extract_variables
 {	
-	grep "Total Cycles" $CSVDIR/$1.tmp \
+	grep "Total Cycles" $1.tmp \
 	| cut -d" " -f 3           \
-	>> $CSVDIR/$1-cycles.csv
+	>> $OUTDIR/$1-cycles.csv
 	
-	grep "Thread" $CSVDIR/$1.tmp       \
+	grep "Thread" $1.tmp       \
 	| cut -d" " -f 3           \
-	>> $CSVDIR/$1-workload.csv
+	>> $OUTDIR/$1-workload.csv
 }
 
 #
@@ -58,11 +61,12 @@ function extract_variables
 #  $2 Number of threads.
 #  $3 Workload.
 #  $4 Skewness.
-#  $5 Sorting
+#  $5 Kernel.
+#  $6 Sorting
 #
 function parse_benchmark
 {
-	extract_variables benchmark-$3-$4-$5-$NITERATIONS-$1-$2
+	extract_variables benchmark-$3-$4-$6-$NTASKS-$5-$1-$2
 }
 
 #===============================================================================
@@ -70,47 +74,54 @@ function parse_benchmark
 #===============================================================================
 
 # Create directories.
-mkdir -p $CSVDIR
+mkdir -p $OUTDIR
 
 for workload in "${WORKLOAD[@]}";
 do
 	for skewness in "${SKEWNESS[@]}";
 	do
-	
 		for kernel in "${KERNELS[@]}";
 		do
-			$BINDIR/searcher                                        \
-				--input $INDIR/$workload-$NITERATIONS-$skewness-$kernel.csv \
-				--ntasks $NITERATIONS                                        \
-				--nthreads $NTHREADS                                         \
-				--crossover 0.80                                             \
-				--mutation 0.10                                              \
-				--replacement 0.90                                           \
-				--elitism 0.01                                               \
-				--popsize 1000                                               \
-				--ngen 10000                                                 \
-			1> $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
-			parse_benchmark ga $NTHREADS $workload $skewness random
-				
-			# House keeping.
-			rm -f $CSVDIR/benchmark-$workload-$skewness-random-$NITERATIONS-ga-$NTHREADS.tmp
+			for sorting in "${SORT[@]}";
+			do
+				$BINDIR/searcher                                           \
+					--input $INDIR/$workload-$NTASKS-$skewness-$kernel.csv \
+					--ntasks $NTASKS                                       \
+					--nthreads $NTHREADS                                   \
+					--crossover 0.80                                       \
+					--mutation 0.10                                        \
+					--replacement 0.90                                     \
+					--elitism 0.01                                         \
+					--popsize 1000                                         \
+					--ngen 100                                             \
+				1> benchmark-$workload-$skewness-$sorting-$NTASKS-$kernel-ga-$NTHREADS.tmp
+				parse_benchmark ga $NTHREADS $workload $skewness $kernel $sorting
+					
+				# House keeping.
+				rm -f benchmark-$workload-$skewness-$sorting-$NTASKS-$kernel-ga-$NTHREADS.tmp
+			done
 		done
 	done
 done
 
 for pdf in "${WORKLOAD[@]}";
 do
-
 	# Move files.
-	mkdir -p $CSVDIR/$pdf/cycles $CSVDIR/$pdf/workload
-	mv $CSVDIR/*-$pdf-*-cycles.csv $CSVDIR/$pdf/cycles
+	mkdir -p $OUTDIR/$pdf/cycles $OUTDIR/$pdf/workload
+	mv $OUTDIR/*-$pdf-*-cycles.csv $OUTDIR/$pdf/cycles
 	
-	# Header.
-	echo ${SKEWNESS[@]} \
-		> $CSVDIR/$pdf/cycles/benchmark-$pdf-random-$NITERATIONS-ga-$NTHREADS-cycles.csv
-			
-	# Data.
-	paste -d " " \
-		$CSVDIR/$pdf/cycles/benchmark-$pdf-0.???-random-$NITERATIONS-ga-$NTHREADS-cycles.csv \
-		>> $CSVDIR/$pdf/cycles/benchmark-$pdf-random-$NITERATIONS-ga-$NTHREADS-cycles.csv
+	for kernel in "${KERNELS[@]}";
+	do
+		for sorting in "${SORT[@]}";
+		do		
+			# Header.
+			echo ${SKEWNESS[@]}                                                              \
+				> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-ga-$NTHREADS-cycles.csv
+					
+			# Data.
+			paste -d " "                                                                         \
+				$OUTDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NTASKS-$kernel-ga-$NTHREADS-cycles.csv \
+				>> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-ga-$NTHREADS-cycles.csv
+		done
+	done
 done
