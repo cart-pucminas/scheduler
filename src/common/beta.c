@@ -47,12 +47,10 @@ double *beta(int nclasses, double skewness)
 	freq = 0.5; sum = 0.0;
 	for (int i = 0; i < nclasses/2; i++)
 	{
-		if (i < (2*nclasses)/16)
+		if (i < (4*nclasses)/12)
 			freq *= skewness;
-		else if (i < (4*nclasses)/16)
-			freq *= 0.85;
-		else if (i < (6*nclasses)/16)
-			freq *= 0.90;
+		else
+			freq *= 0.95;
 		
 		histogram[i] = freq;
 		histogram[nclasses - i - 1] = freq;
