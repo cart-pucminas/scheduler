@@ -318,6 +318,10 @@ static unsigned *tasks_create
 		}
 	}
 	
+	/* Fill up remainder tasks with minimum load. */
+	for (unsigned i = k; i < ntasks; i++)
+		tasks[i] = FACTOR;
+	
 	return (tasks);
 }
 
