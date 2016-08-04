@@ -19,14 +19,14 @@
 
 #
 # Program arguments.
-#   $1: Number of threads.
-#   $2: Number of tasks.
+#   $1: Number of tasks.
+#   $2: Number of threads.
 #   $3: Input directory.
 #   $4: Output directory.
 #
-NTHREADS=$1 # Number of threads.
-NTASKS=$2   # Number of tasks.
-INDIR=$3   # Input directory.
+NTASKS=$1   # Number of tasks.
+NTHREADS=$2 # Number of threads.
+INDIR=$3    # Input directory.
 OUTDIR=$4   # Output directory.
 
 # Directories.

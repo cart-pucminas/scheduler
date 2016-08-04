@@ -19,12 +19,12 @@
 
 #
 # Program arguments.
-#   $1: Number of tasks.
-#   $2: Number of task classes.
+#   $1: Number of task classes.
+#   $2: Number of tasks.
 #   $3: Output directory.
 #
-NTASKS=$1   # Number of tasks.
-NCLASSES=$2 # Number of task classes.
+NCLASSES=$1 # Number of task classes.
+NTASKS=$2   # Number of tasks.
 OUTDIR=$3   # Output directory.
 
 # Directories
@@ -52,8 +52,6 @@ do
 			2> $OUTDIR/$workload-$NTASKS-$skewness-$kernel-histogram.csv \
 			| sort -n                                                    \
 			> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
-			
-			
 		done
 	done
 done
