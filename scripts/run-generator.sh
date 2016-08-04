@@ -43,13 +43,14 @@ do
 	do
 		for kernel in "${KERNELS[@]}";
 		do
-			$BINDIR/generator        \
-				--nclasses $NCLASSES \
-				--ntasks $NTASKS     \
-				--pdf $workload      \
-				--skewness $skewness \
-				--kernel $kernel     \
-			2> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
+			$BINDIR/generator                                            \
+				--nclasses $NCLASSES                                     \
+				--ntasks $NTASKS                                         \
+				--pdf $workload                                          \
+				--skewness $skewness                                     \
+				--kernel $kernel                                         \
+			2> $OUTDIR/$workload-$NTASKS-$skewness-$kernel-histogram.csv \
+			1> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
 		done
 	done
 done
