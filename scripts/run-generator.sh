@@ -50,7 +50,10 @@ do
 				--skewness $skewness                                     \
 				--kernel $kernel                                         \
 			2> $OUTDIR/$workload-$NTASKS-$skewness-$kernel-histogram.csv \
-			1> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
+			| sort -n                                                    \
+			> $OUTDIR/$workload-$NTASKS-$skewness-$kernel.csv
+			
+			
 		done
 	done
 done
