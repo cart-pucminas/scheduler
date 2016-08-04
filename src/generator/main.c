@@ -79,7 +79,8 @@ static struct
 	int ntasks;      /**< Number of tasks.                       */
 	int pdf;         /**< Probability density function.          */
 	double skewness; /**< Probability density function skewness. */
-} args = { 0, 0, 0, 0.0 };
+	int nclasses;    /**< Number of task classes.                */
+} args = { 0, 0, 0, 0.0 , 0};
 
 /**
  * @brief Prints program usage and exits.
@@ -91,6 +92,7 @@ static void usage(void)
 	printf("Usage: generator [options]\n");
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
+	printf("  --nclasses <number> Number of task classes.\n");
 	printf("  --ntasks <number>   Number tasks.\n");
 	printf("  --kernel <name>     Kernel type.\n");
 	printf("           linear     Linear O(n)\n");
@@ -171,6 +173,8 @@ static void checkargs(const char *pdfname, const char *kernelname)
 		error("invalid skewness for probability density function");
 	else if (kernelname == NULL)
 		error("invalid kernel type");
+	else if (!(args.nclasses > 0))
+		error("invalid number of task classes");
 }
 
 /**
@@ -197,6 +201,8 @@ static void readargs(int argc, const char **argv)
 			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
+		else if (!strcmp(argv[i], "--nclasses"))
+			args.nclasses = atoi(argv[++i]);
 	}
 	
 	checkargs(pdfname, kernelname);
@@ -212,13 +218,13 @@ static void readargs(int argc, const char **argv)
 /**
  * @brief Builds tasks histogram.
  * 
- * @param pdf         Probability density functions.
- * @param ntasks Number of tasks.
- * @param skewness    Skewness for probability density function.
+ * @param pdf      Probability density functions.
+ * @param nclasses Number of task classes.
+ * @param skewness Skewness for probability density function.
  * 
  * @returns tasks histogram.
  */
-static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
+static double *histogram_create(unsigned pdf, int nclasses, double skewness)
 {
 	double *h = NULL;
 	
@@ -227,22 +233,22 @@ static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
 	{
 		/* Beta distribution. */
 		case PDF_BETA:
-			h = beta(ntasks, skewness);
+			h = beta(nclasses, skewness);
 			break;
 			
 		/* Gamma distribution. */
 		case PDF_GAMMA:
-			h = gamma(ntasks, skewness);
+			h = gamma(nclasses, skewness);
 			break;
 			
 		/* Gaussian distribution. */
 		case PDF_GAUSSIAN:
-			h = gaussian(ntasks, skewness);
+			h = gaussian(nclasses, skewness);
 			break;
 			
 		/* Poisson distribution. */
 		case PDF_POISSON:
-			h = poisson(ntasks, skewness);
+			h = poisson(nclasses, skewness);
 			break;
 			
 		/* Shouldn't happen. */
@@ -257,47 +263,59 @@ static double *histogram_create(unsigned pdf, unsigned ntasks, double skewness)
 /**
  * @brief Create tasks.
  * 
- * @param h tasks histogram.
- * @param ntasks Number of tasks.
+ * @param h        Tasks histogram.
+ * @param nclasses Number of task classes.
+ * @param ntasks   Number of tasks.
  * 
  * @returns Tasks.
  */
-static unsigned *tasks_create(const double *h, unsigned ntasks, int kernel)
+static unsigned *tasks_create
+(const double *h, int nclasses, unsigned ntasks, int kernel)
 {
+	int k;
 	unsigned *tasks;
-	const unsigned FACTOR = 10000;
+	const unsigned FACTOR = 10;
 	
 	tasks = smalloc(ntasks*sizeof(unsigned));
+	memset(tasks, 0, ntasks*sizeof(unsigned));
 	
-	for (unsigned i = 0; i < ntasks; i++)
+	k = 0;
+	for (int i = 0; i < nclasses; i++)
 	{
-		double x;
+		int n;
 		
-		x = h[i]*FACTOR;
+		n = floor(h[i]*ntasks);
 		
-		/* Check for corner cases. */
-		if (x < 1)
-			error("bad multiplying factor");
-		
-		switch (kernel)
+		for (int j = 0; j < n; j++)
 		{
-			/* Logarithmic kernel. */
-			case KERNEL_LOGARITHMIC:
-				x = x*log(x);
-				break;
+			double x;
 			
-			/* Quadratic kernel. */
-			case KERNEL_QUADRATIC:
-				x = x*x;
-				break;
-			
-			/* Linear kernel. */
-			default:
-			case KERNEL_LINEAR:
-				break;
-		}
+			x = (i + 1)*FACTOR;
 		
-		tasks[i] = ceil(x);
+			/* Check for corner cases. */
+			if (x < 1)
+				error("bad multiplying factor");
+			
+			switch (kernel)
+			{
+				/* Logarithmic kernel. */
+				case KERNEL_LOGARITHMIC:
+					x = x*log(x);
+					break;
+				
+				/* Quadratic kernel. */
+				case KERNEL_QUADRATIC:
+					x = x*x;
+					break;
+				
+				/* Linear kernel. */
+				default:
+				case KERNEL_LINEAR:
+					break;
+			}
+			
+			tasks[k++] = ceil(x);
+		}
 	}
 	
 	return (tasks);
@@ -316,12 +334,16 @@ int main(int argc, const const char **argv)
 	unsigned *tasks;
 	readargs(argc, argv);
 
-	h = histogram_create(args.pdf, args.ntasks, args.skewness);
-	tasks = tasks_create(h, args.ntasks, args.kernel);
+	h = histogram_create(args.pdf, args.nclasses, args.skewness);
+	tasks = tasks_create(h, args.nclasses, args.ntasks, args.kernel);
 	
+	/* Print task classes. */
+	for (int i = 0; i < args.nclasses; i++)
+		fprintf(stderr, "%lf\n", h[i]);
+		
 	/* Print tasks. */
 	for (int i = 0; i < args.ntasks; i++)
-		fprintf(stderr, "%u\n", tasks[i]);
+		printf("%u\n", tasks[i]);
 	
 	/* House keeping. */
 	free(h);

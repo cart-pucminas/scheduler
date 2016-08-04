@@ -20,10 +20,12 @@
 #
 # Program arguments.
 #   $1: Number of tasks.
-#   $2: Output directory.
+#   $2: Number of task classes.
+#   $3: Output directory.
 #
-NTASKS=$1 # Number of tasks.
-OUTDIR=$2 # Output directory.
+NTASKS=$1   # Number of tasks.
+NCLASSES=$2 # Number of task classes.
+OUTDIR=$3   # Output directory.
 
 # Directories
 BINDIR=$PWD/bin
@@ -42,6 +44,7 @@ do
 		for kernel in "${KERNELS[@]}";
 		do
 			$BINDIR/generator        \
+				--nclasses $NCLASSES \
 				--ntasks $NTASKS     \
 				--pdf $workload      \
 				--skewness $skewness \
