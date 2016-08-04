@@ -261,6 +261,41 @@ static double *histogram_create(unsigned pdf, int nclasses, double skewness)
 }
 
 /**
+ * @brief Applies a kernel in a load.
+ * 
+ * @param load   Target load.
+ * @param kernel Kernel.
+ * 
+ * @returns Resulting load.
+ */
+static double apply_kernel(double load, int kernel)
+{
+	double x;
+	
+	x = load;
+	
+	switch (kernel)
+	{
+		/* Logarithmic kernel. */
+		case KERNEL_LOGARITHMIC:
+			x = x*log(x);
+			break;
+			
+		/* Quadratic kernel. */
+		case KERNEL_QUADRATIC:
+			x = x*x;
+			break;
+				
+		/* Linear kernel. */
+		default:
+		case KERNEL_LINEAR:
+			break;
+	}
+	
+	return (x);
+}
+
+/**
  * @brief Create tasks.
  * 
  * @param h        Tasks histogram.
@@ -296,31 +331,13 @@ static unsigned *tasks_create
 			if (x < 1)
 				error("bad multiplying factor");
 			
-			switch (kernel)
-			{
-				/* Logarithmic kernel. */
-				case KERNEL_LOGARITHMIC:
-					x = x*log(x);
-					break;
-				
-				/* Quadratic kernel. */
-				case KERNEL_QUADRATIC:
-					x = x*x;
-					break;
-				
-				/* Linear kernel. */
-				default:
-				case KERNEL_LINEAR:
-					break;
-			}
-			
-			tasks[k++] = ceil(x);
+			tasks[k++] = ceil(apply_kernel(x, kernel));
 		}
 	}
 	
 	/* Fill up remainder tasks with minimum load. */
 	for (unsigned i = k; i < ntasks; i++)
-		tasks[i] = FACTOR;
+			tasks[k++] = ceil(apply_kernel(FACTOR, kernel));
 	
 	return (tasks);
 }
