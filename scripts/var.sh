@@ -18,7 +18,7 @@
 # 
 
 # Workloads
-WORKLOAD=(beta gamma gaussian)
+WORKLOAD=(beta gamma gaussian uniform)
 
 # Skewness
 SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)

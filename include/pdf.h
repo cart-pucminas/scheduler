@@ -27,5 +27,6 @@
 	extern double *gamma(int, double);
 	extern double *gaussian(int, double);
 	extern double *poisson(int, double);
+	extern double *uniform(int, double);
 
 #endif /* PDF_H_ */

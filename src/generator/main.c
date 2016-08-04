@@ -30,11 +30,12 @@
  * @brief Supported probability density functions.
  */
 /**@{*/
-#define NR_PDFS      4 /**< Number of supported PDFs. */
+#define NR_PDFS      5 /**< Number of supported PDFs. */
 #define PDF_BETA     1 /**< Beta.                     */
 #define PDF_GAMMA    2 /**< Gamma.                    */
 #define PDF_GAUSSIAN 3 /**< Gaussian.                 */
 #define PDF_POISSON  4 /**< Poisson.                  */
+#define PDF_UNIFORM  5 /**< Uniform.                  */
 /**@}*/
 
 /**
@@ -44,7 +45,8 @@ static const char *pdfnames[NR_PDFS] = {
 	"beta",     /* Beta.     */
 	"gamma",    /* Gammma.   */
 	"gaussian", /* Gaussian. */
-	"poisson"   /* Poisson.  */
+	"poisson",  /* Poisson.  */
+	"uniform"   /* Uniform.  */
 };
 
 /**
@@ -249,6 +251,11 @@ static double *histogram_create(unsigned pdf, int nclasses, double skewness)
 		/* Poisson distribution. */
 		case PDF_POISSON:
 			h = poisson(nclasses, skewness);
+			break;
+			
+		/* Uniform distribution. */
+		case PDF_UNIFORM:
+			h = uniform(nclasses, skewness);
 			break;
 			
 		/* Shouldn't happen. */
