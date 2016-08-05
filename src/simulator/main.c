@@ -38,21 +38,17 @@
 /**@}*/
 
 /**
- * @brief Number of iterations for random sorting.
- */
-#define SORT_NITERATIONS 100
-
-/**
  * @name Program Parameters
  */
 static struct
 {
-	const char *input; /**< Input data file.   */
-	int nthreads;       /**< Number of threads. */
-	int ntasks;         /**< Number of tasks.   */
-	int sort;           /**< Sorting order.     */
-	int scheduler;      /**< Loop scheduler.    */
-} args = { NULL, 0, 0, 0, SCHEDULER_NONE };
+	const char *input; /**< Input data file.         */
+	int nthreads;      /**< Number of threads.       */
+	int ntasks;        /**< Number of tasks.         */
+	int sort;          /**< Sorting order.           */
+	int scheduler;     /**< Loop scheduler.          */
+	int seed;          /**< Seed for task shuffling. */
+} args = { NULL, 0, 0, 0, SCHEDULER_NONE, 0 };
 
 /**
  * @brief Chunk size for the dynamic scheduling.
@@ -87,6 +83,7 @@ static void usage(void)
 	printf("         descending      Descending order\n");
 	printf("         random          Random order\n");
 	printf("  --chunksize <num>      Chunk size for the dynamic scheduling\n");
+	printf("  --seed <num>           Seed for task shuffling\n");
 	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
@@ -166,6 +163,8 @@ static void readargs(int argc, const char **argv)
 			args.input = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
+		else if (!strcmp(argv[i], "--seed"))
+			args.seed = atoi(argv[++i]);
 		else
 		{
 			if (!strcmp(argv[i], "static"))
@@ -344,36 +343,31 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
-	int i;
 	unsigned cycles;
 	unsigned *tasks;
+	
 	readargs(argc, argv);
 
-	i = 0;
-	do
-	{
-		tasks = readfile(args.input, args.ntasks);
+	tasks = readfile(args.input, args.ntasks);
 	
-		tasks_sort(tasks, args.ntasks, args.sort, i);
+	tasks_sort(tasks, args.ntasks, args.sort, args.seed);
 		
-		threads_spawn();
-		schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
+	threads_spawn();
+	schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
 		
-		/* Print statistics. */
-		cycles = 0;
-		for (int i = 0; i < args.nthreads; i++)
-		{
-			if (threads[i].workload > cycles)
-				cycles = threads[i].workload;
-			fprintf(stderr, "Thread %u: %u\n", i, threads[i].workload);
-		}
-		fprintf(stderr, "Total Cycles: %u\n", cycles);
-		threads_join();
-
-		/* House keeping. */
-		free(tasks);
+	/* Print statistics. */
+	cycles = 0;
+	for (int i = 0; i < args.nthreads; i++)
+	{
+		if (threads[i].workload > cycles)
+			cycles = threads[i].workload;
+		fprintf(stderr, "Thread %u: %u\n", i, threads[i].workload);
 	}
-	while ((args.sort == SORT_RANDOM) && (++i < SORT_NITERATIONS));
+	fprintf(stderr, "Total Cycles: %u\n", cycles);
+	threads_join();
+
+	/* House keeping. */
+	free(tasks);
 		
 	return (EXIT_SUCCESS);
 }
