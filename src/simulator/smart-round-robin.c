@@ -22,7 +22,7 @@
 
 #include <mylib/util.h>
 
-#include "simulator.h"
+#include <simulator.h>
 
 /**
  * @brief Smart round-robin scheduler data.

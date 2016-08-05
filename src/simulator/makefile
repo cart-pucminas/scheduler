@@ -1,5 +1,5 @@
 #
-# Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com
+# Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,33 +17,16 @@
 # MA 02110-1301, USA.
 #
 
-all: static dynamic smart-round-robin oracle guided
+# Executable file.
+EXEC=scheduler
 
-# Builds static kernels.
-static:
-	cd is-kernel && $(MAKE) static
-	cd mst-kernel && $(MAKE) static
+# Tweaks on toolchain.
+CFLAGS += -I include
 
-# Builds dynamic kernels.
-dynamic:
-	cd is-kernel && $(MAKE) dynamic
-	cd mst-kernel && $(MAKE) dynamic
-
-# Builds guided kernels.
-guided:
-	cd is-kernel && $(MAKE) guided
-
-# Builds runtime kernels.
-smart-round-robin:
-	cd is-kernel && $(MAKE) smart-round-robin
-	cd mst-kernel && $(MAKE) smart-round-robin
-
-# Builds oracle kernels.
-oracle:
-	cd mst-kernel && $(MAKE) oracle
-
+# Builds simulator.
+all: *.c
+	$(CC) $(CFLAGS) $^ -o $(BINDIR)/$(EXEC) $(OBJ) $(LIBS)
+	
 # Cleans compilation files.
 clean:
-	cd is-kernel && $(MAKE) clean
-	cd mst-kernel && $(MAKE) clean
-
+	rm -f $(BINDIR)/$(EXEC)

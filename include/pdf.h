@@ -1,5 +1,5 @@
 /*
- * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,16 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef BENCHMARK_H_
-#define BENCHMARK_H_
-
+#ifndef PDF_H_
+#define PDF_H_
+	
+	#include <stddef.h>
+	
 	/* Forward definitions. */
-	extern void benchmark(const unsigned *, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
+	extern double *beta(int, double);
+	extern double *gamma(int, double);
+	extern double *gaussian(int, double);
+	extern double *poisson(int, double);
+	extern double *uniform(int, double);
 
-#endif /* BENCHMARK_H_ */
+#endif /* PDF_H_ */

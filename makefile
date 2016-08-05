@@ -31,7 +31,6 @@ export MYLIB = mylib-0.7
 export LIBS  = $(LIBDIR)/libmy.a
 export LIBS += $(CONTRIBDIR)/lib/libgsl.a
 export LIBS += $(CONTRIBDIR)/lib/libgslcblas.a
-export LIBS += $(CONTRIBDIR)/lib/libpapi.a
 export LIBS += -lm
 
 # Toolchain.
@@ -44,7 +43,7 @@ export CFLAGS += -pedantic -Wall -Wextra -Werror -fopenmp
 export CFLAGS += -O3
 
 # Builds everything.
-all: benchmark simulator searcher generator
+all: simulator generator searcher
 
 # Builds libraries.
 libs:
@@ -55,11 +54,6 @@ libs:
 	cd $(MYLIB) &&                                     \
 	$(MAKE) install PREFIX=$(PREFIX)
 	rm -rf $(CONTRIBDIR)/$(MYLIB)
-
-# Builds the benchmark.
-benchmark: libs
-	mkdir -p $(BINDIR)
-	cd $(SRCDIR) && $(MAKE) benchmark
 
 # Builds the simulator.
 simulator: libs

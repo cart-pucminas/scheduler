@@ -17,30 +17,37 @@
 # MA 02110-1301, USA.
 #
 
+# Common C source files.
+SRC = $(wildcard $(CURDIR)/common/*.c)
+
+# Common object files.
+export OBJ = $(SRC:.c=.o)
+
 # Conflicts.
-.PHONY: benchmark
 .PHONY: simulator
 .PHONY: searcher
 .PHONY: generator
-# Builds benchmark.
-benchmark: benchmark/*.c common/*.c
-	$(CC) $(CFLAGS) -rdynamic -fopenmp -O0 $^ -o $(BINDIR)/benchmark $(LIBS)
 
 # Builds simulator.
-simulator: simulator/*.c common/*.c
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/scheduler $(LIBS)
+simulator: $(OBJ)
+	cd simulator && $(MAKE) all
 	
 # Builds searcher.
-searcher: searcher/*.c common/*.c
+searcher: searcher/*.c $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $(BINDIR)/searcher $(LIBS)
 	
 # Builds generator.
-generator: generator/*.c common/*.c
+generator: generator/*.c $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $(BINDIR)/generator $(LIBS)
+	
+# Builds common objects.
+%.o: %.c
+	$(CC) $< $(CFLAGS) -c -o $@
 
 # Cleans compilation files.
 clean:
-	@rm -f $(BINDIR)/benchmark
+	@rm -f $(OBJ)
+	cd simulator && $(MAKE) clean
 	@rm -f $(BINDIR)/scheduler
 	@rm -f $(BINDIR)/searcher
 	@rm -f $(BINDIR)/generator

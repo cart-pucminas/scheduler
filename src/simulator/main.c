@@ -17,6 +17,7 @@
  * MA 02110-1301, USA.
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,24 +26,39 @@
 
 #include <mylib/util.h>
 #include <common.h>
-#include "simulator.h"
+#include <simulator.h>
+
+/**
+ * @brief Sorting order types.
+ */
+/**@{*/
+#define SORT_ASCENDING  1 /**< Ascending sort.  */
+#define SORT_DESCENDING 2 /**< Descending sort. */
+#define SORT_RANDOM     3 /**< Random sort.     */
+/**@}*/
+
+/**
+ * @name Program Parameters
+ */
+static struct
+{
+	const char *input; /**< Input data file.         */
+	int nthreads;      /**< Number of threads.       */
+	int ntasks;        /**< Number of tasks.         */
+	int sort;          /**< Sorting order.           */
+	int scheduler;     /**< Loop scheduler.          */
+	int seed;          /**< Seed for task shuffling. */
+} args = { NULL, 0, 0, 0, SCHEDULER_NONE, 0 };
+
+/**
+ * @brief Chunk size for the dynamic scheduling.
+ */
+unsigned chunksize = 1;
 
 /**
  * @brief Threads.
  */
 struct thread *threads = NULL;
-
-/**
- * @name Simulation Parameters
- */
-/**@{*/
-static unsigned nthreads = 32;              /**< Number of threads.                     */
-static unsigned ntasks = 1024;              /**< Number of tasks.                       */
-static unsigned distribution = 0;           /**< Probability distribution.              */
-static unsigned scheduler = SCHEDULER_NONE; /**< Loop scheduler.                        */
-static unsigned niterations = 1;            /**< Number of iterations.                  */
-unsigned chunksize = 1;                     /**< Chunk size for the dynamic scheduling. */
-/**@}*/
 
 /**
  * @brief Prints program usage and exits.
@@ -59,14 +75,67 @@ static void usage(void)
 	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
 	printf("  smart-round-robin Simulate smart round-robin loop scheduling\n");
 	printf("Options:\n");
-	printf("  --iterations           Number of iterations\n");
-	printf("  --nthreads <num>       Number of threads\n");
-	printf("  --ntasks <num>         Number of tasks\n");
+	printf("  --input <filename>     Input workload file\n");
+	printf("  --nthreads <number>    Number of threads\n");
+	printf("  --niterations <number> Number iterations in the parallel loop\n");
+	printf("  --sort <type>          Loop iteration sorting\n");
+	printf("         ascending       Ascending order\n");
+	printf("         descending      Descending order\n");
+	printf("         random          Random order\n");
 	printf("  --chunksize <num>      Chunk size for the dynamic scheduling\n");
-	printf("  --distribution <name>  Input probability density function\n");
+	printf("  --seed <num>           Seed for task shuffling\n");
 	printf("  --help                 Display this message\n");
 
 	exit(EXIT_SUCCESS);
+}
+
+
+/*============================================================================*
+ *                                Get Routines                                *
+ *============================================================================*/
+
+/**
+ * @brief Gets tasks sorting type.
+ * 
+ * @param sortname Tasks sorting name.
+ * 
+ * @param Tasks sorting type.
+ */
+static int getsort(const char *sortname)
+{
+	if (!strcmp(sortname, "ascending"))
+		return (SORT_ASCENDING);
+	else if (!strcmp(sortname, "descending"))
+		return (SORT_DESCENDING);
+	else if (!strcmp(sortname, "random"))
+		return (SORT_RANDOM);
+	
+	error("unsupported tasks sorting type");
+	
+	/* Never gets here. */
+	return (-1);
+}
+
+/*============================================================================*
+ *                             Argument Checking                              *
+ *============================================================================*/
+
+/**
+ * @brief Checks program arguments.
+ */
+static void checkargs(const char *sortname)
+{
+	/* Check parameters. */
+	if (!(args.nthreads > 0))
+		error("invalid number of threads");
+	else if (!(args.ntasks > 0))
+		error("invalid number of iterations in the parallel loop");
+	else if (sortname == NULL)
+		error("invalid tasks sorting type");
+	else if (args.scheduler == SCHEDULER_NONE)
+		error("invalid scheduler");
+	else if (args.input == NULL)
+		error("missing input workload file");
 }
 
 /**
@@ -76,109 +145,168 @@ static void usage(void)
  */
 static void readargs(int argc, const char **argv)
 {
-	enum states{
-		STATE_READ_ARG,         /* Read argument.            */
-		STATE_SET_NTHREADS,     /* Set number of threads.    */
-		STATE_SET_NTASKS,       /* Set number of tasks.      */
-		STATE_SET_NITERATIONS,  /* Set number of iterations. */
-		STATE_SET_DISTRIBUTION, /* Set distribution.         */
-		STATE_SET_CHUNKSIZE};   /* Set chunk size.           */
-	
-	unsigned state;                /* Current state.     */
-	const char *distribution_name; /* Distribution name. */
-	
-	state = STATE_READ_ARG;
-	distribution_name = NULL;
+	const char *sortname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
-	{
-		const char *arg = argv[i];
-		
-		/* Set value. */
-		if (state != STATE_READ_ARG)
-		{
-			switch (state)
-			{
-				case STATE_SET_NTHREADS:
-					nthreads = atoi(arg);
-					state = STATE_READ_ARG;
-					break;
-				
-				case STATE_SET_NTASKS:
-					ntasks = atoi(arg);
-					state = STATE_READ_ARG;
-					break;
-				
-				case STATE_SET_DISTRIBUTION:
-					distribution_name = arg;
-					state = STATE_READ_ARG;
-					break;
-
-				case STATE_SET_NITERATIONS:
-					niterations = atoi(arg);
-					state = STATE_READ_ARG;
-					break;
-
-				case STATE_SET_CHUNKSIZE:
-					chunksize = atoi(arg);
-					state = STATE_READ_ARG;
-					break;
-			}
-			
-			continue;
-		}
-		
+	{	
 		/* Parse command. */
-		if (!strcmp(arg, "--nthreads"))
-			state = STATE_SET_NTHREADS;
-		else if (!strcmp(arg, "--niterations"))
-			state = STATE_SET_NITERATIONS;
-		else if (!strcmp(arg, "--ntasks"))
-			state = STATE_SET_NTASKS;
-		else if (!strcmp(arg, "--distribution"))
-			state = STATE_SET_DISTRIBUTION;
-		else if (!strcmp(arg, "--chunksize"))
-			state = STATE_SET_CHUNKSIZE;
-		else if (!strcmp(arg, "--help"))
+		if (!strcmp(argv[i], "--nthreads"))
+			args.nthreads = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--niterations"))
+			args.ntasks = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--sort"))
+			sortname = argv[++i];
+		else if (!strcmp(argv[i], "--chunksize"))
+			chunksize = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--input"))
+			args.input = argv[++i];
+		else if (!strcmp(argv[i], "--help"))
 			usage();
-		else if (!strcmp(arg, "static"))
-			scheduler = SCHEDULER_STATIC;
-		else if (!strcmp(arg, "dynamic"))
-			scheduler = SCHEDULER_DYNAMIC;
-		else if (!strcmp(arg, "workload-aware"))
-			scheduler = SCHEDULER_WORKLOAD_AWARE;
-		else if (!strcmp(arg, "smart-round-robin"))
-			scheduler = SCHEDULER_SMART_ROUND_ROBIN;
+		else if (!strcmp(argv[i], "--seed"))
+			args.seed = atoi(argv[++i]);
+		else
+		{
+			if (!strcmp(argv[i], "static"))
+				args.scheduler = SCHEDULER_STATIC;
+			else if (!strcmp(argv[i], "dynamic"))
+				args.scheduler = SCHEDULER_DYNAMIC;
+			else if (!strcmp(argv[i], "workload-aware"))
+				args.scheduler = SCHEDULER_WORKLOAD_AWARE;
+			else if (!strcmp(argv[i], "srr"))
+				args.scheduler = SCHEDULER_SMART_ROUND_ROBIN;
+			else if (!strcmp(argv[i], "best"))
+				args.scheduler = SCHEDULER_BEST;
+		}
 	}
 	
-	/* Check parameters. */
-	if (nthreads == 0)
-		error("invalid number of threads");
-	else if (niterations == 0)
-		error("invalid number of iterations");
-	else if (ntasks == 0)
-		error("invalid number of tasks");
-	else if (scheduler == SCHEDULER_NONE)
-		error("invalid scheduler");
-	else if (chunksize < 1)
-		error("invalid chunk size");
-	if (distribution_name != NULL)
-	{
-		for (unsigned i = 0; i < NDISTRIBUTIONS; i++)
-		{
-			if (!strcmp(distribution_name, distributions[i]))
-			{
-				distribution = i;
-				goto out;
-			}
-		}
-		error("unknown distribution");
-	}
-
-out:
-	return;
+	checkargs(sortname);
+	
+	args.sort = getsort(sortname);
 }
+
+/*============================================================================*
+ *                           WORKLOAD GENERATOR                               *
+ *============================================================================*/
+
+/**
+ * @brief Greater than.
+ * 
+ * @param a1 First element.
+ * @param a2 Second element.
+ * 
+ * @returns One if @p a1 is greater than @p a2 and minus one otherwise.
+ */
+static int greater(const void *a1, const void *a2)
+{
+	return ((*((unsigned *)a1) > *((unsigned *)a2)) ? 1 : -1);
+}
+
+/**
+ * @brief Less than.
+ * 
+ * @param a1 First element.
+ * @param a2 Second element.
+ * 
+ * @returns One if @p a1 is less than @p a2 and minus one otherwise.
+ */
+static int less(const void *a1, const void *a2)
+{
+	return ((*((unsigned *)a1) < *((unsigned *)a2)) ? 1 : -1);
+}
+
+/**
+ * @brief Shuffles and array.
+ * 
+ * @param a    Target array.
+ * @param n    Size of target array.
+ * @param seed Seed for shuffling.
+ */
+static void array_shuffle(unsigned *a, unsigned n, int seed)
+{
+	/* Let us be totally random. */
+	srand(seed);
+	
+	/* Shuffle array. */
+	for (unsigned i = 0; i < n - 1; i++)
+	{
+		unsigned j; /* Shuffle index.  */
+		unsigned t; /* Temporary data. */
+		
+		j = i + rand()/(RAND_MAX/(n - i) + 1);
+			
+		t = a[i];
+		a[i] = a[j];
+		a[j] = t;
+	}
+}
+
+/**
+ * @brief Sorts tasks.
+ * 
+ * @param tasks  Target tasks.
+ * @param ntasks Number of tasks.
+ * @param type   Sorting type.
+ * @param seed   Seed for shuffling.
+ */
+static void tasks_sort(unsigned *tasks, unsigned ntasks, int type, int seed)
+{
+	/* Random sort. */
+	if (type == SORT_RANDOM)
+		array_shuffle(tasks, ntasks, seed);
+
+	/* Ascending sort. */
+	else if (type == SORT_ASCENDING)
+		qsort(tasks, ntasks, sizeof(unsigned), greater);
+
+	/* Descending sort. */
+	else
+		qsort(tasks, ntasks, sizeof(unsigned), less);
+}
+
+/**
+ * @brief Reads input file
+ * 
+ * @param input Input filename.
+ * @param ntasks Number of tasks.
+ */
+static unsigned *readfile(const char *input, unsigned ntasks)
+{
+	FILE *fp;
+	unsigned *tasks;
+	
+	tasks = smalloc(ntasks*sizeof(unsigned));
+	
+	fp = fopen(input, "r");
+	assert(fp != NULL);
+	
+	/* Read file. */
+	for (unsigned i = 0; i < ntasks; i++)
+	{
+		if (fscanf(fp, "%u", &tasks[i]) == EOF)
+		{
+			if (feof(fp))
+				error("unexpected end of file");
+			else if (ferror(fp))
+				error("cannot read file");
+			else
+				error("unknown error");
+			break;
+		}
+	}
+	
+	/* I/O error. */
+	if (ferror(fp))
+		error("cannot read input file");
+	
+	fclose(fp);
+	
+	return (tasks);
+}
+
+/*============================================================================*
+ *                               THREAD MANAGER                               *
+ *============================================================================*/
 
 /**
  * @brief Spawn threads.
@@ -186,8 +314,8 @@ out:
 static void threads_spawn(void)
 {
 	/* Create threads. */
-	threads = smalloc(nthreads*sizeof(struct thread));
-	for (unsigned i = 0; i < nthreads; i++)
+	threads = smalloc(args.nthreads*sizeof(struct thread));
+	for (int i = 0; i < args.nthreads; i++)
 	{
 		threads[i].tid = i;
 		threads[i].workload = 0;
@@ -206,33 +334,40 @@ static void threads_join(void)
 	free(threads);
 }
 
+/*============================================================================*
+ *                                  SIMULATOR                                 *
+ *============================================================================*/
+
 /**
  * @brief Loop scheduler simulator.
  */
 int main(int argc, const const char **argv)
 {
+	unsigned cycles;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
-	
-	threads_spawn();
 
-	for (unsigned i = 0; i < niterations; i++)
-	{
-		tasks = create_tasks(distribution, ntasks);
+	tasks = readfile(args.input, args.ntasks);
 	
-		schedule(tasks, ntasks, nthreads, scheduler);
+	tasks_sort(tasks, args.ntasks, args.sort, args.seed);
 		
-		/* House keeping. */
-		free(tasks);
-	}
-	
+	threads_spawn();
+	schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
+		
 	/* Print statistics. */
-	for (unsigned i = 0; i < nthreads; i++)
-		printf("thread %u: %u\n", threads[i].tid, threads[i].workload);
-	
-	/* House keeping. */
+	cycles = 0;
+	for (int i = 0; i < args.nthreads; i++)
+	{
+		if (threads[i].workload > cycles)
+			cycles = threads[i].workload;
+		fprintf(stderr, "Thread %u: %u\n", i, threads[i].workload);
+	}
+	fprintf(stderr, "Total Cycles: %u\n", cycles);
 	threads_join();
-	
+
+	/* House keeping. */
+	free(tasks);
+		
 	return (EXIT_SUCCESS);
 }

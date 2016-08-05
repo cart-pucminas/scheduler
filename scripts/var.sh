@@ -1,5 +1,5 @@
 #
-# Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com
+# Copyright(C) 2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
-#
+# 
 
-tar -xjvf gsl-1.16.tar.bz2
-cd gsl-1.16
-./configure --prefix=$PWD/../
-make -j 4
-make install
-cd ..
-rm -rf gsl-1.16
+# Workloads
+WORKLOAD=(beta gamma gaussian uniform)
+
+# Skewness
+SKEWNESS=(0.750 0.775 0.800 0.825 0.850 0.875 0.900)
+
+# Kernels
+KERNELS=(linear logarithm quadratic)
 
 
+# Scheduling strategies.
+STRATEGIES=(static dynamic workload-aware srr best)
+
+# Workload sorting.
+SORT=(random)
