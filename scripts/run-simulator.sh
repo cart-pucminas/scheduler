@@ -23,17 +23,16 @@
 #   $2: Number of threads.
 #   $3: Input directory.
 #   $4: Output directory.
+#   $5: Experiments design.
 #
 NTASKS=$1   # Number of tasks.
 NTHREADS=$2 # Number of threads.
 INDIR=$3    # Input directory.
 OUTDIR=$4   # Output directory.
+DESIGN=$5   # Experiments design.
 
 # Directories.
 BINDIR=$PWD/bin
-
-# Import some variables.
-source scripts/var.sh
 
 #===============================================================================
 #                              PARSING ROUTINES
@@ -62,10 +61,11 @@ function extract_variables
 #  $4 Skewness.
 #  $5 Kernel.
 #  $6 Sorting
+#  $7 seed.
 #
 function parse_benchmark
 {
-	extract_variables benchmark-$3-$4-$6-$NTASKS-$5-$1-$2
+	extract_variables benchmark-$3-$4-$6-$NTASKS-$7-$5-$1-$2
 }
 
 #===============================================================================
@@ -80,16 +80,18 @@ function parse_benchmark
 #  $4 Skewness.
 #  $5 Kernel.
 #  $6 Sorting.
+#  $7 seed.
 #
 function run_benchmark
-{
+{	
 	$BINDIR/scheduler                       \
 		--input $INDIR/$3-$NTASKS-$4-$5.csv \
 		--nthreads $2                       \
 		--niterations $NTASKS               \
 		--sort $6                           \
+		--seed $7                           \
 		$1                                  \
-	2>> benchmark-$3-$4-$6-$NTASKS-$5-$1-$2.tmp
+	2>> benchmark-$3-$4-$6-$NTASKS-$7-$5-$1-$2.tmp
 }
 
 #===============================================================================
@@ -99,52 +101,17 @@ function run_benchmark
 # Create output directory.
 mkdir -p $OUTDIR
 
-for strategy in "${STRATEGIES[@]}";
+while read line
 do
-	for workload in "${WORKLOAD[@]}";
-	do	
-		for skewness in "${SKEWNESS[@]}";
-		do
-			for kernel in "${KERNELS[@]}";
-			do
-				for sorting in "${SORT[@]}";
-				do
-					run_benchmark $strategy $NTHREADS $workload $skewness $kernel $sorting
-					parse_benchmark $strategy $NTHREADS $workload $skewness $kernel $sorting
-					
-					# House keeping.
-					rm -f *.tmp
-				done
-			done
-		done
-	done
-done
-
-for pdf in "${WORKLOAD[@]}";
-do
-	# Move files.
-	mkdir -p $OUTDIR/$pdf/cycles $OUTDIR/$pdf/workload
-	mv $OUTDIR/*-$pdf-*-cycles.csv $OUTDIR/$pdf/cycles
-	mv $OUTDIR/*-$pdf-*-workload.csv $OUTDIR/$pdf/workload
+	strategy=`echo $line | cut -d " " -f 5`
+	pdf=`echo $line | cut -d " " -f 1`
+	skewness=`echo $line | cut -d " " -f 2`
+	kernel=`echo $line | cut -d " " -f 4`
+	seed=`echo $line | cut -d " " -f 3`
 	
-	for strategy in "${STRATEGIES[@]}";
-	do
-		for kernel in "${KERNELS[@]}";
-		do
-			for sorting in "${SORT[@]}";
-			do
-				# Header.
-				echo ${SKEWNESS[@]} \
-					> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
-				
-				# Data.
-				paste -d " "                                                                                         \
-					$OUTDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv \
-					>> $OUTDIR/$pdf/cycles/benchmark-$pdf-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
-				
-				# House keeping.
-				rm -f $OUTDIR/$pdf/cycles/benchmark-$pdf-0.???-$sorting-$NTASKS-$kernel-$strategy-$NTHREADS-cycles.csv
-			done
-		done
-	done
-done
+	run_benchmark $strategy $NTHREADS $pdf $skewness $kernel random $seed
+	parse_benchmark $strategy $NTHREADS $pdf $skewness $kernel random $seed
+
+	# House keeping.
+	rm -f *.tmp
+done < $DESIGN
