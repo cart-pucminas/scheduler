@@ -220,7 +220,8 @@ void ga(
 	double mutation,
 	double replacement)
 {
-	unsigned cycles;
+	unsigned total;
+	unsigned max, min;
 	unsigned *taskmap;
 	unsigned workload[_nthreads];
 	
@@ -248,17 +249,18 @@ void ga(
 	for (unsigned i = 0; i < _ntasks; i++)
 		workload[taskmap[i]] += tasks[i];
 	
-	/* Compute maximum number of cycles. */
-	cycles = 0;
+	/* Print statistics. */
+	max = 0; min = UINT_MAX; total = 0;
 	for (unsigned i = 0; i < nthreads; i++)
 	{
-		if (workload[i] > cycles)
-			cycles = workload[i];
-			
-		printf("Thread %u: %u\n", i, workload[i]);
+		if (min > workload[i])
+			min = workload[i];
+		if (max < workload[i])
+			max = workload[i];
+		total += workload[i];
 	}
-	
-	printf("Total Cycles: %u\n", cycles);
+	fprintf(stdout, "Total Cycles: %u\n", max);
+	fprintf(stdout, "Load Imbalance: %lf\n", ((double)(max-min))/total);
 		
 	/* House keeping. */
 	free(bestgen);
