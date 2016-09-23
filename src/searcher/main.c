@@ -53,8 +53,8 @@ struct
 	double replacement; /**< Replacement rate.      */
 	/**@}*/
 } args = {
-	NULL, 24, 12,
-	0.70, 0.01, 0.50, 1000, 100, 0.90
+	NULL, 0, 0,
+	0.0, 0.0, 0.0, 0, 0, 0.0
 };
 
 /**
