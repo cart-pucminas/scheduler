@@ -343,7 +343,8 @@ static void threads_join(void)
  */
 int main(int argc, const const char **argv)
 {
-	unsigned cycles;
+	unsigned total;
+	unsigned max, min;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
@@ -356,14 +357,17 @@ int main(int argc, const const char **argv)
 	schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
 		
 	/* Print statistics. */
-	cycles = 0;
+	max = 0; min = UINT_MAX; total = 0;
 	for (int i = 0; i < args.nthreads; i++)
 	{
-		if (threads[i].workload > cycles)
-			cycles = threads[i].workload;
-		fprintf(stderr, "Thread %u: %u\n", i, threads[i].workload);
+		if (min > threads[i].workload)
+			min = threads[i].workload;
+		if (max < threads[i].workload)
+			max = threads[i].workload;
+		total += threads[i].workload;
 	}
-	fprintf(stderr, "Total Cycles: %u\n", cycles);
+	fprintf(stderr, "Total Cycles: %u\n", max);
+	fprintf(stderr, "Load Imbalance: %lf\n", ((double)(max-min))/total);
 	threads_join();
 
 	/* House keeping. */
