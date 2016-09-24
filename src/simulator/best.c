@@ -30,18 +30,53 @@
  */
 static struct
 {
-	unsigned i0;           /**< Last scheduled iteration. */
-	unsigned ntasks;       /**< Number of tasks.          */
-	const unsigned *tasks; /**< Tasks.                    */
-	unsigned nthreads;     /**< Number of threads.        */
-	unsigned sum;          /**< Workload sum.             */
+	unsigned ntasks;       /**< Number of tasks.               */
+	unsigned nthreads;     /**< Number of threads.             */
+	const unsigned *tasks; /**< Tasks.                         */
+	unsigned *taskmap;     /**< Task map.             */
 } scheduler_data = {
 	0,
 	0,
 	NULL,
-	0,
-	0
+	NULL,
 };
+
+/**
+ * @brief Sorts the workload.
+ * 
+ * @param a Workload
+ * @param n Number of tasks.
+ * 
+ * @returns Sorting map.
+ */
+static unsigned *sort(unsigned *a, unsigned n)
+{
+	unsigned *map;
+	
+	map = smalloc(n*sizeof(unsigned));
+	for (unsigned i = 0; i < n; i++)
+		map[i] = i;
+		
+	/* Sort. */
+	for (unsigned i = 0; i < n - 1; i++)
+	{
+		for (unsigned j = i + 1; j < n; j++)
+		{
+			/* Swap. */
+			if (a[j] < a[i])
+			{
+				unsigned tmp1;
+				unsigned tmp2;
+				
+				tmp1 = a[j]; tmp2   = map[j];
+				a[j] = a[i]; map[j] = map[i];
+				a[i] = tmp1; map[i] = tmp2;
+			}
+		}
+	}
+	
+	return (map);
+} 
 
 /**
  * @brief Initializes the best scheduler.
@@ -55,15 +90,46 @@ static struct
 void scheduler_best_init
 (const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
+	unsigned *workload;      /* Workload of current thread. */
+	unsigned *sorted_tasks; /* Sorted tasks.                */
+	unsigned *sorting_map;  /* Sorting map.                 */
+	
+	/* Already initialized. */
+	if (scheduler_data.taskmap != NULL)
+		return;
+		
+	sorted_tasks = smalloc(ntasks*sizeof(unsigned));
+	memcpy(sorted_tasks, tasks, ntasks*sizeof(unsigned));
+	workload = smalloc(nthreads*sizeof(unsigned));
+	memset(workload, 0, nthreads*sizeof(unsigned));
+	
+	sorting_map = sort(sorted_tasks, ntasks);
+	
 	/* Initialize scheduler data. */
-	scheduler_data.i0 = 0;
 	scheduler_data.ntasks = ntasks;
+	scheduler_data.taskmap = smalloc(ntasks*sizeof(unsigned));
 	scheduler_data.tasks = tasks;
 	scheduler_data.nthreads = nthreads;
-	scheduler_data.sum = 0;
+		
+	/* Assign tasks to threads. */
+	for (unsigned i = ntasks; i > 0; i--)
+	{
+		unsigned tid = 0;
+
+		for (unsigned j = 1; j < nthreads; j++)
+		{
+			if (workload[j] < workload[tid])
+				tid = j;
+		}
+
+		workload[tid] += tasks[i - 1];
+		scheduler_data.taskmap[sorting_map[i - 1]] = tid;
+	}
 	
-	for (unsigned i = 0; i < ntasks; i++)
-		scheduler_data.sum += tasks[i];
+	/* House keeping. */
+	free(sorting_map);
+	free(workload);
+	free(sorted_tasks);
 }
 
 /**
@@ -73,7 +139,8 @@ void scheduler_best_init
  */
 void scheduler_best_end(void)
 {
-	/* NOOP */
+	free(scheduler_data.taskmap);
+	scheduler_data.taskmap = NULL;
 }
 
 /**
@@ -91,12 +158,23 @@ unsigned scheduler_best_sched(unsigned tid)
 	unsigned workload; /* Workload amount. */
 	
 	/* Get next tasks. */
-	n = (scheduler_data.i0 < scheduler_data.ntasks) ?
-		scheduler_data.ntasks/scheduler_data.nthreads : 0;
-	workload = floor(((double)scheduler_data.sum)/scheduler_data.nthreads);
-	
-	/* Skip to next task. */
-	scheduler_data.i0 += n;
+	n = 0;
+	workload = 0;
+	for (unsigned i = 0; i < scheduler_data.ntasks; i++)
+	{
+		/* This task is mine. */
+		if (scheduler_data.taskmap[i] == tid)
+		{
+			n++;
+			workload += scheduler_data.tasks[i];
+			threads[tid].ntasks++;
+			if (scheduler_data.tasks[i] < threads[tid].min)
+				threads[tid].min = scheduler_data.tasks[i];
+			if (scheduler_data.tasks[i] > threads[tid].max)
+				threads[tid].max = scheduler_data.tasks[i];
+			scheduler_data.taskmap[i] = scheduler_data.nthreads;
+		}
+	}
 	
 	threads[tid].workload += workload;
 	dqueue_insert(tid, workload);

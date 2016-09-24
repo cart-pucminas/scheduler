@@ -48,7 +48,7 @@ static struct
  * 
  * @returns Sorting map.
  */
-unsigned *sort(unsigned *a, unsigned n)
+static unsigned *sort(unsigned *a, unsigned n)
 {
 	unsigned *map;
 	
