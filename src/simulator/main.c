@@ -71,6 +71,7 @@ static void usage(void)
 	printf("Brief: loop scheduler simulator\n");
 	printf("Scheduler:\n");
 	printf("  lpt               Simulate longest processing time first scheduling\n");
+	printf("  opt               Simulate optimum scheduling\n");
 	printf("  static            Simulate static loop scheduling\n");
 	printf("  dynamic           Simulate dynamic loop scheduling\n");
 	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
@@ -178,6 +179,8 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = SCHEDULER_SMART_ROUND_ROBIN;
 			else if (!strcmp(argv[i], "lpt"))
 				args.scheduler = SCHEDULER_LPT;
+			else if (!strcmp(argv[i], "opt"))
+				args.scheduler = SCHEDULER_OPT;
 		}
 	}
 	

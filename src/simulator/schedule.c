@@ -19,7 +19,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
+#include <common.h>
 #include <mylib/util.h>
 
 #include <simulator.h>
@@ -101,6 +103,26 @@ static unsigned choose_thread(void)
 }
 
 /**
+ * @brief Optimum scheduler.
+ *
+ * @param tasks    Tasks to schedule.
+ * @param ntasks   Number of tasks.
+ * @param nthreads Number of threads.
+ */
+static void schedule_opt(const unsigned *tasks, unsigned ntasks, unsigned nthreads)
+{
+	double total = 0.0;
+
+	/* Compute total workload. */
+	for (unsigned i = 0; i < ntasks; i++)
+		total += tasks[i];
+	
+	/* Compute average workload. */
+	for (unsigned i = 0; i < nthreads; i++)
+		threads[i].workload = (unsigned)(floor(total/ntasks));
+}
+
+/**
  * @brief Loop scheduler.
  * 
  * @details Simulates a loop scheduler.
@@ -110,6 +132,14 @@ void schedule
 {
 	unsigned n;
 	
+	/* Optimum scheduler is somewhat special. */
+	if (scheduler == SCHEDULER_OPT)
+	{
+		schedule_opt(tasks, ntasks, nthreads);
+		return;
+	}
+
+
 	nthreads = _nthreads;
 	dqueue_create();
 	

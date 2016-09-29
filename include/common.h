@@ -24,12 +24,13 @@
 	 * @name Schedulers
 	 */
 	/**@{*/
-	#define SCHEDULER_NONE              0 /**< Null scheduler.           */
-	#define SCHEDULER_STATIC            1 /**< Static scheduler.         */
-	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.        */
-	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler. */
-	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.        */
-	#define SCHEDULER_LPT              5 /**< Best scheduler.           */
+	#define SCHEDULER_NONE              0 /**< Null scheduler.                          */
+	#define SCHEDULER_STATIC            1 /**< Static scheduler.                        */
+	#define SCHEDULER_DYNAMIC           2 /**< Dynamic scheduler.                       */
+	#define SCHEDULER_WORKLOAD_AWARE    3 /**< Workload aware scheduler.                */
+	#define SCHEDULER_SMART_ROUND_ROBIN 4 /**< Smart round robin.                       */
+	#define SCHEDULER_LPT               5 /**< Longest processing time first scheduler. */
+	#define SCHEDULER_OPT               6 /**< Optimum scheduler.                       */
 	/**@}*/
 
 #endif /* _COMMON_H_ */
