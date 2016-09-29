@@ -70,6 +70,7 @@ static void usage(void)
 	printf("Usage: scheduler [options] <scheduler>\n");
 	printf("Brief: loop scheduler simulator\n");
 	printf("Scheduler:\n");
+	printf("  lpt               Simulate longest processing time first scheduling\n");
 	printf("  static            Simulate static loop scheduling\n");
 	printf("  dynamic           Simulate dynamic loop scheduling\n");
 	printf("  workload-aware    Simulate workload-aware loop scheduling\n");
