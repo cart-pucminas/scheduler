@@ -79,15 +79,15 @@ static unsigned *sort(unsigned *a, unsigned n)
 } 
 
 /**
- * @brief Initializes the best scheduler.
+ * @brief Initializes the lpt scheduler.
  * 
- * @details Initializes the best scheduler.
+ * @details Initializes the lpt scheduler.
  * 
  * @param tasks    Tasks to assign.
  * @param ntasks   Number of tasks.
  * @param nthreads Number of threads.
  */
-void scheduler_best_init
+void scheduler_lpt_init
 (const unsigned *tasks, unsigned ntasks, unsigned nthreads)
 {
 	unsigned *workload;      /* Workload of current thread. */
@@ -133,11 +133,11 @@ void scheduler_best_init
 }
 
 /**
- * @brief Finalizes the best scheduler.
+ * @brief Finalizes the lpt scheduler.
  * 
- * @details Finalizes the best scheduler.
+ * @details Finalizes the lpt scheduler.
  */
-void scheduler_best_end(void)
+void scheduler_lpt_end(void)
 {
 	free(scheduler_data.taskmap);
 	scheduler_data.taskmap = NULL;
@@ -152,7 +152,7 @@ void scheduler_best_end(void)
  * 
  * @returns Number of tasks assigned to the thread @p tid.
  */
-unsigned scheduler_best_sched(unsigned tid)
+unsigned scheduler_lpt_sched(unsigned tid)
 {
 	unsigned n;        /* Number of tasks. */
 	unsigned workload; /* Workload amount. */

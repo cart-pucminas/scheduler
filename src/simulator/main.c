@@ -175,8 +175,8 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = SCHEDULER_WORKLOAD_AWARE;
 			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = SCHEDULER_SMART_ROUND_ROBIN;
-			else if (!strcmp(argv[i], "best"))
-				args.scheduler = SCHEDULER_BEST;
+			else if (!strcmp(argv[i], "lpt"))
+				args.scheduler = SCHEDULER_LPT;
 		}
 	}
 	

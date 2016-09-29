@@ -48,7 +48,7 @@ scheduler_init_t schedulers_init[6] = {
 	&scheduler_dynamic_init,           /* SCHEDULER_DYNAMIC           */
 	&scheduler_workload_aware_init,    /* SCHEDULER_WORKLOAD_AWARE    */
 	&scheduler_smart_round_robin_init, /* SCHEDULER_SMART_ROUND_ROBIN */
-	&scheduler_best_init               /* SCHEDULER_BEST              */
+	&scheduler_lpt_init               /* SCHEDULER_LPT              */
 };
 
 /**
@@ -60,7 +60,7 @@ scheduler_sched_t schedulers_sched[6] = {
 	&scheduler_dynamic_sched,           /* SCHEDULER_DYNAMIC           */
 	&scheduler_workload_aware_sched,    /* SCHEDULER_WORKLOAD_AWARE    */
 	&scheduler_smart_round_robin_sched, /* SCHEDULER_SMART_ROUND_ROBIN */
-	&scheduler_best_sched               /* SCHEDULER_BEST              */
+	&scheduler_lpt_sched               /* SCHEDULER_LPT              */
 };
 
 /**
@@ -72,7 +72,7 @@ scheduler_end_t schedulers_end[6] = {
 	&scheduler_dynamic_end,           /* SCHEDULER_DYNAMIC           */
 	&scheduler_workload_aware_end,    /* SCHEDULER_WORKLOAD_AWARE    */
 	&scheduler_smart_round_robin_end, /* SCHEDULER_SMART_ROUND_ROBIN */
-	&scheduler_best_end               /* SCHEDULER_BEST              */
+	&scheduler_lpt_end               /* SCHEDULER_LPT              */
 };
 
 /**
