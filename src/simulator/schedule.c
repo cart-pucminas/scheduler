@@ -116,10 +116,10 @@ static void schedule_opt(const unsigned *tasks, unsigned ntasks, unsigned nthrea
 	/* Compute total workload. */
 	for (unsigned i = 0; i < ntasks; i++)
 		total += tasks[i];
-	
 	/* Compute average workload. */
+
 	for (unsigned i = 0; i < nthreads; i++)
-		threads[i].workload = (unsigned)(floor(total/ntasks));
+		threads[i].workload = (unsigned)(floor(total/nthreads));
 }
 
 /**
@@ -135,10 +135,9 @@ void schedule
 	/* Optimum scheduler is somewhat special. */
 	if (scheduler == SCHEDULER_OPT)
 	{
-		schedule_opt(tasks, ntasks, nthreads);
+		schedule_opt(tasks, ntasks, _nthreads);
 		return;
 	}
-
 
 	nthreads = _nthreads;
 	dqueue_create();
