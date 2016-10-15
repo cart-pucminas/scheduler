@@ -274,7 +274,7 @@ int main(int argc, const const char **argv)
 	
 	readargs(argc, argv);
 	
-	srandnum(time(NULL));
+	srandnum(0);
 	
 	tasks = readfile(args.infile, args.ntasks);
 	
