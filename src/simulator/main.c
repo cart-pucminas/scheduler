@@ -349,6 +349,7 @@ int main(int argc, const const char **argv)
 {
 	unsigned total;
 	unsigned max, min;
+	double stddev,mean;
 	unsigned *tasks;
 	
 	readargs(argc, argv);
@@ -361,7 +362,7 @@ int main(int argc, const const char **argv)
 	schedule(tasks, args.ntasks, args.nthreads, args.scheduler);
 		
 	/* Print statistics. */
-	max = 0; min = UINT_MAX; total = 0;
+	max = 0; min = UINT_MAX; total = 0; stddev = 0.0;
 	for (int i = 0; i < args.nthreads; i++)
 	{
 		if (min > threads[i].workload)
@@ -369,10 +370,16 @@ int main(int argc, const const char **argv)
 		if (max < threads[i].workload)
 			max = threads[i].workload;
 		total += threads[i].workload;
+		fprintf(stderr, "Thread %d: %u\n", i, threads[i].workload);
 	}
+	mean = total/args.nthreads;
+	for (int i = 0; i < args.nthreads; i++)
+		stddev += pow(threads[i].workload - mean, 2);
+	stddev = sqrt(stddev/(args.nthreads - 1));
 	fprintf(stderr, "Total Cycles: %u\n", max);
 	fprintf(stderr, "Load Imbalance: %lf\n", ((double)(max-min))/total);
-	fprintf(stderr, "Slowdown: %lf\n", ((double)(max)/min));
+	fprintf(stderr, "Slowdown: %.2lf\n", ((double)(max)/min));
+	fprintf(stderr, "Variance: %.2lf\n", (stddev/mean)*100);
 	threads_join();
 
 	/* House keeping. */
