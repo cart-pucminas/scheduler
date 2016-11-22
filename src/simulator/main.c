@@ -372,6 +372,7 @@ int main(int argc, const const char **argv)
 	}
 	fprintf(stderr, "Total Cycles: %u\n", max);
 	fprintf(stderr, "Load Imbalance: %lf\n", ((double)(max-min))/total);
+	fprintf(stderr, "Slowdown: %lf\n", ((double)(max)/min));
 	threads_join();
 
 	/* House keeping. */
