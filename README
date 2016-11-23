@@ -4,7 +4,9 @@ ABOUT
 	and assessing the performance of loop scheduling strategies. Here
 	is a brief description of each tool that is hereby shipped:
 
-		* generator: a synthetic workload generator.
+		* generator: a synthetic workload generator that is able to
+		  generate even and uneven workloads based on well-known
+		  probabilistic density functions.
 		
 		* searcher: a state-space explorer that enables the upper-bound
 		  assessment of loop scheduling strategies.
