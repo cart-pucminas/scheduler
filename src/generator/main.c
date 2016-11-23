@@ -26,6 +26,17 @@
 #include <mylib/util.h>
 #include <pdf.h>
 
+#include "generator.h"
+
+/**
+ * @brief Sorting order types.
+ */
+/**@{*/
+#define SORT_DESCENDING -1 /**< Descending sort. */
+#define SORT_RANDOM      0 /**< Random sort.     */
+#define SORT_ASCENDING  +1 /**< Ascending sort.  */
+/**@}*/
+
 /**
  * @brief Supported probability density functions.
  */
@@ -82,7 +93,9 @@ static struct
 	int pdf;         /**< Probability density function.          */
 	double skewness; /**< Probability density function skewness. */
 	int nclasses;    /**< Number of task classes.                */
-} args = { 0, 0, 0, 0.0 , 0};
+	int seed;        /**< Seed number for shuffling.             */
+	int sort;        /**< Task sorting type.                     */
+} args = { 0, 0, 0, 0.0 , 0, 0, SORT_RANDOM};
 
 /**
  * @brief Prints program usage and exits.
@@ -94,19 +107,24 @@ static void usage(void)
 	printf("Usage: generator [options]\n");
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
-	printf("  --nclasses <number> Number of task classes.\n");
-	printf("  --ntasks <number>   Number tasks.\n");
-	printf("  --kernel <name>     Kernel type.\n");
-	printf("           linear     Linear O(n)\n");
-	printf("           logarithm  Logarithm O(n log n)\n");
-	printf("           quadratic  Quadratic O(n^2)\n");
-	printf("  --pdf <name>        Probability desity function for random numbers.\n");
-	printf("        beta            a = 0.5 and b = 0.5\n");
-	printf("        gamma           a = 1.0 and b = 2.0 \n");
-	printf("        gaussian        x = 0.0 and std = 1.0\n");
+	printf("  --nclasses <number>   Number of task classes.\n");
+	printf("  --ntasks <number>     Number tasks.\n");
+	printf("  --kernel <name>       Kernel type.\n");
+	printf("           linear         Linear O(n)\n");
+	printf("           logarithm      Logarithm O(n log n)\n");
+	printf("           quadratic      Quadratic O(n^2)\n");
+	printf("  --pdf <name>          Probability desity function for random numbers.\n");
+	printf("        beta              a = 0.5 and b = 0.5\n");
+	printf("        gamma             a = 1.0 and b = 2.0 \n");
+	printf("        gaussian          x = 0.0 and std = 1.0\n");
 	printf("        poisson                                \n");
-	printf("  --skewness <number> PDF skewness.\n");
-	printf("  --help              Display this message.\n");
+	printf("  --skewness <number>   PDF skewness.\n");
+	printf("  --sort <type>         Tasks sorting\n");
+	printf("         ascending        Ascending order\n");
+	printf("         descending       Descending order\n");
+	printf("         shuffle          Shuffle\n");
+	printf("  --seed <number>       Seed value for shuffling\n");
+	printf("  --help                Display this message.\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -157,6 +175,28 @@ static int getkernel(const char *kernelname)
 	return (-1);
 }
 
+/**
+ * @brief Gets tasks sorting type.
+ * 
+ * @param sortname Tasks sorting name.
+ * 
+ * @param Tasks sorting type.
+ */
+static int getsort(const char *sortname)
+{
+	if (!strcmp(sortname, "ascending"))
+		return (SORT_ASCENDING);
+	else if (!strcmp(sortname, "descending"))
+		return (SORT_DESCENDING);
+	else if (!strcmp(sortname, "shuffle"))
+		return (SORT_RANDOM);
+	
+	error("unsupported sorting type");
+	
+	/* Never gets here. */
+	return (-1);
+}
+
 /*============================================================================*
  *                             Argument Checking                              *
  *============================================================================*/
@@ -164,7 +204,8 @@ static int getkernel(const char *kernelname)
 /**
  * @brief Checks program arguments.
  */
-static void checkargs(const char *pdfname, const char *kernelname)
+static void checkargs
+(const char *pdfname, const char *kernelname, const char *sortname)
 {
 	/* Check parameters. */
 	if (!(args.ntasks > 0))
@@ -177,6 +218,8 @@ static void checkargs(const char *pdfname, const char *kernelname)
 		error("invalid kernel type");
 	else if (!(args.nclasses > 0))
 		error("invalid number of task classes");
+	else if (sortname == NULL)
+		error("invalid task sorting");
 }
 
 /**
@@ -188,29 +231,35 @@ static void readargs(int argc, const char **argv)
 {
 	const char *pdfname = NULL;
 	const char *kernelname = NULL;
+	const char *sortname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
 	{	
 		/* Parse command. */
-		if (!strcmp(argv[i], "--ntasks"))
+		if (!strcmp(argv[i], "--nclasses"))
+			args.nclasses = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--ntasks"))
 			args.ntasks = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--kernel"))
+			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--pdf"))
 			pdfname = argv[++i];
 		else if (!strcmp(argv[i], "--skewness"))
 			args.skewness = atof(argv[++i]);
-		else if (!strcmp(argv[i], "--kernel"))
-			kernelname = argv[++i];
-		else if (!strcmp(argv[i], "--help"))
+		else if (!strcmp(argv[i], "--sort"))
+			sortname = argv[++i];
+		else if (!strcmp(argv[i], "--seed"))
+			args.seed = atoi(argv[++i]);
+		else
 			usage();
-		else if (!strcmp(argv[i], "--nclasses"))
-			args.nclasses = atoi(argv[++i]);
 	}
 	
-	checkargs(pdfname, kernelname);
+	checkargs(pdfname, kernelname, sortname);
 	
 	args.pdf = getpdf(pdfname);
 	args.kernel = getkernel(kernelname);
+	args.sort = getsort(sortname);
 }
 
 /*============================================================================*
@@ -360,11 +409,13 @@ int main(int argc, const const char **argv)
 {
 	double *h;
 	unsigned *tasks;
+
 	readargs(argc, argv);
 
 	h = histogram_create(args.pdf, args.nclasses, args.skewness);
 	tasks = tasks_create(h, args.nclasses, args.ntasks, args.kernel);
-	
+	array_sort(tasks, args.ntasks, args.sort);
+
 	/* Print task classes. */
 	for (int i = 0; i < args.nclasses; i++)
 		fprintf(stderr, "%lf\n", h[i]);
