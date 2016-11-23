@@ -61,41 +61,17 @@ static const char *pdfnames[NR_PDFS] = {
 };
 
 /**
- * @brief Number of supported kernels.
- */
-#define NR_KERNELS 3
-
-/**
- * @brief Name of supported kernel types.
- */
-/**@{*/
-#define KERNEL_LINEAR      1 /**< Linear kernel O(n).            */
-#define KERNEL_LOGARITHMIC 2 /**< Logarithmic kernel O(n log n). */
-#define KERNEL_QUADRATIC   3 /**< Quadratic kernel O(n^2).       */
-/**@}*/
-
-/**
- * @brief Name of supported kernel types.
- */
-static const char *kernelnames[NR_KERNELS] = {
-	"linear",    /* Linear.    */
-	"logarithm", /* Logarithm. */
-	"quadratic"  /* Quadratic. */
-};
-
-/**
  * @name Program Parameters
  */
 static struct
 {
-	int kernel;      /**< Kernel type.                           */
 	int ntasks;      /**< Number of tasks.                       */
 	int pdf;         /**< Probability density function.          */
 	double skewness; /**< Probability density function skewness. */
 	int nclasses;    /**< Number of task classes.                */
 	int seed;        /**< Seed number for shuffling.             */
 	int sort;        /**< Task sorting type.                     */
-} args = { 0, 0, 0, 0.0 , 0, 0, SORT_RANDOM};
+} args = { 0, 0, 0.0 , 0, 0, SORT_RANDOM};
 
 /**
  * @brief Prints program usage and exits.
@@ -109,10 +85,6 @@ static void usage(void)
 	printf("Options:\n");
 	printf("  --nclasses <number>   Number of task classes.\n");
 	printf("  --ntasks <number>     Number tasks.\n");
-	printf("  --kernel <name>       Kernel type.\n");
-	printf("           linear         Linear O(n)\n");
-	printf("           logarithm      Logarithm O(n log n)\n");
-	printf("           quadratic      Quadratic O(n^2)\n");
 	printf("  --pdf <name>          Probability desity function for random numbers.\n");
 	printf("        beta              a = 0.5 and b = 0.5\n");
 	printf("        gamma             a = 1.0 and b = 2.0 \n");
@@ -155,27 +127,6 @@ static int getpdf(const char *pdfname)
 }
 
 /**
- * @brief Gets kernel type.
- * 
- * @param kernelname Kernel name.
- * 
- * @returns Kernel type.
- */
-static int getkernel(const char *kernelname)
-{
-	for (int i = 0; i < NR_KERNELS; i++)
-	{
-		if (!strcmp(kernelname, kernelnames[i]))
-			return (i + 1);
-	}
-	
-	error("unsupported kernel type");
-	
-	/* Never gets here. */
-	return (-1);
-}
-
-/**
  * @brief Gets tasks sorting type.
  * 
  * @param sortname Tasks sorting name.
@@ -204,8 +155,7 @@ static int getsort(const char *sortname)
 /**
  * @brief Checks program arguments.
  */
-static void checkargs
-(const char *pdfname, const char *kernelname, const char *sortname)
+static void checkargs(const char *pdfname, const char *sortname)
 {
 	/* Check parameters. */
 	if (!(args.ntasks > 0))
@@ -214,8 +164,6 @@ static void checkargs
 		error("missing probability density function");
 	else if (!(args.skewness > 0.1))
 		error("invalid skewness for probability density function");
-	else if (kernelname == NULL)
-		error("invalid kernel type");
 	else if (!(args.nclasses > 0))
 		error("invalid number of task classes");
 	else if (sortname == NULL)
@@ -230,7 +178,6 @@ static void checkargs
 static void readargs(int argc, const char **argv)
 {
 	const char *pdfname = NULL;
-	const char *kernelname = NULL;
 	const char *sortname = NULL;
 	
 	/* Parse command line arguments. */
@@ -241,8 +188,6 @@ static void readargs(int argc, const char **argv)
 			args.nclasses = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--ntasks"))
 			args.ntasks = atoi(argv[++i]);
-		else if (!strcmp(argv[i], "--kernel"))
-			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--pdf"))
 			pdfname = argv[++i];
 		else if (!strcmp(argv[i], "--skewness"))
@@ -255,10 +200,9 @@ static void readargs(int argc, const char **argv)
 			usage();
 	}
 	
-	checkargs(pdfname, kernelname, sortname);
+	checkargs(pdfname, sortname);
 	
 	args.pdf = getpdf(pdfname);
-	args.kernel = getkernel(kernelname);
 	args.sort = getsort(sortname);
 }
 
@@ -317,41 +261,6 @@ static double *histogram_create(unsigned pdf, int nclasses, double skewness)
 }
 
 /**
- * @brief Applies a kernel in a load.
- * 
- * @param load   Target load.
- * @param kernel Kernel.
- * 
- * @returns Resulting load.
- */
-static double apply_kernel(double load, int kernel)
-{
-	double x;
-	
-	x = load;
-	
-	switch (kernel)
-	{
-		/* Logarithmic kernel. */
-		case KERNEL_LOGARITHMIC:
-			x = x*log(x);
-			break;
-			
-		/* Quadratic kernel. */
-		case KERNEL_QUADRATIC:
-			x = x*x;
-			break;
-				
-		/* Linear kernel. */
-		default:
-		case KERNEL_LINEAR:
-			break;
-	}
-	
-	return (x);
-}
-
-/**
  * @brief Create tasks.
  * 
  * @param h        Tasks histogram.
@@ -361,7 +270,7 @@ static double apply_kernel(double load, int kernel)
  * @returns Tasks.
  */
 static unsigned *tasks_create
-(const double *h, int nclasses, unsigned ntasks, int kernel)
+(const double *h, int nclasses, unsigned ntasks)
 {
 	int k;
 	unsigned *tasks;
@@ -387,13 +296,13 @@ static unsigned *tasks_create
 			if (x < 1)
 				error("bad multiplying factor");
 			
-			tasks[k++] = ceil(apply_kernel(x, kernel));
+			tasks[k++] = ceil(x);
 		}
 	}
 	
 	/* Fill up remainder tasks with minimum load. */
 	for (unsigned i = k; i < ntasks; i++)
-			tasks[k++] = ceil(apply_kernel(FACTOR, kernel));
+			tasks[k++] = ceil(FACTOR);
 	
 	return (tasks);
 }
@@ -413,7 +322,7 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 
 	h = histogram_create(args.pdf, args.nclasses, args.skewness);
-	tasks = tasks_create(h, args.nclasses, args.ntasks, args.kernel);
+	tasks = tasks_create(h, args.nclasses, args.ntasks);
 	array_sort(tasks, args.ntasks, args.sort);
 
 	/* Print task classes. */
