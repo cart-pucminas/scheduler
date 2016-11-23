@@ -24,13 +24,13 @@ SRC = $(wildcard $(CURDIR)/common/*.c)
 export OBJ = $(SRC:.c=.o)
 
 # Conflicts.
-.PHONY: simulator
+.PHONY: simsched
 .PHONY: searcher
 .PHONY: generator
 
 # Builds simulator.
 simulator: $(OBJ)
-	cd simulator && $(MAKE) all
+	cd simsched && $(MAKE) all
 	
 # Builds searcher.
 searcher: searcher/*.c $(OBJ)
@@ -47,7 +47,7 @@ generator: generator/*.c $(OBJ)
 # Cleans compilation files.
 clean:
 	@rm -f $(OBJ)
-	cd simulator && $(MAKE) clean
-	@rm -f $(BINDIR)/scheduler
+	cd simsched && $(MAKE) clean
+	@rm -f $(BINDIR)/simsched
 	@rm -f $(BINDIR)/searcher
 	@rm -f $(BINDIR)/generator

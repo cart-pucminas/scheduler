@@ -1,49 +1,29 @@
-Copyright(C) 2015-2016 Pedro H. Penna <pedrohenriquepenna@gmail.com
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-  
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-  
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-MA 02110-1301, USA.
-  
-
-                                  SCHEDULER
-
 ABOUT
 
-	This repository contains a suite of tools to analyze and evaluate loop
-	scheduling strategies. Here is a brief description of each tool:
-		
+	This repository provides a collection of useful tools for analyzing
+	and assessing the performance of loop scheduling strategies. Here
+	is a brief description of each tool that is hereby shipped:
+
 		* generator: a synthetic workload generator.
 		
-		* searcher: outputs the best scheduling solution for a input workload.
+		* searcher: a state-space explorer that enables the upper-bound
+		  assessment of loop scheduling strategies.
 		
-		* simulator: simulates the behavior of several loops scheduling
+		* simsched: an event-driven simulator that enables a fast and
+		  accurate performance evaluation of several loop scheduling
 		  strategies.
-		  
-		* benchmark: a synthetic benchmark for loop scheduling strategies.
 
 BUILDING
 
-	To build this project execute the following commands:
-	
-		$ cd contrib            # Change the current directory to 'contrib'.
-		$ bash setup-contrib.sh # Build third-party tools.
-		$ cd ..                 # Go back to the project's root directory.
-		$ make libgomp          # Build the modified version of LibGOMP.
-		$ make                  # Build software suite.
+	To build this repository:
+
+		$ cd ~/
+		$ git clone https://github.com/cart-pucminas/scheduler
+		$ cd scheduler
+		$ make
 
 LICENSE AND MAINTAINERS
 
-	This is an open source software that is under GPL V3 license and is 
-	maintained by Pedro H. Penna. Any questions or suggestions send an email to
-	him: <pedrohenriquepenna@gmail.com>.
+	This is an open source project that is publicy available under the
+	GPL V3 license and is maintained by Pedro H. Penna. Any questions
+	or suggestions send him an email: <pedrohenriquepenna@gmail.com>.

@@ -18,7 +18,7 @@
 #
 
 # Executable file.
-EXEC=scheduler
+EXEC=simsched
 
 # Tweaks on toolchain.
 CFLAGS += -I include
