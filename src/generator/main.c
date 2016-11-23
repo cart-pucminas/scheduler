@@ -323,6 +323,8 @@ int main(int argc, const const char **argv)
 
 	h = histogram_create(args.pdf, args.nclasses, args.skewness);
 	tasks = tasks_create(h, args.nclasses, args.ntasks);
+
+	array_shuffle_seed(args.seed);
 	array_sort(tasks, args.ntasks, args.sort);
 
 	/* Print task classes. */
