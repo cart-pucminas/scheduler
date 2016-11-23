@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #include <common.h>
 #include <mylib/util.h>
@@ -40,6 +41,11 @@ static unsigned nready = 0;
  * @brief Pool of ready tasks.
  */
 static struct thread **ready = NULL;
+
+/**
+ * @brief Seed for scheduling.
+ */
+static unsigned seed = 0;
 
 /**
  * @brief Schedulers init() table.
@@ -90,10 +96,10 @@ static unsigned choose_thread(void)
 	unsigned tid; /* ID of chosen thread. */
 		
 	/* Choose thread. */
-	i = randnum()%nthreads;
+	i = rand_r(&seed)%nthreads;
 	while (ready[i] == NULL)
 		i = (i + 1)%nthreads;
-	
+
 	/* Remove thread from ready pool. */
 	nready--;
 	tid = ready[i]->tid;
@@ -132,6 +138,8 @@ void schedule
 {
 	unsigned n;
 	
+	seed = time(NULL);
+
 	/* Optimum scheduler is somewhat special. */
 	if (scheduler == SCHEDULER_OPT)
 	{
