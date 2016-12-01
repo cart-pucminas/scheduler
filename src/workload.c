@@ -186,17 +186,17 @@ void workload_sort(struct workload *w, enum workload_sorting sorting)
 	switch(sorting)
 	{
 		/* Sort in ascending order. */
-		case ASCENDING:
+		case WORKLOAD_ASCENDING:
 			workload_ascending(w);
 			break;
 
 		/* Sort in descending order. */
-		case DESCENDING:
+		case WORKLOAD_DESCENDING:
 			workload_descending(w);
 			break;
 
 		/* Shuffle workload. */
-		case SHUFFLE:
+		case WORKLOAD_SHUFFLE:
 			workload_shuffle(w);
 			break;
 

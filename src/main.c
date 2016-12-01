@@ -39,7 +39,7 @@ static struct
 	int nclasses;                    /**< Number of task classes.   */
 	int ntasks;                      /**< Number of tasks.          */
 	enum workload_sorting sorting;   /**< Workload sorting.         */
-} args = { 0, 0, 0.0 , 0, SHUFFLE };
+} args = { 0, 0, 0.0 , 0, WORKLOAD_SHUFFLE };
 
 /*============================================================================*
  *                             Argument Checking                              *
@@ -104,11 +104,11 @@ static distribution_tt (*getdist(const char *distname))(double)
 static enum workload_sorting getsort(const char *sortname)
 {
 	if (!strcmp(sortname, "ascending"))
-		return (ASCENDING);
+		return (WORKLOAD_ASCENDING);
 	else if (!strcmp(sortname, "descending"))
-		return (DESCENDING);
+		return (WORKLOAD_DESCENDING);
 	else if (!strcmp(sortname, "shuffle"))
-		return (SHUFFLE);
+		return (WORKLOAD_SHUFFLE);
 	
 	error("unsupported sorting type");
 	

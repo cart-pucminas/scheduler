@@ -41,9 +41,9 @@
 	 */
 	enum workload_sorting
 	{
-		ASCENDING,  /**< Ascending order.  */
-		DESCENDING, /**< Descending order. */
-		SHUFFLE     /**< Shuffle.          */
+		WORKLOAD_ASCENDING,  /**< Ascending order.  */
+		WORKLOAD_DESCENDING, /**< Descending order. */
+		WORKLOAD_SHUFFLE     /**< Shuffle.          */
 	};
 
 	/**
