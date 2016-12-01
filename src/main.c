@@ -30,7 +30,7 @@
 #include <workload.h>
 
 /**
- * @name Program Parameters
+ * @name Program arguments.
  */
 static struct
 {
@@ -169,17 +169,17 @@ static void readargs(int argc, const char **argv)
 }
 
 /*============================================================================*
- *                                  SIMULATOR                                 *
+ * WORKLOAD GENERATOR                                                         *
  *============================================================================*/
 
 /**
- * @brief Loop scheduler simulator.
+ * @brief A synthetic workload generator.
  */
 int main(int argc, const const char **argv)
 {
-	distribution_tt dist;
-	histogram_tt hist;
-	workload_tt w;
+	distribution_tt dist; /* Underlying probability distribution.   */
+	histogram_tt hist;    /* Histogram of probability distribution. */
+	workload_tt w;        /* Workload.                              */
 
 	readargs(argc, argv);
 

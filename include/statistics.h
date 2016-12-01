@@ -43,17 +43,6 @@
 	typedef const struct histogram * const_histogram_tt;
 
 	/**
-	 * @brief Supported probability distributions.
-	 */
-	enum distributions
-	{
-		BETA,     /**< Beta distribution.     */
-		GAMMA,    /**< Gamma distribution     */
-		GAUSSIAN, /**< Gaussian distribution. */
-		UNIFORM   /**< Uniform distribution.  */
-	};
-
-	/**
 	 * @name Operations on Histograms
 	 */
 	/**@{*/
