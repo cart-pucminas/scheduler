@@ -34,6 +34,9 @@ export CFLAGS += -std=c99 -pedantic
 export CFLAGS += -Wall -Wextra -Werror
 export CFLAGS += -O3
 
+# Libraries.
+export LIBS = -lm
+
 # Source files.
 SRC = $(wildcard $(SRCDIR)/*.c)
 
@@ -44,7 +47,9 @@ OBJ = $(SRC:.c=.o)
 all: workloadgen
 
 # Builds WorkloadGen.
-workloadgen: $(SRCDIR)/statistics.o
+workloadgen:               \
+	$(SRCDIR)/statistics.o \
+	$(SRCDIR)/workload.o
 
 # Builds object file from C source file.
 %.o: %.c

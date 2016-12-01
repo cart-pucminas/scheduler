@@ -23,32 +23,100 @@
 #include <stdlib.h>
 
 #include <statistics.h>
+#include <util.h>
+
+/*====================================================================*
+ * HISTOGRAM                                                          *
+ *====================================================================*/
 
 /**
- * @brief Safe malloc().
- *
- * @param size Number of bytes to allocate.
- *
- * @returns Allocated block of memory.
+ * @brief Histogram.
  */
-void *smalloc(size_t size)
+struct histogram
 {
-	void *p;
+	int nclasses;    /**< Number of classes. */
+	double *classes; /**< classes            */
+};
 
-	p = malloc(size);
-	assert(p != NULL);
+/**
+ * @brief Creates a histogram.
+ *
+ * @param nclasses Number of classes.
+ *
+ * @returns A histogram.
+ */
+static struct histogram *histogram_create(int nclasses)
+{
+	struct histogram *h;
+	
+	/* Sanity check. */
+	assert(nclasses > 0);
 
-	return (p);
+	/* Create histogram. */
+	h = smalloc(sizeof(struct histogram));
+	h->nclasses = nclasses;
+	h->classes = smalloc(nclasses*sizeof(double));
+
+	return (h);
 }
 
+/**
+ * @brief Destroys a histogram.
+ *
+ * @param h Target histogram.
+ */
+void histogram_destroy(const struct histogram *h)
+{
+	/* Sanity check, */
+	assert(h != NULL);
+
+	free((void *) h->classes);
+	free((void *) h);
+}
+
+/**
+ * @brief Returns the number of classes in a histogram.
+ *
+ * @param h Target histogram.
+ *
+ * @returns The number of classes in a histogram.
+ */
+int histogram_nclasses(const struct histogram *h)
+{
+	/* Sanity check. */
+	assert(h != NULL);
+
+	return (h->nclasses);
+}
+
+/**
+ * @brief Returns the frequency of a class in a histogram.
+ *
+ * @param h Target histogram.
+ * @param i Target class.
+ *
+ * @returns The frequency of a class in a histogram.
+ */
+double histogram_class(const struct histogram *h, int i)
+{
+	/* Sanity check. */
+	assert(h != NULL);
+	assert((i > 0) && (i < h->nclasses));
+
+	return (h->classes[i]);
+}
+
+/*====================================================================*
+ * PROBABILITY DISTRIBUTION                                           *
+ *====================================================================*/
 
 /**
  * @brief Probability distribution.
  */
 struct distribution
 {
-	double kurtosis;                       /**< Distribution's kurtosis.  */
-	const double *(*histgen)(double, int); /**< Histogram generator.      */
+	double kurtosis;                      /**< Distribution's kurtosis.  */
+	histogram_tt (*histgen)(double, int); /**< Histogram generator.      */
 };
 
 /**
@@ -68,7 +136,7 @@ void distfree(const struct distribution *dist)
  *
  * @returns A histogram.
  */
-const double *histgen(const struct distribution *dist, int nclasses)
+const struct histogram *histgen(const struct distribution *dist, int nclasses)
 {
 	/* Sanity check. */
 	assert(dist != NULL);
@@ -88,13 +156,13 @@ const double *histgen(const struct distribution *dist, int nclasses)
  *
  * @returns A histogram.
  */
-static const double *beta_histgen(double kurtosis, int nclasses)
+static const struct histogram *beta_histgen(double kurtosis, int nclasses)
 {
-	double sum;  /* PDF sum.         */
-	double freq; /* Class frequency. */
-	double *h;   /* Histogram.       */
+	double sum;          /* PDF sum.         */
+	double freq;         /* Class frequency. */
+	struct histogram *h; /* Histogram.       */
 
-	h = smalloc(nclasses*sizeof(double));
+	h = histogram_create(nclasses);
 
 	/* Build histogram. */
 	freq = 0.5; sum = 0.0;
@@ -105,15 +173,15 @@ static const double *beta_histgen(double kurtosis, int nclasses)
 		else
 		freq *= 0.95;
 
-		h[i] = freq;
-		h[nclasses - i - 1] = freq;
+		h->classes[i] = freq;
+		h->classes[nclasses - i - 1] = freq;
 
 		sum	+= freq	+ freq;
 	}
 
 	/* Normalize. */
 	for (int i = 0; i < nclasses; i++)
-		h[i] /= sum;
+		h->classes[i] /= sum;
 
 	return (h);
 }
@@ -153,13 +221,13 @@ const struct distribution *beta(double kurtosis)
  *
  * @returns A histogram.
  */
-static const double *gamma_histgen(double kurtosis, int nclasses)
+static const struct histogram *gamma_histgen(double kurtosis, int nclasses)
 {
-	double sum;  /* PDF sum.         */
-	double freq; /* Class frequency. */
-	double *h;   /* Histogram.       */
+	double sum;          /* PDF sum.         */
+	double freq;         /* Class frequency. */
+	struct histogram *h; /* Histogram.       */
 
-	h = smalloc(nclasses*sizeof(double));
+	h = histogram_create(nclasses);
 
 	/* Build histogram. */
 	freq = 1.0; sum = 0.0;
@@ -167,14 +235,14 @@ static const double *gamma_histgen(double kurtosis, int nclasses)
 	{
 		freq *= kurtosis;
 
-		h[i] = freq;
+		h->classes[i] = freq;
 
 		sum += freq;
 	}
 
 	/* Normalize. */
 	for (int i = 0; i < nclasses; i++)
-		h[i] /= sum;
+		h->classes[i] /= sum;
 
 	return (h);
 }
@@ -214,13 +282,13 @@ const struct distribution *gamma(double kurtosis)
  *
  * @returns A histogram.
  */
-static const double *gaussian_histgen(double kurtosis, int nclasses)
+static const struct histogram *gaussian_histgen(double kurtosis, int nclasses)
 {
-	double sum;  /* PDF sum.         */
-	double freq; /* Class frequency. */
-	double *h;   /* Histogram.       */
+	double sum;          /* PDF sum.         */
+	double freq;         /* Class frequency. */
+	struct histogram *h; /* Histogram.       */
 
-	h = smalloc(nclasses*sizeof(double));
+	h = histogram_create(nclasses);
 
 	/* Build histogram. */
 	freq = 0.5; sum = 0.0;
@@ -228,15 +296,15 @@ static const double *gaussian_histgen(double kurtosis, int nclasses)
 	{
 		freq *= kurtosis;
 
-		h[nclasses/2 - i - 1] = freq;
-		h[nclasses/2 + i] = freq;
+		h->classes[nclasses/2 - i - 1] = freq;
+		h->classes[nclasses/2 + i] = freq;
 
 		sum += freq + freq;
 	}
 
 	/* Normalize. */
 	for (int i = 0; i < nclasses; i++)
-		h[i] /= sum;
+		h->classes[i] /= sum;
 
 	return (h);
 }
@@ -276,21 +344,21 @@ const struct distribution *gaussian(double kurtosis)
  *
  * @returns A histogram.
  */
-static const double *uniform_histgen(double kurtosis, int nclasses)
+static const struct histogram *uniform_histgen(double kurtosis, int nclasses)
 {
-	double freq; /* Class frequency. */
-	double *h;   /* Histogram.       */
+	double freq;         /* Class frequency. */
+	struct histogram *h; /* Histogram.       */
 
 	((void) kurtosis);
 
-	h = smalloc(nclasses*sizeof(double));
+	h = histogram_create(nclasses);
 
 	/* Build histogram. */
 	freq = 1.0/nclasses;
 	for (int i = 0; i < nclasses; i += 2)
 	{
-		h[i] = freq;
-		h[i + 1] = freq;
+		h->classes[i] = freq;
+		h->classes[i + 1] = freq;
 	}
 
 	return (h);

@@ -28,10 +28,24 @@
 	typedef const struct distribution * distribution_tt;
 
 	/**
-	 * @name Operations
+	 * @brief Opaque pointer to a histogram.
+	 */
+	typedef const struct histogram * histogram_tt;
+
+	/**
+	 * @name Operations on Histograms
 	 */
 	/**@{*/
-	extern const double *histgen(distribution_tt, int);
+	extern void histogram_destroy(histogram_tt);
+	extern double histogram_class(histogram_tt, int);
+	extern int histogram_nclasses(histogram_tt);
+	/**@}*/
+
+	/**
+	 * @name Operations on Probability Distributions
+	 */
+	/**@{*/
+	extern histogram_tt histgen(distribution_tt, int);
 	extern void distfree(distribution_tt);
 	/**@}*/
 
