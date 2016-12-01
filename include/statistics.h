@@ -25,28 +25,49 @@
 	/**
 	 * @brief Opaque pointer to a probability distribution.
 	 */
-	typedef const struct distribution * distribution_tt;
+	typedef struct distribution * distribution_tt;
+
+	/**
+	 * @brief Constant opaque pointer to a probability distribution.
+	 */
+	typedef const struct distribution * const_distribution_tt;
 
 	/**
 	 * @brief Opaque pointer to a histogram.
 	 */
-	typedef const struct histogram * histogram_tt;
+	typedef struct histogram * histogram_tt;
+
+	/**
+	 * @brief Constant opaque pointer to a histogram.
+	 */
+	typedef const struct histogram * const_histogram_tt;
+
+	/**
+	 * @brief Supported probability distributions.
+	 */
+	enum distributions
+	{
+		BETA,     /**< Beta distribution.     */
+		GAMMA,    /**< Gamma distribution     */
+		GAUSSIAN, /**< Gaussian distribution. */
+		UNIFORM   /**< Uniform distribution.  */
+	};
 
 	/**
 	 * @name Operations on Histograms
 	 */
 	/**@{*/
 	extern void histogram_destroy(histogram_tt);
-	extern double histogram_class(histogram_tt, int);
-	extern int histogram_nclasses(histogram_tt);
+	extern double histogram_class(const_histogram_tt, int);
+	extern int histogram_nclasses(const_histogram_tt);
 	/**@}*/
 
 	/**
 	 * @name Operations on Probability Distributions
 	 */
 	/**@{*/
-	extern histogram_tt histgen(distribution_tt, int);
-	extern void distfree(distribution_tt);
+	extern histogram_tt distribution_histogram(const_distribution_tt, int);
+	extern void distribution_destroy(distribution_tt);
 	/**@}*/
 
 	/**

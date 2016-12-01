@@ -24,6 +24,7 @@
 
 	#include <assert.h>
 	#include <stdlib.h>
+	#include <stdio.h>
 
 	/**
 	 * @brief Safe malloc().
@@ -42,5 +43,16 @@
 		return (p);
 	}
 	
+	/**
+	 * @brief Prints an error message and terminates.
+	 *
+	 * @param msg Error message.
+	 */
+	inline void error(const char *msg)
+	{
+		fprintf(stderr, "error %s\n", msg);
+
+		exit(EXIT_FAILURE);
+	}
 
 #endif /* UTIL_H_ */

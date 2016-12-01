@@ -65,7 +65,7 @@ static struct histogram *histogram_create(int nclasses)
  *
  * @param h Target histogram.
  */
-void histogram_destroy(const struct histogram *h)
+void histogram_destroy(struct histogram *h)
 {
 	/* Sanity check, */
 	assert(h != NULL);
@@ -101,7 +101,7 @@ double histogram_class(const struct histogram *h, int i)
 {
 	/* Sanity check. */
 	assert(h != NULL);
-	assert((i > 0) && (i < h->nclasses));
+	assert((i >= 0) && (i < h->nclasses));
 
 	return (h->classes[i]);
 }
@@ -124,9 +124,9 @@ struct distribution
  *
  * @param dist Target distribution.
  */
-void distfree(const struct distribution *dist)
+void distribution_destroy(struct distribution *dist)
 {
-	free((void *) dist);
+	free(dist);
 }
 
 /**
@@ -136,7 +136,7 @@ void distfree(const struct distribution *dist)
  *
  * @returns A histogram.
  */
-const struct histogram *histgen(const struct distribution *dist, int nclasses)
+struct histogram *distribution_histogram(const struct distribution *dist, int nclasses)
 {
 	/* Sanity check. */
 	assert(dist != NULL);
@@ -156,7 +156,7 @@ const struct histogram *histgen(const struct distribution *dist, int nclasses)
  *
  * @returns A histogram.
  */
-static const struct histogram *beta_histgen(double kurtosis, int nclasses)
+static struct histogram *beta_histgen(double kurtosis, int nclasses)
 {
 	double sum;          /* PDF sum.         */
 	double freq;         /* Class frequency. */
@@ -193,13 +193,12 @@ static const struct histogram *beta_histgen(double kurtosis, int nclasses)
  *
  * @returns A beta distribution.
  */
-const struct distribution *dist_beta(double kurtosis)
+struct distribution *dist_beta(double kurtosis)
 {
 	struct distribution *beta;
 
 	/* Sanity check. */
-	assert(kurtosis > 0);
-	assert(kurtosis < 0);
+	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	beta = smalloc(sizeof(struct distribution));
 
@@ -221,7 +220,7 @@ const struct distribution *dist_beta(double kurtosis)
  *
  * @returns A histogram.
  */
-static const struct histogram *gamma_histgen(double kurtosis, int nclasses)
+static struct histogram *gamma_histgen(double kurtosis, int nclasses)
 {
 	double sum;          /* PDF sum.         */
 	double freq;         /* Class frequency. */
@@ -254,13 +253,12 @@ static const struct histogram *gamma_histgen(double kurtosis, int nclasses)
  *
  * @returns A gamma distribution.
  */
-const struct distribution *dist_gamma(double kurtosis)
+struct distribution *dist_gamma(double kurtosis)
 {
 	struct distribution *gamma;
 
 	/* Sanity check. */
-	assert(kurtosis > 0);
-	assert(kurtosis < 0);
+	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	gamma = smalloc(sizeof(struct distribution));
 
@@ -282,7 +280,7 @@ const struct distribution *dist_gamma(double kurtosis)
  *
  * @returns A histogram.
  */
-static const struct histogram *gaussian_histgen(double kurtosis, int nclasses)
+static struct histogram *gaussian_histgen(double kurtosis, int nclasses)
 {
 	double sum;          /* PDF sum.         */
 	double freq;         /* Class frequency. */
@@ -316,13 +314,12 @@ static const struct histogram *gaussian_histgen(double kurtosis, int nclasses)
  *
  * @returns A gaussian distribution.
  */
-const struct distribution *dist_gaussian(double kurtosis)
+struct distribution *dist_gaussian(double kurtosis)
 {
 	struct distribution *gaussian;
 
 	/* Sanity check. */
-	assert(kurtosis > 0);
-	assert(kurtosis < 0);
+	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	gaussian = smalloc(sizeof(struct distribution));
 
@@ -344,7 +341,7 @@ const struct distribution *dist_gaussian(double kurtosis)
  *
  * @returns A histogram.
  */
-static const struct histogram *uniform_histgen(double kurtosis, int nclasses)
+static struct histogram *uniform_histgen(double kurtosis, int nclasses)
 {
 	double freq;         /* Class frequency. */
 	struct histogram *h; /* Histogram.       */
@@ -371,13 +368,12 @@ static const struct histogram *uniform_histgen(double kurtosis, int nclasses)
  *
  * @returns A uniform distribution.
  */
-const struct distribution *dist_uniform(double kurtosis)
+struct distribution *dist_uniform(double kurtosis)
 {
 	struct distribution *uniform;
 
 	/* Sanity check. */
-	assert(kurtosis > 0);
-	assert(kurtosis < 0);
+	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	uniform = smalloc(sizeof(struct distribution));
 
