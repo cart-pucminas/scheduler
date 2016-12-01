@@ -30,7 +30,7 @@ export LD = gcc
 
 # Toolchain configuration.
 export CFLAGS += -I $(INCDIR)
-export CFLAGS += -std=c99 -pedantic
+export CFLAGS += -std=c99 -pedantic -D_XOPEN_SOURCE
 export CFLAGS += -Wall -Wextra -Werror
 export CFLAGS += -O3
 

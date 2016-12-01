@@ -53,10 +53,10 @@
 	 * @name Known Probability Distributions
 	 */
 	/**@{*/
-	extern distribution_tt beta(double);
-	extern distribution_tt gamma(double);
-	extern distribution_tt gaussian(double);
-	extern distribution_tt uniform(double);
+	extern distribution_tt dist_beta(double);
+	extern distribution_tt dist_gamma(double);
+	extern distribution_tt dist_gaussian(double);
+	extern distribution_tt dist_uniform(double);
 	/**@}*/
 
 #endif /* Statistics. */

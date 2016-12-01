@@ -193,7 +193,7 @@ static const struct histogram *beta_histgen(double kurtosis, int nclasses)
  *
  * @returns A beta distribution.
  */
-const struct distribution *beta(double kurtosis)
+const struct distribution *dist_beta(double kurtosis)
 {
 	struct distribution *beta;
 
@@ -254,7 +254,7 @@ static const struct histogram *gamma_histgen(double kurtosis, int nclasses)
  *
  * @returns A gamma distribution.
  */
-const struct distribution *gamma(double kurtosis)
+const struct distribution *dist_gamma(double kurtosis)
 {
 	struct distribution *gamma;
 
@@ -316,7 +316,7 @@ static const struct histogram *gaussian_histgen(double kurtosis, int nclasses)
  *
  * @returns A gaussian distribution.
  */
-const struct distribution *gaussian(double kurtosis)
+const struct distribution *dist_gaussian(double kurtosis)
 {
 	struct distribution *gaussian;
 
@@ -371,7 +371,7 @@ static const struct histogram *uniform_histgen(double kurtosis, int nclasses)
  *
  * @returns A uniform distribution.
  */
-const struct distribution *uniform(double kurtosis)
+const struct distribution *dist_uniform(double kurtosis)
 {
 	struct distribution *uniform;
 
