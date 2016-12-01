@@ -49,7 +49,10 @@ all: workloadgen
 # Builds WorkloadGen.
 workloadgen:               \
 	$(SRCDIR)/statistics.o \
-	$(SRCDIR)/workload.o
+	$(SRCDIR)/workload.o   \
+	$(SRCDIR)/main.o
+	mkdir -p $(BINDIR)
+	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
 
 # Builds object file from C source file.
 %.o: %.c
@@ -58,3 +61,4 @@ workloadgen:               \
 # Cleans compilation files.
 clean:
 	@rm -f $(OBJ)
+	@rm -rf $(BINDIR)
