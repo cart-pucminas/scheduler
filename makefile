@@ -55,10 +55,11 @@ workloadgen:               \
 	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
 
 # Builds SimShed.
-simsched:              \
-	$(SRCDIR)/thread.o \
-	$(SRCDIR)/queue.o  \
-	$(SRCDIR)/dqueue.o
+simsched:                \
+	$(SRCDIR)/thread.o   \
+	$(SRCDIR)/queue.o    \
+	$(SRCDIR)/dqueue.o   \
+	$(SRCDIR)/simsched.o
 
 # Builds object file from C source file.
 %.o: %.c
