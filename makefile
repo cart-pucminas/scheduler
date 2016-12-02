@@ -44,7 +44,7 @@ SRC = $(wildcard $(SRCDIR)/*.c)
 OBJ = $(SRC:.c=.o)
 
 # Builds everything
-all: workloadgen
+all: workloadgen simsched
 
 # Builds WorkloadGen.
 workloadgen:               \
@@ -53,6 +53,10 @@ workloadgen:               \
 	$(SRCDIR)/main.o
 	mkdir -p $(BINDIR)
 	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
+
+# Builds SimShed.
+simsched:              \
+	$(SRCDIR)/thread.o
 
 # Builds object file from C source file.
 %.o: %.c
