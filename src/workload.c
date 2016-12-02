@@ -250,3 +250,18 @@ struct workload *workload_read(FILE *infile)
 
 	return (w);
 }
+
+/**
+ * @brief Returns the number of tasks in a workload.
+ *
+ * @param w Target workload.
+ *
+ * @returns The number of tasks in the target workload.
+ */
+int workload_ntasks(const struct workload *w)
+{
+	/* Sanity check. */
+	assert(w != NULL);
+
+	return (w->ntasks);
+}
