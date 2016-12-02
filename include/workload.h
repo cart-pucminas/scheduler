@@ -52,6 +52,7 @@
 	/**@{*/
 	extern workload_tt workload_create(histogram_tt, int);
 	extern void workload_destroy(workload_tt);
+	extern int workload_ntasks(const_workload_tt);
 	extern void workload_sort(workload_tt, enum workload_sorting);
 	extern void workload_write(FILE *, const_workload_tt);
 	extern workload_tt workload_read(FILE *);

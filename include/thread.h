@@ -43,5 +43,4 @@
 	extern void thread_assign(thread_tt, int);
 	/**@}*/
 
-
 #endif /* THREAD_H_ */
