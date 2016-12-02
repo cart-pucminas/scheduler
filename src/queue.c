@@ -30,7 +30,7 @@
  */
 struct qnode
 {
-	void *obj;          /** Underlying object.        */
+	void *obj;          /**< Underlying object.       */
 	struct qnode *next; /**< Next objet in the queue. */
 };
 

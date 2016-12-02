@@ -57,7 +57,8 @@ workloadgen:               \
 # Builds SimShed.
 simsched:              \
 	$(SRCDIR)/thread.o \
-	$(SRCDIR)/queue.o
+	$(SRCDIR)/queue.o  \
+	$(SRCDIR)/dqueue.o
 
 # Builds object file from C source file.
 %.o: %.c
