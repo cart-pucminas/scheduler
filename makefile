@@ -59,7 +59,8 @@ simsched:                \
 	$(SRCDIR)/thread.o   \
 	$(SRCDIR)/queue.o    \
 	$(SRCDIR)/dqueue.o   \
-	$(SRCDIR)/simsched.o
+	$(SRCDIR)/simsched.o \
+	$(SRCDIR)/array.o \
 
 # Builds object file from C source file.
 %.o: %.c
