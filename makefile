@@ -21,6 +21,7 @@
 
 # Directories.
 export BINDIR = $(CURDIR)/bin
+export CONTRIB = $(CURDIR)/contrib
 export INCDIR = $(CURDIR)/include
 export SRCDIR = $(CURDIR)/src
 
@@ -38,7 +39,8 @@ export CFLAGS += -O3
 export LIBS = -lm
 
 # Source files.
-SRC = $(wildcard $(SRCDIR)/*.c)
+SRC = $(wildcard $(SRCDIR)/*.c) \
+	  $(wildcard $(CONTRIB)/*.c)
 
 # Object files.
 OBJ = $(SRC:.c=.o)
@@ -55,12 +57,12 @@ workloadgen:               \
 	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
 
 # Builds SimShed.
-simsched:                \
-	$(SRCDIR)/thread.o   \
-	$(SRCDIR)/queue.o    \
-	$(SRCDIR)/dqueue.o   \
-	$(SRCDIR)/simsched.o \
-	$(SRCDIR)/array.o \
+simsched:                 \
+	$(CONTRIB)/queue.o    \
+	$(CONTRIB)/dqueue.o   \
+	$(CONTRIB)/array.o    \
+	$(SRCDIR)/simsched.o  \
+	$(SRCDIR)/thread.o
 
 # Builds object file from C source file.
 %.o: %.c
