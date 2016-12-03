@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include <util.h>
+#include <array.h>
 #include <dqueue.h>
 #include <queue.h>
 
@@ -30,30 +31,66 @@
 #include <thread.h>
 
 /**
+ * @brief Working threads.
+ */
+static array_tt threads;
+
+/**
+ * @brief Ready threads.
+ */
+static queue_tt ready;
+
+/**
+ * @brief Running threads.
+ */
+static dqueue_tt running;
+
+/**
+ * @brief Spawns threads.
+ *
+ * @param nthreads Number of threads.
+ */
+static void threads_spawn(int nthreads)
+{
+	threads = array_create(nthreads);
+	ready = queue_create();	
+	running = dqueue_create();
+
+	for (int i = 0; i < nthreads; i++)
+	{
+		thread_tt t = thread_create();
+		array_set(threads, i, t);
+		queue_insert(ready, t);
+	}
+}
+
+/**
+ * @brief Joins threads.
+ */
+static void threads_join(void)
+{
+	for (int i = 0; i < array_size(threads); i++)
+	{
+		thread_tt t = array_get(threads, i);
+		thread_destroy(t);
+	}
+	array_destroy(threads);
+	dqueue_destroy(running);
+	queue_destroy(ready);
+}
+
+/**
  * @brief Simulates a parallel loop.
  */
 void simshed
 (const_workload_tt w, int nthreads, const struct scheduler *strategy)
 {
-	thread_tt *threads; /* Threads          */
-	dqueue_tt running;  /* Running threads. */
-	queue_tt ready;     /* Ready threads.   */
-
 	/* Sanity check. */
 	assert(w != NULL);
 	assert(nthreads > 0);
 	assert(strategy != NULL);
 
-	ready = queue_create();	
-	running = dqueue_create();
-
-	/* Create threads. */
-	threads = smalloc(nthreads*sizeof(thread_tt));
-	for (int i = 0; i < nthreads; i++)
-	{
-		threads[i] = thread_create();
-		queue_insert(ready, &threads[i]);
-	}
+	threads_spawn(nthreads);
 
 	/* Simulate. */
 	for (int i = 0; i < workload_ntasks(w); /* noop */)
@@ -77,12 +114,7 @@ void simshed
 		}
 	}
 
-	/* House keeping. */
-	for (int i = 0; i < nthreads; i++)
-		thread_destroy(threads[i]);
-	free(threads);
-	dqueue_destroy(running);
-	queue_destroy(ready);
+	threads_join();
 }
 
 
