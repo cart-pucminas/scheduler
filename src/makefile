@@ -19,44 +19,31 @@
 # 02110-1301, USA.
 #
 
-# Directories.
-export BINDIR =  $(CURDIR)/bin
-export CONTRIB = $(CURDIR)/contrib
-export INCDIR =  $(CURDIR)/include
-export LIBDIR =  $(CURDIR)/lib
-export SRCDIR =  $(CURDIR)/src
-
-# Toolchain
-export AR = ar
-export CC = gcc
-export LD = gcc
-
-# Toolchain configuration.
-export ARFLAGS  = -vq
-export CFLAGS  += -I $(INCDIR)
-export CFLAGS  += -std=c99 -pedantic -D_XOPEN_SOURCE
-export CFLAGS  += -Wall -Wextra -Werror
-export CFLAGS  += -O3
-
-# Libraries.
-export LIBS = $(LIBDIR)/mylib.a -lm
-
-# Builds everything
+# Builds everything.
 all: workloadgen simsched
 
-# Builds SimSched
-simsched: mylib
-	cd $(SRCDIR) && $(MAKE) simsched
-
 # Builds WorkloadGen.
-workloadgen: mylib
-	cd $(SRCDIR) && $(MAKE) workloadgen
+workloadgen:                     \
+		common/workload.o        \
+		workloadgen/main.o       \
+		workloadgen/statistics.o
+	mkdir -p $(BINDIR)
+	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
 
-# Builds MyLib:
-mylib:
-	cd $(CONTRIB) && $(MAKE) all
+# Builds SimSched.
+simsched:               \
+	common/workload.o   \
+	simsched/simsched.o \
+	simsched/thread.o
+
+# Builds object file from C source file.
+%.o: %.c
+	$(CC) $(CFLAGS) $< -c -o $@
 
 # Cleans compilation files.
 clean:
-	cd $(CONTRIB) && $(MAKE) clean
-	cd $(SRCDIR) && $(MAKE) clean
+	@rm -f common/*.o
+	@rm -f workloadgen/*.o
+	@rm -f simsched/*.o
+	@rm -f $(BINDIR)/workloadgen
+	@rm -f $(BINDIR)/simsched

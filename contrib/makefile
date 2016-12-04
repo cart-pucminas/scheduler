@@ -19,44 +19,23 @@
 # 02110-1301, USA.
 #
 
-# Directories.
-export BINDIR =  $(CURDIR)/bin
-export CONTRIB = $(CURDIR)/contrib
-export INCDIR =  $(CURDIR)/include
-export LIBDIR =  $(CURDIR)/lib
-export SRCDIR =  $(CURDIR)/src
+# Source files.
+SRC = $(wildcard *.c)
 
-# Toolchain
-export AR = ar
-export CC = gcc
-export LD = gcc
+# Object files.
+OBJ = $(SRC:.c=.o)
 
-# Toolchain configuration.
-export ARFLAGS  = -vq
-export CFLAGS  += -I $(INCDIR)
-export CFLAGS  += -std=c99 -pedantic -D_XOPEN_SOURCE
-export CFLAGS  += -Wall -Wextra -Werror
-export CFLAGS  += -O3
+# Builds everything.
+all: $(OBJ)
+	@mkdir -p $(LIBDIR)
+	$(AR) $(ARFLAGS) $(LIBDIR)/mylib.a
 
-# Libraries.
-export LIBS = $(LIBDIR)/mylib.a -lm
-
-# Builds everything
-all: workloadgen simsched
-
-# Builds SimSched
-simsched: mylib
-	cd $(SRCDIR) && $(MAKE) simsched
-
-# Builds WorkloadGen.
-workloadgen: mylib
-	cd $(SRCDIR) && $(MAKE) workloadgen
-
-# Builds MyLib:
-mylib:
-	cd $(CONTRIB) && $(MAKE) all
+# Builds object file from C source file.
+%.o: %.c
+	$(CC) $(CFLAGS) $< -c -o $@
 
 # Cleans compilation files.
 clean:
-	cd $(CONTRIB) && $(MAKE) clean
-	cd $(SRCDIR) && $(MAKE) clean
+	@rm -f *.o
+	@rm -f $(LIBDIR)/mylib.a
+
