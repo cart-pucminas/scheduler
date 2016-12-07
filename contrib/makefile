@@ -28,7 +28,7 @@ OBJ = $(SRC:.c=.o)
 # Builds everything.
 all: $(OBJ)
 	@mkdir -p $(LIBDIR)
-	$(AR) $(ARFLAGS) $(LIBDIR)/mylib.a
+	$(AR) $(ARFLAGS) $(LIBDIR)/libmy.a $(OBJ)  
 
 # Builds object file from C source file.
 %.o: %.c
@@ -37,5 +37,5 @@ all: $(OBJ)
 # Cleans compilation files.
 clean:
 	@rm -f *.o
-	@rm -f $(LIBDIR)/mylib.a
+	@rm -f $(LIBDIR)/libmy.a
 

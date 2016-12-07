@@ -22,8 +22,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <dqueue.h>
+#include <mylib/util.h>
+#include <mylib/dqueue.h>
 
 /**
  * @brief Delta queue node.
@@ -153,7 +153,7 @@ bool dqueue_empty(const struct dqueue *q)
  *
  * @returns The counter of the front object in the target delta queue.
  */
-int dqueue_nexter_counter(const struct dqueue *q)
+int dqueue_next_counter(const struct dqueue *q)
 {
 	/* Sanity check. */
 	assert(q != NULL);

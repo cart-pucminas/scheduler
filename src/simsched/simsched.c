@@ -20,11 +20,13 @@
  */
 
 #include <assert.h>
+#include <limits.h>
+#include <math.h>
 
-#include <util.h>
-#include <array.h>
-#include <dqueue.h>
-#include <queue.h>
+#include <mylib/util.h>
+#include <mylib/array.h>
+#include <mylib/dqueue.h>
+#include <mylib/queue.h>
 
 #include <scheduler.h>
 #include <workload.h>
@@ -80,7 +82,62 @@ static void threads_join(void)
 }
 
 /**
+ * @brief Dumps simulation statistics.
+ */
+static void simsched_dump(void)
+{
+	int min, max, total;
+	double mean, stddev;
+
+	min = INT_MAX; max = INT_MIN;
+	total = 0; mean = 0.0; stddev = 0.0;
+
+	/* Compute min, max, total. */
+	for (int i = 0; i < array_size(threads); i++)
+	{
+		thread_tt t; /* Working thread.         */
+		int wtotal;  /* Workload assigned to t. */
+
+		t = array_get(threads, i);
+		wtotal = thread_wtotal(t);
+
+		if (min > wtotal)
+			min = wtotal;
+		if (max < wtotal)
+			max = wtotal;
+
+		total += wtotal;
+	}
+
+	/* Compute mean. */
+	mean = ((double) total)/array_size(threads);
+
+	/* Compute stddev. */
+	for (int i = 0; i < array_size(threads); i++)
+	{
+		thread_tt t;
+
+		t = array_get(threads, i);
+
+		stddev += pow(thread_wtotal(t) - mean, 2);
+	}
+	stddev = sqrt(stddev/(array_size(threads)));
+
+	/* Print statistics. */
+	printf("min: %d\n", min);
+	printf("max: %d\n", max);
+	printf("mean: %lf\n", mean);
+	printf("stddev: %lf\n", 100*stddev/mean);
+	printf("imbalance: %lf\n", 100*(max - min)/((double) total));
+	printf("speeddown: %lf\n", max/((double) min));
+}
+
+/**
  * @brief Simulates a parallel loop.
+ *
+ * @param w        Workload.
+ * @param nthreads Number of threads
+ * @param strategy Scheduling strategy.
  */
 void simshed
 (const_workload_tt w, int nthreads, const struct scheduler *strategy)
@@ -91,6 +148,8 @@ void simshed
 	assert(strategy != NULL);
 
 	threads_spawn(nthreads);
+
+	strategy->init(w, threads);
 
 	/* Simulate. */
 	for (int i = 0; i < workload_ntasks(w); /* noop */)
@@ -114,7 +173,10 @@ void simshed
 		}
 	}
 
+	strategy->end();
+
+	simsched_dump();
+
 	threads_join();
 }
-
 

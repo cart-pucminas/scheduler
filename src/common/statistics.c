@@ -22,8 +22,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <mylib/util.h>
+
 #include <statistics.h>
-#include <util.h>
 
 /*====================================================================*
  * HISTOGRAM                                                          *

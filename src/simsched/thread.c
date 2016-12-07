@@ -19,7 +19,8 @@
  * 02110-1301, USA.
  */
 
-#include <util.h>
+#include <mylib/util.h>
+
 #include <thread.h>
 
 /**

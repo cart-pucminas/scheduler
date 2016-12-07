@@ -39,7 +39,7 @@ export CFLAGS  += -Wall -Wextra -Werror
 export CFLAGS  += -O3
 
 # Libraries.
-export LIBS = $(LIBDIR)/mylib.a -lm
+export LIBS = $(LIBDIR)/libmy.a -lm
 
 # Builds everything
 all: workloadgen simsched

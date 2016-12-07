@@ -23,18 +23,23 @@
 all: workloadgen simsched
 
 # Builds WorkloadGen.
-workloadgen:                     \
-		common/workload.o        \
-		workloadgen/main.o       \
-		workloadgen/statistics.o
+workloadgen:                \
+		common/workload.o   \
+		common/statistics.o \
+		workloadgen/main.o       
 	mkdir -p $(BINDIR)
 	$(LD) $(CFLAGS) $^ -o $(BINDIR)/workloadgen $(LIBS)
 
 # Builds SimSched.
-simsched:               \
-	common/workload.o   \
-	simsched/simsched.o \
-	simsched/thread.o
+simsched:                   \
+		common/workload.o   \
+		common/statistics.o \
+		simsched/simsched.o \
+		simsched/thread.o   \
+		simsched/static.o   \
+		simsched/main.o
+	@mkdir -p $(BINDIR)
+	$(LD) $(CFLAGS) $^ -o $(BINDIR)/simsched $(LIBS)
 
 # Builds object file from C source file.
 %.o: %.c

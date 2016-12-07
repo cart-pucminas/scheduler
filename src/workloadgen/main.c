@@ -25,7 +25,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <util.h>
+#include <mylib/util.h>
+
 #include <statistics.h>
 #include <workload.h>
 
@@ -39,10 +40,10 @@ static struct
 	int nclasses;                    /**< Number of task classes.   */
 	int ntasks;                      /**< Number of tasks.          */
 	enum workload_sorting sorting;   /**< Workload sorting.         */
-} args = { 0, 0, 0.0 , 0, WORKLOAD_SHUFFLE };
+} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE };
 
 /*============================================================================*
- *                             Argument Checking                              *
+ * ARGUMENT CHECKING                                                          *
  *============================================================================*/
 
 /**
@@ -118,6 +119,9 @@ static enum workload_sorting getsort(const char *sortname)
 
 /**
  * @brief Checks program arguments.
+ *
+ * @param distname Name of probability distribution.
+ * @param sortname Task sorting name.
  */
 static void checkargs(const char *distname, const char *sortname)
 {
@@ -147,7 +151,6 @@ static void readargs(int argc, const char **argv)
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
 	{	
-		/* Parse command. */
 		if (!strcmp(argv[i], "--dist"))
 			distname = argv[++i];
 		else if (!strcmp(argv[i], "--kurtosis"))

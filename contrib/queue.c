@@ -22,8 +22,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <queue.h>
+#include <mylib/util.h>
+#include <mylib/queue.h>
 
 /**
  * @brief Queue node.

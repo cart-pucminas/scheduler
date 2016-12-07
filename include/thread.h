@@ -33,7 +33,7 @@
 	typedef const struct thread * const_thread_tt;
 
 	/**
-	 * @name Operations on Workload
+	 * @name Operations on Thread
 	 */
 	/**@{*/
 	extern thread_tt thread_create(void);

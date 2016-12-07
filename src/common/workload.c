@@ -25,9 +25,10 @@
 #include <time.h>
 #include <stdio.h>
 
+#include <mylib/util.h>
+
 #include <statistics.h>
 #include <workload.h>
-#include <util.h>
 
 /**
  * @brief Synthetic workload.
@@ -242,7 +243,9 @@ struct workload *workload_read(FILE *infile)
 
 	assert(fscanf(infile, "%d\n", &ntasks) == 1);
 
-	w = smalloc(ntasks);
+	w = smalloc(sizeof(struct workload));
+	w->tasks = smalloc(ntasks*sizeof(int));
+	w->ntasks = ntasks;
 
 	/* Write workload to file. */
 	for (int i = 0; i < ntasks; i++)
@@ -264,4 +267,21 @@ int workload_ntasks(const struct workload *w)
 	assert(w != NULL);
 
 	return (w->ntasks);
+}
+
+/**
+ * @brief Returns ith task in a workload.
+ *
+ * @param w   Target workload.
+ * @param idx Index of  target task.
+ *
+ * @returns The ith task in the target workload.
+ */
+int workload_task(const struct workload *w, int idx)
+{
+	/* Sanity check. */
+	assert(w != NULL);
+	assert((idx >= 0) && (idx < w->ntasks));
+
+	return (w->tasks[idx]);
 }

@@ -22,7 +22,8 @@
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
 
-	#include "dqueue.h"
+	#include <mylib/array.h>
+	#include <mylib/dqueue.h>
 
 	#include "workload.h"
 	#include "thread.h"
@@ -32,19 +33,21 @@
 	 */
 	struct scheduler
 	{
-		void (*init)(const_workload_tt, thread_tt *, int); /**< Initialize. */
-		int (*sched)(dqueue_tt, thread_tt);                /**< Schedule.   */
-		void (*end)(void);                                 /**< End.        */
+		void (*init)(const_workload_tt, array_tt); /**< Initialize. */
+		int (*sched)(dqueue_tt, thread_tt);        /**< Schedule.   */
+		void (*end)(void);                         /**< End.        */
 	};
 
 	/**
 	 * @brief Supported Loop Scheduling Strategies.
 	 */
 	/**@{*/
-	extern const struct scheduler *sched_static;
-	extern const struct shceduler *sched_lpt;
 	extern const struct scheduler *sched_dynamic;
-	extern const struct scheduler *srr;
+	extern const struct scheduler *sched_lpt;
+	extern const struct scheduler *sched_srr;
+	extern const struct scheduler *sched_static;
 	/**@}*/
+
+	extern void simshed(const_workload_tt, int, const struct scheduler*);
 
 #endif /* SCHEDULER_H_ */
