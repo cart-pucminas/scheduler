@@ -3,30 +3,30 @@
 
 ABOUT
 
-	This repository packages a collection of tools for analyzing and
-	assessing the performance of loop scheduling strategies. Here is
-	a brief description of each tool that is hereby shipped:
+    This repository packages a collection of tools for analyzing and
+    assessing the performance of loop scheduling strategies. Here is
+    a brief description of each tool that is hereby shipped:
 
-		* WorkloadGen: a synthetic workload generator that is able to
-		  generate even and uneven workloads based on well-known
-		  probabilistic density functions.
-		
-		* SimSched: an event-driven simulator that enables a fast and
-		  accurate performance evaluation of several loop scheduling
-		  strategies.
+        * WorkloadGen: a synthetic workload generator that is able to
+          generate even and uneven workloads based on well-known
+          probabilistic density functions.
+        
+        * SimSched: an event-driven simulator that enables a fast and
+          accurate performance evaluation of several loop scheduling
+          strategies.
 
 BUILDING
 
-	To build this repository:
+    To build this repository:
 
-		$ cd ~/
-		$ git clone https://github.com/cart-pucminas/scheduler
-		$ cd scheduler
-		$ make
+        $ cd ~/
+        $ git clone https://github.com/cart-pucminas/scheduler
+        $ cd scheduler
+        $ make
 
 LICENSE AND MAINTAINERS
 
-	This is an open source project that is publicy available under the
-	GPL V3 license and is maintained by Pedro H. Penna. Any questions
-	or suggestions send him an email: <pedrohenriquepenna@gmail.com>.
+    This is an open source project that is publicy available under the
+    GPL V3 license and is maintained by Pedro H. Penna. Any questions
+    or suggestions send him an email: <pedrohenriquepenna@gmail.com>.
 
