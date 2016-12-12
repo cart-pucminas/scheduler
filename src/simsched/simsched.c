@@ -166,10 +166,10 @@ void simshed
 		/* Reschedule running threads. */
 		while (!dqueue_empty(running))
 		{
+			queue_insert(ready, dqueue_remove(running));
+
 			if (dqueue_next_counter(running) != 0)
 				break;
-
-			queue_insert(ready, dqueue_remove(running));
 		}
 	}
 
