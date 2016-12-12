@@ -109,12 +109,16 @@ int thread_wtotal(const struct thread *t)
  *
  * @param t     Target thread.
  * @param wsize Work size.
+ *
+ * @returns Required processing time.
  */
-void thread_assign(struct thread *t, int wsize)
+int thread_assign(struct thread *t, int wsize)
 {
 	/* Sanity check. */
 	assert(t != NULL);
 
 	t->wtotal += wsize;
+
+	return (t->capacity*wsize);
 }
 

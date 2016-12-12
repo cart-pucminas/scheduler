@@ -40,7 +40,7 @@
 	extern void thread_destroy(thread_tt);
 	extern int thread_gettid(const_thread_tt);
 	extern int thread_wtotal(const_thread_tt);
-	extern void thread_assign(thread_tt, int);
+	extern int thread_assign(thread_tt, int);
 	/**@}*/
 
 #endif /* THREAD_H_ */

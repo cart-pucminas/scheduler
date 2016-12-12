@@ -32,10 +32,9 @@
  */
 static struct
 {
-	workload_tt workload;              /**< Input workload.            */
-	int nthreads;                      /**< Number of working threads. */
-	array_tt  threads;                 /**< Working threads.           */
-	const struct scheduler *scheduler; /**< Loop scheduling strategy.  */
+	workload_tt workload;              /**< Input workload.           */
+	array_tt  threads;                 /**< Working threads.          */
+	const struct scheduler *scheduler; /**< Loop scheduling strategy. */
 } args = { NULL, 0, NULL, NULL };
 
 /*============================================================================*
@@ -52,7 +51,6 @@ static void usage(void)
 	printf("Options:\n");
 	printf("  --arch <filename>     Architecture file\n");
 	printf("  --input <filename>    Input workload file\n");
-	printf("  --nthreads <number>   Number of threads\n");
 	printf("  --help                Display this message\n");
 	printf("Loop Schedulers:\n");
 	printf("  dynamic  Dynamic Scheduling\n");
@@ -93,20 +91,34 @@ static workload_tt get_workload(const char *filename)
  *
  * @returns Working threads.
  */
-static array_tt get_threads(const char *filename, int nthreads)
+static array_tt get_threads(const char *filename)
 {
-	array_tt threads;
+	FILE *file;       /* Architecture file.         */
+	int nthreads;     /* Number of working threads. */
+	array_tt threads; /* Working threads.           */
 
-	((void) filename);
-	
+	if ((file = fopen(filename, "r")) == NULL)
+		error("failed to open architecture file");
+
+	assert(fscanf(file, "%d", &nthreads) == 1);
+	if (nthreads < 1)
+		error("bad architecture file");
+
 	threads = array_create(nthreads);
 
 	for (int i = 0; i < nthreads; i++)
 	{
-		thread_tt t = thread_create(100);
+		thread_tt t;  /* Thread.                       */
+		int capacity; /* Thread's processing capacity. */
+		
+		assert(fscanf(file, "%d", &capacity) == 1);
+
+		t = thread_create(capacity);
 		array_set(threads, i, t);
 	}
 
+	/* House keeping. */
+	fclose(file);
 
 	return (threads);
 }
@@ -119,14 +131,12 @@ static array_tt get_threads(const char *filename, int nthreads)
  */
 static void checkargs(const char *wfilename, const char *afilename)
 {
-	((void) afilename);
-
+	if (afilename == NULL)
+		error("missing architecture file");
 	if (wfilename == NULL)
 		error("missing input workload file");
 	if (args.scheduler == NULL)
 		error("missing loop scheduling strategy");
-	if (args.nthreads <= 1)
-		error("invalid number of threads");
 }
 
 /**
@@ -147,8 +157,6 @@ static void readargs(int argc, const char **argv)
 			afilename = argv[++i];
 		else if (!strcmp(argv[i], "--input"))
 			wfilename = argv[++i];
-		else if (!strcmp(argv[i], "--nthreads"))
-			args.nthreads = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 		else
@@ -169,7 +177,7 @@ static void readargs(int argc, const char **argv)
 	checkargs(wfilename, afilename);
 
 	args.workload = get_workload(wfilename);
-	args.threads = get_threads(afilename, args.nthreads);
+	args.threads = get_threads(afilename);
 }
 
 /*============================================================================*
