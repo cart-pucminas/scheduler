@@ -125,7 +125,7 @@ static void readargs(int argc, const char **argv)
 			else if (!strcmp(argv[i], "lpt"))
 				args.scheduler = sched_lpt;
 			else if (!strcmp(argv[i], "srr"))
-				args.scheduler = NULL;
+				args.scheduler = sched_srr;
 			else if (!strcmp(argv[i], "static"))
 				args.scheduler = sched_static;
 			else

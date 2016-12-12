@@ -39,6 +39,7 @@ simsched:                   \
 		simsched/static.o   \
 		simsched/dynamic.o  \
 		simsched/lpt.o      \
+		simsched/srr.o      \
 		simsched/main.o
 	@mkdir -p $(BINDIR)
 	$(LD) $(CFLAGS) $^ -o $(BINDIR)/simsched $(LIBS)
