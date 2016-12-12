@@ -121,12 +121,12 @@ static void readargs(int argc, const char **argv)
 		else
 		{
 			if (!strcmp(argv[i], "dynamic"))
+				args.scheduler = sched_dynamic;
+			else if (!strcmp(argv[i], "lpt"))
 				args.scheduler = NULL;
-			if (!strcmp(argv[i], "lpt"))
+			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = NULL;
-			if (!strcmp(argv[i], "srr"))
-				args.scheduler = NULL;
-			if (!strcmp(argv[i], "static"))
+			else if (!strcmp(argv[i], "static"))
 				args.scheduler = sched_static;
 			else
 				error("unsupported loop scheduling strategy");
