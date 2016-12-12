@@ -123,7 +123,7 @@ static void readargs(int argc, const char **argv)
 			if (!strcmp(argv[i], "dynamic"))
 				args.scheduler = sched_dynamic;
 			else if (!strcmp(argv[i], "lpt"))
-				args.scheduler = NULL;
+				args.scheduler = sched_lpt;
 			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = NULL;
 			else if (!strcmp(argv[i], "static"))

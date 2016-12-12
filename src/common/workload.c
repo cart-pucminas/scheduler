@@ -207,6 +207,43 @@ void workload_sort(struct workload *w, enum workload_sorting sorting)
 			break;
 	}
 }
+/**
+ * @brief Computes the task sorting map of a workload.
+ * 
+ * @param w Target workload
+ * 
+ * @returns Sorting map.
+ */
+int *workload_sortmap(const struct workload *w)
+{
+	int *map;
+
+	/* Sanity check. */
+	assert(w != NULL);
+	
+	map = smalloc(w->ntasks*sizeof(int));
+	for (int i = 0; i < w->ntasks; i++)
+		map[i] = i;
+
+	/* Sort. */
+	for (int i = 0; i < w->ntasks - 1; i++)
+	{
+		for (int j = i + 1; j < w->ntasks; j++)
+		{
+			/* Swap. */
+			if (w->tasks[map[j]] < w->tasks[map[i]])
+			{
+				int tmp;
+				
+				tmp = map[j];
+				map[j] = map[i];
+				map[i] = tmp;
+			}
+		}
+	}
+	
+	return (map);
+} 
 
 /**
  * @brief Writes a workload to a file.

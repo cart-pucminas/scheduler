@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <mylib/util.h>
 #include <mylib/dqueue.h>
@@ -28,7 +29,7 @@
 #include <scheduler.h>
 
 /**
- * @brief Static scheduler data.
+ * @brief LPT scheduler data.
  */
 static struct
 {
@@ -38,16 +39,17 @@ static struct
 } scheddata = { NULL, NULL, NULL };
 
 /**
- * @brief Initializes the static scheduler.
+ * @brief Initializes the lpt scheduler.
  * 
  * @param workload Target workload.
  * @param threads  Target threads.
  */
-void scheduler_static_init(const_workload_tt workload, array_tt threads)
+void scheduler_lpt_init(const_workload_tt workload, array_tt threads)
 {
-	int tidx;      /* Index of working thread. */
-	int ntasks;    /* Workload size.           */
-	int chunksize; /* Chunk size.              */
+	int ntasks;   /* Number of tasks.              */
+	int nthreads; /* Number of threads.            */
+	int *map;     /* Task sorting map.             */
+	int *wsize;   /* Workload assigned to threads. */
 	
 	/* Sanity check. */
 	assert(workload != NULL);
@@ -58,45 +60,55 @@ void scheduler_static_init(const_workload_tt workload, array_tt threads)
 		return;
 	
 	ntasks = workload_ntasks(workload);
+	nthreads = array_size(threads);
 
 	/* Initialize scheduler data. */
 	scheddata.workload = workload;
 	scheddata.threads = threads;
 	scheddata.taskmap = smalloc(ntasks*sizeof(thread_tt));
-		
+
+	map = workload_sortmap(workload);
+	wsize = smalloc(nthreads*sizeof(int));
+	memset(wsize, 0, nthreads*sizeof(int));
+
 	/* Assign tasks to threads. */
-	tidx = 0;
-	chunksize = ntasks/array_size(threads);
 	for (int i = 0; i < ntasks; i++)
 	{
-		scheddata.taskmap[i] = array_get(threads, tidx);
-		
-		if (--chunksize == 0)
+		int tidx = 0;
+
+		for (int j = 1; j < array_size(threads); j++)
 		{
-			chunksize = ntasks/array_size(threads);
-			tidx = (tidx + 1)%array_size(threads);
+			if (wsize[j] < wsize[tidx])
+				tidx = j;
 		}
+
+		wsize[tidx] += workload_task(workload, map[i]);
+		scheddata.taskmap[map[i]] = array_get(threads, tidx);
 	}
+	
+	/* House keeping. */
+	free(map);
+	free(wsize);
 }
 
 /**
- * @brief Finalizes the static scheduler.
+ * @brief Finalizes the lpt scheduler.
  */
-void scheduler_static_end(void)
+void scheduler_lpt_end(void)
 {
 	free(scheddata.taskmap);
 	scheddata.taskmap = NULL;
 }
 
 /**
- * @brief Static scheduler.
+ * @brief LPT scheduler.
  * 
  * @param running Target queue of running threads.
  * @param t       Target thread
  * 
  * @returns Number scheduled tasks,
  */
-int scheduler_static_sched(dqueue_tt running, thread_tt t)
+int scheduler_lpt_sched(dqueue_tt running, thread_tt t)
 {
 	int n = 0;     /* Number of tasks scheduled. */
 	int wsize = 0; /* Size of assigned work.     */
@@ -119,12 +131,13 @@ int scheduler_static_sched(dqueue_tt running, thread_tt t)
 }
 
 /**
- * @brief Static scheduler.
+ * @brief LPT scheduler.
  */
-static struct scheduler _sched_static = {
-	scheduler_static_init,
-	scheduler_static_sched,
-	scheduler_static_end
+static struct scheduler _sched_lpt = {
+	scheduler_lpt_init,
+	scheduler_lpt_sched,
+	scheduler_lpt_end
 };
 
-const struct scheduler *sched_static = &_sched_static;
+const struct scheduler *sched_lpt = &_sched_lpt;
+
