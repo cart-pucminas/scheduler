@@ -28,8 +28,9 @@
  */
 struct thread
 {
-	int tid;    /**< Identification number,   */
-	int wtotal; /**< Total assigned workload. */
+	int tid;      /**< Identification number,   */
+	int wtotal;   /**< Total assigned workload. */
+	int capacity; /**< Processing capacity.     */
 };
 
 /**
@@ -40,18 +41,22 @@ static int next_tid = 0;
 /**
  * @brief Creates a thread.
  *
- * @param tid Identification number.
+ * @param capacity Processing capacity.
  *
  * @returns A thread.
  */
-struct thread *thread_create(void)
+struct thread *thread_create(int capacity)
 {
 	struct thread *t;
+
+	/* Sanity check. */
+	assert((capacity >= 1) && (capacity <= 100));
 
 	t = smalloc(sizeof(struct thread));
 
 	t->tid = next_tid++;
 	t->wtotal = 0;
+	t->capacity = capacity;
 
 	return (t);
 }

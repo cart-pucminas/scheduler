@@ -32,10 +32,11 @@
  */
 static struct
 {
-	workload_tt workload;              /**< Input workload.           */
-	int nthreads;                      /**< Number of threads.        */
-	const struct scheduler *scheduler; /**< Loop scheduling strategy. */
-} args = { NULL, 0, NULL };
+	workload_tt workload;              /**< Input workload.            */
+	int nthreads;                      /**< Number of working threads. */
+	array_tt  threads;                 /**< Working threads.           */
+	const struct scheduler *scheduler; /**< Loop scheduling strategy.  */
+} args = { NULL, 0, NULL, NULL };
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -49,6 +50,7 @@ static void usage(void)
 	printf("Usage: simsched [options] <scheduler>\n");
 	printf("Brief: loop scheduler simulator\n");
 	printf("Options:\n");
+	printf("  --arch <filename>     Architecture file\n");
 	printf("  --input <filename>    Input workload file\n");
 	printf("  --nthreads <number>   Number of threads\n");
 	printf("  --help                Display this message\n");
@@ -85,13 +87,41 @@ static workload_tt get_workload(const char *filename)
 }
 
 /**
+ * @brief Gets threads.
+ *
+ * @param filename Architecture filename.
+ *
+ * @returns Working threads.
+ */
+static array_tt get_threads(const char *filename, int nthreads)
+{
+	array_tt threads;
+
+	((void) filename);
+	
+	threads = array_create(nthreads);
+
+	for (int i = 0; i < nthreads; i++)
+	{
+		thread_tt t = thread_create(100);
+		array_set(threads, i, t);
+	}
+
+
+	return (threads);
+}
+
+/**
  * @brief Checks program arguments.
  *
- * @param filename Input workload filename.
+ * @param wfilename Input workload filename.
+ * @param afilename Input architecture filename.
  */
-static void checkargs(const char *filename)
+static void checkargs(const char *wfilename, const char *afilename)
 {
-	if (filename == NULL)
+	((void) afilename);
+
+	if (wfilename == NULL)
 		error("missing input workload file");
 	if (args.scheduler == NULL)
 		error("missing loop scheduling strategy");
@@ -107,13 +137,16 @@ static void checkargs(const char *filename)
  */
 static void readargs(int argc, const char **argv)
 {
-	const char *filename = NULL;
+	const char *wfilename = NULL;
+	const char *afilename = NULL;
 
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
 	{	
-		if (!strcmp(argv[i], "--input"))
-			filename = argv[++i];
+		if (!strcmp(argv[i], "--arch"))
+			afilename = argv[++i];
+		else if (!strcmp(argv[i], "--input"))
+			wfilename = argv[++i];
 		else if (!strcmp(argv[i], "--nthreads"))
 			args.nthreads = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--help"))
@@ -133,9 +166,10 @@ static void readargs(int argc, const char **argv)
 		}
 	}
 
-	checkargs(filename);
+	checkargs(wfilename, afilename);
 
-	args.workload = get_workload(filename);
+	args.workload = get_workload(wfilename);
+	args.threads = get_threads(afilename, args.nthreads);
 }
 
 /*============================================================================*
@@ -149,9 +183,15 @@ int main(int argc, const const char **argv)
 {
 	readargs(argc, argv);
 
-	simshed(args.workload, args.nthreads, args.scheduler);
+	simshed(args.workload, args.threads, args.scheduler);
 
 	/* House keeping, */
+	for (int i = 0; i < array_size(args.threads); i++)
+	{
+		thread_tt t = array_get(args.threads, i);
+		thread_destroy(t);
+	}
+	array_destroy(args.threads);
 	workload_destroy(args.workload);
 
 	return (EXIT_SUCCESS);

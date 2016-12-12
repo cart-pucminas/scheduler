@@ -48,6 +48,6 @@
 	extern const struct scheduler *sched_static;
 	/**@}*/
 
-	extern void simshed(const_workload_tt, int, const struct scheduler*);
+	extern void simshed(const_workload_tt, array_tt, const struct scheduler*);
 
 #endif /* SCHEDULER_H_ */

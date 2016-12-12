@@ -33,11 +33,6 @@
 #include <thread.h>
 
 /**
- * @brief Working threads.
- */
-static array_tt threads;
-
-/**
  * @brief Ready threads.
  */
 static queue_tt ready;
@@ -50,18 +45,16 @@ static dqueue_tt running;
 /**
  * @brief Spawns threads.
  *
- * @param nthreads Number of threads.
+ * @param threads Working threads.
  */
-static void threads_spawn(int nthreads)
+static void threads_spawn(array_tt threads)
 {
-	threads = array_create(nthreads);
 	ready = queue_create();	
 	running = dqueue_create();
 
-	for (int i = 0; i < nthreads; i++)
+	for (int i = 0; i < array_size(threads); i++)
 	{
-		thread_tt t = thread_create();
-		array_set(threads, i, t);
+		thread_tt t = array_get(threads, i);
 		queue_insert(ready, t);
 	}
 }
@@ -71,20 +64,16 @@ static void threads_spawn(int nthreads)
  */
 static void threads_join(void)
 {
-	for (int i = 0; i < array_size(threads); i++)
-	{
-		thread_tt t = array_get(threads, i);
-		thread_destroy(t);
-	}
-	array_destroy(threads);
 	dqueue_destroy(running);
 	queue_destroy(ready);
 }
 
 /**
  * @brief Dumps simulation statistics.
+ *
+ * @param threads Working threads.
  */
-static void simsched_dump(void)
+static void simsched_dump(array_tt threads)
 {
 	int min, max, total;
 	double mean, stddev;
@@ -136,18 +125,17 @@ static void simsched_dump(void)
  * @brief Simulates a parallel loop.
  *
  * @param w        Workload.
- * @param nthreads Number of threads
+ * @param threads  Working threads.
  * @param strategy Scheduling strategy.
  */
-void simshed
-(const_workload_tt w, int nthreads, const struct scheduler *strategy)
+void simshed(const_workload_tt w, array_tt threads, const struct scheduler *strategy)
 {
 	/* Sanity check. */
 	assert(w != NULL);
-	assert(nthreads > 0);
+	assert(threads != NULL);
 	assert(strategy != NULL);
 
-	threads_spawn(nthreads);
+	threads_spawn(threads);
 
 	strategy->init(w, threads);
 
@@ -175,7 +163,7 @@ void simshed
 
 	strategy->end();
 
-	simsched_dump();
+	simsched_dump(threads);
 
 	threads_join();
 }

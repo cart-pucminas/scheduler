@@ -36,7 +36,7 @@
 	 * @name Operations on Thread
 	 */
 	/**@{*/
-	extern thread_tt thread_create(void);
+	extern thread_tt thread_create(int);
 	extern void thread_destroy(thread_tt);
 	extern int thread_gettid(const_thread_tt);
 	extern int thread_wtotal(const_thread_tt);
