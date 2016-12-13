@@ -42,16 +42,19 @@ struct workload
 /**
  * @brief Creates a workload.
  *
- * @param h   Histogram of probability distribution.
- * @param ntasks Number of tasks.
+ * @param h        Histogram of probability distribution.
+ * @param skewness Skewness.
+ * @param ntasks   Number of tasks.
  */
-struct workload *workload_create(histogram_tt h, int ntasks)
+struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 {
 	int k;              /* Residual tasks. */
 	struct workload *w; /* Workload.       */
 
 	/* Sanity check. */
 	assert(h != NULL);
+	assert(skewness >= WORKLOAD_SKEWNESS_CONST);
+	assert(skewness <= WORKLOAD_SKEWNESS_LINEAR);
 	assert(ntasks > 0);
 
 	/* Create workload. */
@@ -68,7 +71,10 @@ struct workload *workload_create(histogram_tt h, int ntasks)
 		n = floor(histogram_class(h, i)*ntasks);
 
 		for (int j = 0; j < n; j++)
-			w->tasks[k++] = (i + 1);
+		{
+			w->tasks[k++] = (skewness == WORKLOAD_SKEWNESS_CONST) ? 
+				i + 1 : 1;
+		}
 	}
 
 	/* Fill up remainder tasks with minimum load. */

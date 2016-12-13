@@ -47,10 +47,19 @@
 	};
 
 	/**
+	 * @brief Workload skewness types.
+	 */
+	/**@{*/
+	#define WORKLOAD_SKEWNESS_NULL   0 /**< Null skewness. */
+	#define WORKLOAD_SKEWNESS_CONST  1 /**< Constant.      */
+	#define WORKLOAD_SKEWNESS_LINEAR 2 /**< Linear.        */
+	/**@}*/
+
+	/**
 	 * @name Operations on Workload
 	 */
 	/**@{*/
-	extern workload_tt workload_create(histogram_tt, int);
+	extern workload_tt workload_create(histogram_tt, int, int);
 	extern void workload_destroy(workload_tt);
 	extern int workload_ntasks(const_workload_tt);
 	extern int workload_task(const_workload_tt, int);

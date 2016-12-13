@@ -40,7 +40,8 @@ static struct
 	int nclasses;                    /**< Number of task classes.   */
 	int ntasks;                      /**< Number of tasks.          */
 	enum workload_sorting sorting;   /**< Workload sorting.         */
-} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE };
+	int skewness;                    /**< Workload skewness.        */
+} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NULL};
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -55,17 +56,20 @@ static void usage(void)
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
 	printf("  --dist <name>         Probability distribution for task classes.\n");
-	printf("        beta              a = 0.5 and b = 0.5\n");
-	printf("        gamma             a = 1.0 and b = 2.0\n");
-	printf("        gaussian          x = 0.0 and std = 1.0\n");
-	printf("        uniform           a = 0.0 and b = 0.0\n");
-	printf("  --kurtosis <number>   Probability distribution's kurtosis.\n");
+	printf("         beta               a = 0.5 and b = 0.5\n");
+	printf("         gamma              a = 1.0 and b = 2.0\n");
+	printf("         gaussian           x = 0.0 and std = 1.0\n");
+	printf("         uniform            a = 0.0 and b = 0.0\n");
+	printf("  --kurtosis <number>   Workload kurtosis.\n");
 	printf("  --nclasses <number>   Number of task classes.\n");
 	printf("  --ntasks <number>     Number tasks.\n");
+	printf("  --skewness <type>     Workload skewness.\n");
+	printf("             const         Constant\n");
+	printf("             linear        Linear");
 	printf("  --sort <type>         Tasks sorting,\n");
-	printf("         ascending        Ascending order\n");
-	printf("         descending       Descending order\n");
-	printf("         shuffle          Shuffle\n");
+	printf("         ascending          Ascending order\n");
+	printf("         descending         Descending order\n");
+	printf("         shuffle            Shuffle\n");
 	printf("  --help                Display this message.\n");
 
 	exit(EXIT_SUCCESS);
@@ -100,7 +104,7 @@ static distribution_tt (*getdist(const char *distname))(double)
  * 
  * @param sortname Tasks sorting name.
  * 
- * @param Tasks sorting type.
+ * @returns Tasks sorting type.
  */
 static enum workload_sorting getsort(const char *sortname)
 {
@@ -118,22 +122,45 @@ static enum workload_sorting getsort(const char *sortname)
 }
 
 /**
+ * @brief Gets workload skewness type.
+ *
+ * @param skewnessname Skewness name.
+ *
+ * @returns Workload skewness type.
+ */
+static int getskewness(const char *skewnessname)
+{
+	if (!strcmp(skewnessname, "const"))
+		return (WORKLOAD_SKEWNESS_CONST);
+	else if (!strcmp(skewnessname, "linear"))
+		return (WORKLOAD_SKEWNESS_LINEAR);
+
+	error("unsupported workload skewness");
+
+	/* Never gets here. */
+	return (-1);
+}
+
+/**
  * @brief Checks program arguments.
  *
  * @param distname Name of probability distribution.
  * @param sortname Task sorting name.
+ * @param skewnessname Skewness name.
  */
-static void checkargs(const char *distname, const char *sortname)
+static void checkargs(const char *distname, const char *sortname, const char *skewnessname)
 {
 	if (distname == NULL)
 		error("missing probability distribution");
-	else if (!(args.kurtosis > 0.1))
+	if (!(args.kurtosis > 0.1))
 		error("invalid kurtosis for probability distribution");
-	else if (!(args.nclasses > 0))
+	if (!(args.nclasses > 0))
 		error("invalid number of task classes");
 	if (!(args.ntasks > 0))
 		error("invalid number of tasks");
-	else if (sortname == NULL)
+	if (skewnessname == NULL)
+		error("missing workload skewness");
+	if (sortname == NULL)
 		error("invalid task sorting");
 }
 
@@ -147,6 +174,7 @@ static void readargs(int argc, const char **argv)
 {
 	const char *distname = NULL;
 	const char *sortname = NULL;
+	const char *skewnessname = NULL;
 	
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -159,16 +187,19 @@ static void readargs(int argc, const char **argv)
 			args.nclasses = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--ntasks"))
 			args.ntasks = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "--skewness"))
+			skewnessname = argv[++i];
 		else if (!strcmp(argv[i], "--sort"))
 			sortname = argv[++i];
 		else
 			usage();
 	}
 	
-	checkargs(distname, sortname);
+	checkargs(distname, sortname, skewnessname);
 	
 	args.dist = getdist(distname);
 	args.sorting = getsort(sortname);
+	args.skewness = getskewness(skewnessname);
 }
 
 /*============================================================================*
@@ -188,7 +219,7 @@ int main(int argc, const const char **argv)
 
 	dist = args.dist(args.kurtosis);
 	hist = distribution_histogram(dist, args.nclasses);
-	w = workload_create(hist, args.ntasks);
+	w = workload_create(hist, args.skewness, args.ntasks);
 	workload_sort(w, args.sorting);
 
 	workload_write(stdout, w);
