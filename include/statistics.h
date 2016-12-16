@@ -63,11 +63,11 @@
 	 * @name Known Probability Distributions
 	 */
 	/**@{*/
-	extern distribution_tt dist_beta(double);
-	extern distribution_tt dist_exponential(double);
-	extern distribution_tt dist_gamma(double);
-	extern distribution_tt dist_gaussian(double);
-	extern distribution_tt dist_uniform(double);
+	extern distribution_tt dist_beta(void);
+	extern distribution_tt dist_exponential(void);
+	extern distribution_tt dist_gamma(void);
+	extern distribution_tt dist_gaussian(void);
+	extern distribution_tt dist_uniform(void);
 	/**@}*/
 
 #endif /* Statistics. */

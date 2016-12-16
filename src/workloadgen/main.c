@@ -35,13 +35,12 @@
  */
 static struct
 {
-	distribution_tt (*dist)(double); /**< Probability distribution. */
-	double kurtosis;                 /**< Distribution's kurtosis.  */
-	int nclasses;                    /**< Number of task classes.   */
-	int ntasks;                      /**< Number of tasks.          */
-	enum workload_sorting sorting;   /**< Workload sorting.         */
-	int skewness;                    /**< Workload skewness.        */
-} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NONE };
+	distribution_tt (*dist)(void); /**< Probability distribution. */
+	int nclasses;                  /**< Number of task classes.   */
+	int ntasks;                    /**< Number of tasks.          */
+	enum workload_sorting sorting; /**< Workload sorting.         */
+	int skewness;                  /**< Workload skewness.        */
+} args = { NULL, 0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NONE };
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -61,13 +60,12 @@ static void usage(void)
 	printf("         gamma               a = 5.0 and b = 1.0\n");
 	printf("         gaussian            x = 0.0 and std = 1.0\n");
 	printf("         uniform             a = 0.0 and b = 01.0\n");
-	printf("  --kurtosis <number>    Workload kurtosis.\n");
 	printf("  --nclasses <number>    Number of task classes.\n");
 	printf("  --ntasks <number>      Number tasks.\n");
 	printf("  --skewness <type>      Workload skewness.\n");
-	printf("             left           Left");
-	printf("             none           None");
-	printf("             right          Right");
+	printf("             left           Left\n");
+	printf("             none           None\n");
+	printf("             right          Right\n");
 	printf("  --sort <type>          Tasks sorting,\n");
 	printf("         ascending           Ascending order\n");
 	printf("         descending          Descending order\n");
@@ -84,7 +82,7 @@ static void usage(void)
  * 
  * @returns A probability distribution.
  */
-static distribution_tt (*getdist(const char *distname))(double)
+static distribution_tt (*getdist(const char *distname))(void)
 {
 	if (!strcmp(distname, "beta"))
 		return (dist_beta);
@@ -158,8 +156,6 @@ static void checkargs(const char *distname, const char *sortname, const char *sk
 {
 	if (distname == NULL)
 		error("missing probability distribution");
-	if (!(args.kurtosis > 0.1))
-		error("invalid kurtosis for probability distribution");
 	if (!(args.nclasses > 0))
 		error("invalid number of task classes");
 	if (!(args.ntasks > 0))
@@ -187,8 +183,6 @@ static void readargs(int argc, const char **argv)
 	{	
 		if (!strcmp(argv[i], "--dist"))
 			distname = argv[++i];
-		else if (!strcmp(argv[i], "--kurtosis"))
-			args.kurtosis = atof(argv[++i]);
 		else if (!strcmp(argv[i], "--nclasses"))
 			args.nclasses = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--ntasks"))
@@ -223,7 +217,7 @@ int main(int argc, const const char **argv)
 
 	readargs(argc, argv);
 
-	dist = args.dist(args.kurtosis);
+	dist = args.dist();
 	hist = distribution_histogram(dist, args.nclasses);
 	w = workload_create(hist, args.skewness, args.ntasks);
 	workload_sort(w, args.sorting);

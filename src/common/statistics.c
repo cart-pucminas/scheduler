@@ -119,8 +119,7 @@ double histogram_class(const struct histogram *h, int i)
  */
 struct distribution
 {
-	double kurtosis;                      /**< Distribution's kurtosis.  */
-	histogram_tt (*histgen)(double, int); /**< Histogram generator.      */
+	histogram_tt (*histgen)(int); /**< Histogram generator. */
 };
 
 /**
@@ -146,7 +145,7 @@ struct histogram *distribution_histogram(const struct distribution *dist, int nc
 	assert(dist != NULL);
 	assert(nclasses > 0);
 
-	return (dist->histgen(dist->kurtosis, nclasses));
+	return (dist->histgen(nclasses));
 }
 
 /*====================================================================*
@@ -160,14 +159,12 @@ struct histogram *distribution_histogram(const struct distribution *dist, int nc
  *
  * @returns A histogram.
  */
-static struct histogram *beta_histgen(double kurtosis, int nclasses)
+static struct histogram *beta_histgen(int nclasses)
 {
 	struct histogram *h;  /* Histogram. */
 	const double a = 0.5; /* Alpha.     */
 	const double b = 0.5; /* Beta.      */
 	double density = 0.0; /* Density.   */
-
-	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
@@ -193,21 +190,15 @@ static struct histogram *beta_histgen(double kurtosis, int nclasses)
 /**
  * @brief Creates a beta distribution.
  *
- * @param kurtosis Distribution's kurtosis.
- *
  * @returns A beta distribution.
  */
-struct distribution *dist_beta(double kurtosis)
+struct distribution *dist_beta(void)
 {
 	struct distribution *beta;
-
-	/* Sanity check. */
-	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	beta = smalloc(sizeof(struct distribution));
 
 	/* Initialize beta distribution. */
-	beta->kurtosis = kurtosis;
 	beta->histgen = beta_histgen;
 
 	return (beta);
@@ -224,13 +215,11 @@ struct distribution *dist_beta(double kurtosis)
  *
  * @returns A histogram.
  */
-static struct histogram *exponential_histgen(double kurtosis, int nclasses)
+static struct histogram *exponential_histgen(int nclasses)
 {
 	struct histogram *h;   /* Histogram. */
 	const double mu = 5.0; /* Mean.     */
 	double density = 0.0;  /* Density.   */
-
-	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
@@ -256,21 +245,15 @@ static struct histogram *exponential_histgen(double kurtosis, int nclasses)
 /**
  * @brief Creates a exponential distribution.
  *
- * @param kurtosis Distribution's kurtosis.
- *
  * @returns A exponential distribution.
  */
-struct distribution *dist_exponential(double kurtosis)
+struct distribution *dist_exponential(void)
 {
 	struct distribution *exponential;
-
-	/* Sanity check. */
-	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	exponential = smalloc(sizeof(struct distribution));
 
 	/* Initialize exponential distribution. */
-	exponential->kurtosis = kurtosis;
 	exponential->histgen = exponential_histgen;
 
 	return (exponential);
@@ -287,14 +270,12 @@ struct distribution *dist_exponential(double kurtosis)
  *
  * @returns A histogram.
  */
-static struct histogram *gamma_histgen(double kurtosis, int nclasses)
+static struct histogram *gamma_histgen(int nclasses)
 {
 	struct histogram *h;      /* Histogram. */
 	const double k = 5.0;     /* Shape.     */
 	const double theta = 1.0; /* Scale.     */
 	double density = 0.0;     /* Density.   */
-
-	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
@@ -320,21 +301,15 @@ static struct histogram *gamma_histgen(double kurtosis, int nclasses)
 /**
  * @brief Creates a gamma distribution.
  *
- * @param kurtosis Distribution's kurtosis.
- *
  * @returns A gamma distribution.
  */
-struct distribution *dist_gamma(double kurtosis)
+struct distribution *dist_gamma(void)
 {
 	struct distribution *gamma;
-
-	/* Sanity check. */
-	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	gamma = smalloc(sizeof(struct distribution));
 
 	/* Initialize gamma distribution. */
-	gamma->kurtosis = kurtosis;
 	gamma->histgen = gamma_histgen;
 
 	return (gamma);
@@ -351,13 +326,11 @@ struct distribution *dist_gamma(double kurtosis)
  *
  * @returns A histogram.
  */
-static struct histogram *gaussian_histgen(double kurtosis, int nclasses)
+static struct histogram *gaussian_histgen(int nclasses)
 {
 	struct histogram *h;      /* Histogram.          */
 	const double sigma = 1.0; /* Standard deviation. */
 	double density = 0.0;     /* Density.            */
-
-	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
@@ -383,21 +356,15 @@ static struct histogram *gaussian_histgen(double kurtosis, int nclasses)
 /**
  * @brief Creates a gaussian distribution.
  *
- * @param kurtosis Distribution's kurtosis.
- *
  * @returns A gaussian distribution.
  */
-struct distribution *dist_gaussian(double kurtosis)
+struct distribution *dist_gaussian(void)
 {
 	struct distribution *gaussian;
-
-	/* Sanity check. */
-	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	gaussian = smalloc(sizeof(struct distribution));
 
 	/* Initialize gaussian distribution. */
-	gaussian->kurtosis = kurtosis;
 	gaussian->histgen = gaussian_histgen;
 
 	return (gaussian);
@@ -414,14 +381,12 @@ struct distribution *dist_gaussian(double kurtosis)
  *
  * @returns A histogram.
  */
-static struct histogram *uniform_histgen(double kurtosis, int nclasses)
+static struct histogram *uniform_histgen(int nclasses)
 {
 	struct histogram *h;  /* Histogram. */
 	const double a = 0.0; /* Min.       */
 	const double b = 1.0; /* Max.       */
 	double density = 0.0; /* Density.   */
-
-	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
@@ -447,21 +412,15 @@ static struct histogram *uniform_histgen(double kurtosis, int nclasses)
 /**
  * @brief Creates a uniform distribution.
  *
- * @param kurtosis Distribution's kurtosis.
- *
  * @returns A uniform distribution.
  */
-struct distribution *dist_uniform(double kurtosis)
+struct distribution *dist_uniform(void)
 {
 	struct distribution *uniform;
-
-	/* Sanity check. */
-	assert((kurtosis > 0) && (kurtosis < 1.0));
 
 	uniform = smalloc(sizeof(struct distribution));
 
 	/* Initialize uniform distribution. */
-	uniform->kurtosis = kurtosis;
 	uniform->histgen = uniform_histgen;
 
 	return (uniform);
