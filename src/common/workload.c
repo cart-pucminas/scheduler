@@ -57,7 +57,7 @@ static int workload_skewness(int i, int nclasses, int skewness)
 			break;
 
 		case WORKLOAD_SKEWNESS_NONE:
-			return (2*((i < nclasses/2) ? i + 1 : nclasses - i));
+			return (((i < nclasses/2) ? i + 1 : nclasses - i));
 			break;
 
 		case WORKLOAD_SKEWNESS_RIGHT:
@@ -105,9 +105,12 @@ struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 			w->tasks[k++] = workload_skewness(i, histogram_nclasses(h), skewness);
 	}
 
-	/* Fill up remainder tasks with minimum load. */
+	/* Fill up remainder tasks. */
 	for (int i = k; i < ntasks; i++)
-		w->tasks[k++] = workload_skewness(0, histogram_nclasses(h), skewness);
+	{
+		int j = rand()%histogram_nclasses(h);
+		w->tasks[k++] = workload_skewness(j, histogram_nclasses(h), skewness);
+	}
 
 	return (w);
 }
