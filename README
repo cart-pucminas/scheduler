@@ -20,6 +20,7 @@ BUILDING
     To build this repository:
 
         $ cd ~/
+        $ cd contrib ; bash setup-contrib.sh ; cd ..
         $ git clone https://github.com/cart-pucminas/scheduler
         $ cd scheduler
         $ make

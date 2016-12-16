@@ -57,9 +57,10 @@ static void usage(void)
 	printf("Options:\n");
 	printf("  --dist <name>          Probability distribution for task classes.\n");
 	printf("         beta                a = 0.5 and b = 0.5\n");
-	printf("         gamma               a = 1.0 and b = 2.0\n");
+	printf("         exponential         mu = 1.0\n");
+	printf("         gamma               a = 5.0 and b = 1.0\n");
 	printf("         gaussian            x = 0.0 and std = 1.0\n");
-	printf("         uniform             a = 0.0 and b = 0.0\n");
+	printf("         uniform             a = 0.0 and b = 01.0\n");
 	printf("  --kurtosis <number>    Workload kurtosis.\n");
 	printf("  --nclasses <number>    Number of task classes.\n");
 	printf("  --ntasks <number>      Number tasks.\n");
@@ -87,6 +88,8 @@ static distribution_tt (*getdist(const char *distname))(double)
 {
 	if (!strcmp(distname, "beta"))
 		return (dist_beta);
+	if (!strcmp(distname, "exponential"))
+		return (dist_exponential);
 	if (!strcmp(distname, "gamma"))
 		return (dist_gamma);
 	if (!strcmp(distname, "gaussian"))

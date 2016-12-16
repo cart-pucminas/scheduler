@@ -64,6 +64,7 @@
 	 */
 	/**@{*/
 	extern distribution_tt dist_beta(double);
+	extern distribution_tt dist_exponential(double);
 	extern distribution_tt dist_gamma(double);
 	extern distribution_tt dist_gaussian(double);
 	extern distribution_tt dist_uniform(double);

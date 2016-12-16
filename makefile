@@ -33,13 +33,16 @@ export LD = gcc
 
 # Toolchain configuration.
 export ARFLAGS  = -vq
-export CFLAGS  += -I $(INCDIR)
+export CFLAGS  += -I $(INCDIR) -I $(CONTRIB)/include
 export CFLAGS  += -std=c99 -pedantic -D_XOPEN_SOURCE
 export CFLAGS  += -Wall -Wextra -Werror
 export CFLAGS  += -O3
 
 # Libraries.
-export LIBS = $(LIBDIR)/libmy.a -lm
+export LIBS = $(LIBDIR)/libmy.a
+export LIBS += -lm
+export LIBS += $(CONTRIB)/lib/libgsl.a
+export LIBS += $(CONTRIB)/lib/libgslcblas.a
 
 # Builds everything
 all: workloadgen simsched
