@@ -105,6 +105,13 @@ struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 			w->tasks[k++] = workload_skewness(i, histogram_nclasses(h), skewness);
 	}
 
+	/* Check for overflow. */
+	if (k > ntasks)
+	{
+		fprintf(stderr, "ntasks=%d\n", k);
+		error("histogram overflow");
+	}
+
 	/* Fill up remainder tasks. */
 	for (int i = k; i < ntasks; i++)
 	{

@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <mylib/util.h>
 
@@ -275,6 +276,20 @@ struct distribution *dist_gamma(double kurtosis)
  *====================================================================*/
 
 /**
+ * @brief Computes the gaussian function.
+ *
+ * @param mu    Mu.
+ * @param sigma Sigma.
+ * @para  x     Random number.
+ *
+ * @returns A gaussian number.
+ */
+static double gaussian(double mu, double sigma, double x)
+{
+	return (1.0/(sigma*sqrt(2*M_PI))*exp(-pow(x - mu, 2)/(2*pow(sigma, 2))));
+}
+
+/**
  * @brief Builds a Gaussian histogram.
  *
  * @param nclasses Number of classes.
@@ -283,27 +298,30 @@ struct distribution *dist_gamma(double kurtosis)
  */
 static struct histogram *gaussian_histgen(double kurtosis, int nclasses)
 {
-	double sum;          /* PDF sum.         */
-	double freq;         /* Class frequency. */
-	struct histogram *h; /* Histogram.       */
+	struct histogram *h;      /* Histogram.          */
+	const double mu = 0.0;    /* Mean.               */
+	const double sigma = 1.0; /* Standard deviation. */
+	double density = 0.0;     /* Density.            */
+
+	((void) kurtosis);
 
 	h = histogram_create(nclasses);
 
 	/* Build histogram. */
-	freq = 0.5; sum = 0.0;
-	for (int i = 0; i < nclasses/2; i++)
+	for (int i = 0; i < nclasses; i++)
 	{
-		freq *= kurtosis;
+		double x = -2.5 + (i )*5.0/(nclasses - 1);
 
-		h->classes[nclasses/2 - i - 1] = freq;
-		h->classes[nclasses/2 + i] = freq;
-
-		sum += freq + freq;
+		h->classes[i] = gaussian(mu, sigma, x);
+		density += h->classes[i];
 	}
 
 	/* Normalize. */
-	for (int i = 0; i < nclasses; i++)
-		h->classes[i] /= sum;
+	if (density > 1.0)
+	{
+		for (int i = 0; i < nclasses; i++)
+			h->classes[i] /= density;
+	}
 
 	return (h);
 }
