@@ -56,10 +56,6 @@ static int workload_skewness(int i, int nclasses, int skewness)
 			return (i + 1);
 			break;
 
-		case WORKLOAD_SKEWNESS_NONE:
-			return (((i < nclasses/2) ? i + 1 : nclasses - i));
-			break;
-
 		case WORKLOAD_SKEWNESS_RIGHT:
 			return (nclasses - i);
 			break;

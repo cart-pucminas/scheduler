@@ -40,7 +40,7 @@ static struct
 	int ntasks;                    /**< Number of tasks.          */
 	enum workload_sorting sorting; /**< Workload sorting.         */
 	int skewness;                  /**< Workload skewness.        */
-} args = { NULL, 0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NONE };
+} args = { NULL, 0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NULL };
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -64,7 +64,6 @@ static void usage(void)
 	printf("  --ntasks <number>      Number tasks.\n");
 	printf("  --skewness <type>      Workload skewness.\n");
 	printf("             left           Left\n");
-	printf("             none           None\n");
 	printf("             right          Right\n");
 	printf("  --sort <type>          Tasks sorting,\n");
 	printf("         ascending           Ascending order\n");
@@ -134,8 +133,6 @@ static int getskewness(const char *skewnessname)
 {
 	if (!strcmp(skewnessname, "left"))
 		return (WORKLOAD_SKEWNESS_LEFT);
-	if (!strcmp(skewnessname, "none"))
-		return (WORKLOAD_SKEWNESS_NONE);
 	if (!strcmp(skewnessname, "right"))
 		return (WORKLOAD_SKEWNESS_RIGHT);
 
