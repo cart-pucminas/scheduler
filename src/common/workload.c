@@ -107,7 +107,7 @@ struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 
 	/* Fill up remainder tasks with minimum load. */
 	for (int i = k; i < ntasks; i++)
-		w->tasks[k++] = workload_skewness(i, histogram_nclasses(h), skewness);
+		w->tasks[k++] = workload_skewness(0, histogram_nclasses(h), skewness);
 
 	return (w);
 }
