@@ -40,6 +40,39 @@ struct workload
 };
 
 /**
+ * @brief Computes the skewness of a task.
+ *
+ * @param i        Task class.
+ * @param nclasses Number of task classes
+ * @param skewness Skewness.
+ *
+ * @returns Task skewness.
+ */
+static int workload_skewness(int i, int nclasses, int skewness)
+{
+	switch (skewness)
+	{
+		case WORKLOAD_SKEWNESS_LEFT:
+			return (i + 1);
+			break;
+
+		case WORKLOAD_SKEWNESS_NONE:
+			return (2*((i < nclasses/2) ? i + 1 : nclasses - i));
+			break;
+
+		case WORKLOAD_SKEWNESS_RIGHT:
+			return (nclasses - i);
+			break;
+
+		default:
+			error("unknown skewness");
+	}
+	
+	/* Never gets here. */
+	return (-1);
+}
+
+/**
  * @brief Creates a workload.
  *
  * @param h        Histogram of probability distribution.
@@ -53,8 +86,6 @@ struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 
 	/* Sanity check. */
 	assert(h != NULL);
-	assert(skewness >= WORKLOAD_SKEWNESS_CONST);
-	assert(skewness <= WORKLOAD_SKEWNESS_LINEAR);
 	assert(ntasks > 0);
 
 	/* Create workload. */
@@ -71,15 +102,12 @@ struct workload *workload_create(histogram_tt h, int skewness, int ntasks)
 		n = floor(histogram_class(h, i)*ntasks);
 
 		for (int j = 0; j < n; j++)
-		{
-			w->tasks[k++] = (skewness == WORKLOAD_SKEWNESS_CONST) ? 
-				i + 1 : 1;
-		}
+			w->tasks[k++] = workload_skewness(i, histogram_nclasses(h), skewness);
 	}
 
 	/* Fill up remainder tasks with minimum load. */
 	for (int i = k; i < ntasks; i++)
-		w->tasks[k++] = 1;
+		w->tasks[k++] = workload_skewness(i, histogram_nclasses(h), skewness);
 
 	return (w);
 }

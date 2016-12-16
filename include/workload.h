@@ -50,9 +50,9 @@
 	 * @brief Workload skewness types.
 	 */
 	/**@{*/
-	#define WORKLOAD_SKEWNESS_NULL   0 /**< Null skewness. */
-	#define WORKLOAD_SKEWNESS_CONST  1 /**< Constant.      */
-	#define WORKLOAD_SKEWNESS_LINEAR 2 /**< Linear.        */
+	#define WORKLOAD_SKEWNESS_NONE  0 /**< None.  */
+	#define WORKLOAD_SKEWNESS_LEFT  1 /**< Left.  */
+	#define WORKLOAD_SKEWNESS_RIGHT 2 /**< Right. */
 	/**@}*/
 
 	/**

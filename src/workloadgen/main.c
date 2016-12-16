@@ -41,7 +41,7 @@ static struct
 	int ntasks;                      /**< Number of tasks.          */
 	enum workload_sorting sorting;   /**< Workload sorting.         */
 	int skewness;                    /**< Workload skewness.        */
-} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NULL};
+} args = { 0, 0, 0.0, 0, WORKLOAD_SHUFFLE, WORKLOAD_SKEWNESS_NONE };
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -55,22 +55,23 @@ static void usage(void)
 	printf("Usage: generator [options]\n");
 	printf("Brief: workload generator\n");
 	printf("Options:\n");
-	printf("  --dist <name>         Probability distribution for task classes.\n");
-	printf("         beta               a = 0.5 and b = 0.5\n");
-	printf("         gamma              a = 1.0 and b = 2.0\n");
-	printf("         gaussian           x = 0.0 and std = 1.0\n");
-	printf("         uniform            a = 0.0 and b = 0.0\n");
-	printf("  --kurtosis <number>   Workload kurtosis.\n");
-	printf("  --nclasses <number>   Number of task classes.\n");
-	printf("  --ntasks <number>     Number tasks.\n");
-	printf("  --skewness <type>     Workload skewness.\n");
-	printf("             const         Constant\n");
-	printf("             linear        Linear");
-	printf("  --sort <type>         Tasks sorting,\n");
-	printf("         ascending          Ascending order\n");
-	printf("         descending         Descending order\n");
-	printf("         shuffle            Shuffle\n");
-	printf("  --help                Display this message.\n");
+	printf("  --dist <name>          Probability distribution for task classes.\n");
+	printf("         beta                a = 0.5 and b = 0.5\n");
+	printf("         gamma               a = 1.0 and b = 2.0\n");
+	printf("         gaussian            x = 0.0 and std = 1.0\n");
+	printf("         uniform             a = 0.0 and b = 0.0\n");
+	printf("  --kurtosis <number>    Workload kurtosis.\n");
+	printf("  --nclasses <number>    Number of task classes.\n");
+	printf("  --ntasks <number>      Number tasks.\n");
+	printf("  --skewness <type>      Workload skewness.\n");
+	printf("             left           Left");
+	printf("             none           None");
+	printf("             right          Right");
+	printf("  --sort <type>          Tasks sorting,\n");
+	printf("         ascending           Ascending order\n");
+	printf("         descending          Descending order\n");
+	printf("         shuffle             Shuffle\n");
+	printf("  --help                 Display this message.\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -130,10 +131,12 @@ static enum workload_sorting getsort(const char *sortname)
  */
 static int getskewness(const char *skewnessname)
 {
-	if (!strcmp(skewnessname, "const"))
-		return (WORKLOAD_SKEWNESS_CONST);
-	else if (!strcmp(skewnessname, "linear"))
-		return (WORKLOAD_SKEWNESS_LINEAR);
+	if (!strcmp(skewnessname, "left"))
+		return (WORKLOAD_SKEWNESS_LEFT);
+	if (!strcmp(skewnessname, "none"))
+		return (WORKLOAD_SKEWNESS_NONE);
+	if (!strcmp(skewnessname, "right"))
+		return (WORKLOAD_SKEWNESS_RIGHT);
 
 	error("unsupported workload skewness");
 
