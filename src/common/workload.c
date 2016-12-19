@@ -53,11 +53,11 @@ static int workload_skewness(int i, int nclasses, int skewness)
 	switch (skewness)
 	{
 		case WORKLOAD_SKEWNESS_LEFT:
-			return (i + 1);
+			return (i + 2);
 			break;
 
 		case WORKLOAD_SKEWNESS_RIGHT:
-			return (nclasses - i);
+			return (nclasses - i + 1);
 			break;
 
 		default:

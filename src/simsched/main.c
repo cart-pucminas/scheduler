@@ -54,7 +54,7 @@ static void kernel_linear(workload_tt w)
 	{
 		int load;
 
-		load = 2*workload_task(w, i);
+		load = workload_task(w, i);
 		workload_set_task(w, i, load);
 	}
 }
@@ -70,7 +70,7 @@ static void kernel_logarithmic(workload_tt w)
 	{
 		int load;
 
-		load = 2*workload_task(w, i);
+		load = workload_task(w, i);
 		load = floor(load*(log(load)/log(2.0)));
 		workload_set_task(w, i, load);
 	}
@@ -87,7 +87,7 @@ static void kernel_quadratic(workload_tt w)
 	{
 		int load;
 
-		load = 2*workload_task(w, i);
+		load = workload_task(w, i);
 		load = load*load;
 		workload_set_task(w, i, load);
 	}
