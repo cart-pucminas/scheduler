@@ -362,3 +362,20 @@ int workload_task(const struct workload *w, int idx)
 
 	return (w->tasks[idx]);
 }
+
+/**
+ * @brief Adjusts the load of the ith task in a workload.
+ *
+ * @param w    Target workload.
+ * @param idx  Index of target task.
+ * @param load New load.
+ */
+void workload_set_task(struct workload *w, int idx, int load)
+{
+	/* Sanity check. */
+	assert(w != NULL);
+	assert((idx >= 0) && (idx < w->ntasks));
+	assert(load > 0);
+
+	w->tasks[idx] = load;
+}

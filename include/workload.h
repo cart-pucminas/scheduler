@@ -67,6 +67,7 @@
 	extern int *workload_sortmap(const_workload_tt);
 	extern void workload_write(FILE *, const_workload_tt);
 	extern workload_tt workload_read(FILE *);
+	extern void workload_set_task(workload_tt, int, int);
 	/**@}*/
 
 #endif /* WORKLOAD_H_ */

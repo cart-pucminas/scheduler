@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <mylib/util.h>
 
@@ -35,7 +36,62 @@ static struct
 	workload_tt workload;              /**< Input workload.           */
 	array_tt  threads;                 /**< Working threads.          */
 	const struct scheduler *scheduler; /**< Loop scheduling strategy. */
-} args = { NULL, 0, NULL, NULL };
+	void (*kernel)(workload_tt);       /**< Application kernel.       */
+} args = { NULL, 0, NULL, NULL, NULL };
+
+/*============================================================================*
+ * KERNELS                                                                    *
+ *============================================================================*/
+
+/**
+ * @brief Applies a linear kernel in a workload
+ *
+ * @param w Target workload.
+ */
+static void kernel_linear(workload_tt w)
+{
+	for (int i = 0; i < workload_ntasks(w); i++)
+	{
+		int load;
+
+		load = 2*workload_task(w, i);
+		workload_set_task(w, i, load);
+	}
+}
+
+/**
+ * @brief Applies a logarithmic kernel in a workload
+ *
+ * @param w Target workload.
+ */
+static void kernel_logarithmic(workload_tt w)
+{
+	for (int i = 0; i < workload_ntasks(w); i++)
+	{
+		int load;
+
+		load = 2*workload_task(w, i);
+		load = floor(load*(log(load)/log(2.0)));
+		workload_set_task(w, i, load);
+	}
+}
+
+/**
+ * @brief Applies a quadratic kernel in a workload
+ *
+ * @param w Target workload.
+ */
+static void kernel_quadratic(workload_tt w)
+{
+	for (int i = 0; i < workload_ntasks(w); i++)
+	{
+		int load;
+
+		load = 2*workload_task(w, i);
+		load = load*load;
+		workload_set_task(w, i, load);
+	}
+}
 
 /*============================================================================*
  * ARGUMENT CHECKING                                                          *
@@ -50,6 +106,10 @@ static void usage(void)
 	printf("Brief: loop scheduler simulator\n");
 	printf("Options:\n");
 	printf("  --arch <filename>     Architecture file\n");
+	printf("  --kernel <name>       Kernel complexity.\n");
+	printf("           linear          Linear kerneli\n");
+	printf("           logarithmic     Logarithm kernel\n");
+	printf("           quadratic       Quadratic kernel\n");
 	printf("  --input <filename>    Input workload file\n");
 	printf("  --help                Display this message\n");
 	printf("Loop Schedulers:\n");
@@ -124,17 +184,42 @@ static array_tt get_threads(const char *filename)
 }
 
 /**
+ * @brief Gets application kernel.
+ *
+ * @param kernelname Kernel name.
+ *
+ * @returns Application kernel.
+ */
+static void (*get_kernel(const char *kernelname))(workload_tt)
+{
+	if (!strcmp(kernelname, "linear"))
+		return (kernel_linear);
+	if (!strcmp(kernelname, "logarithmic"))
+		return (kernel_logarithmic);
+	if (!strcmp(kernelname, "quadratic"))
+		return (kernel_quadratic);
+
+	error("unsupported application kernel");
+
+	/* Never gets here. */
+	return (NULL);
+}
+
+/**
  * @brief Checks program arguments.
  *
- * @param wfilename Input workload filename.
- * @param afilename Input architecture filename.
+ * @param wfilename  Input workload filename.
+ * @param afilename  Input architecture filename.
+ * @param kernelname Application kernel name.
  */
-static void checkargs(const char *wfilename, const char *afilename)
+static void checkargs(const char *wfilename, const char *afilename, const char *kernelname)
 {
 	if (afilename == NULL)
 		error("missing architecture file");
 	if (wfilename == NULL)
 		error("missing input workload file");
+	if (kernelname == NULL)
+		error("missing kernel name");
 	if (args.scheduler == NULL)
 		error("missing loop scheduling strategy");
 }
@@ -149,6 +234,7 @@ static void readargs(int argc, const char **argv)
 {
 	const char *wfilename = NULL;
 	const char *afilename = NULL;
+	const char *kernelname = NULL;
 
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -157,6 +243,8 @@ static void readargs(int argc, const char **argv)
 			afilename = argv[++i];
 		else if (!strcmp(argv[i], "--input"))
 			wfilename = argv[++i];
+		else if (!strcmp(argv[i], "--kernel"))
+			kernelname = argv[++i];
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 		else
@@ -174,10 +262,11 @@ static void readargs(int argc, const char **argv)
 		}
 	}
 
-	checkargs(wfilename, afilename);
+	checkargs(wfilename, afilename, kernelname);
 
 	args.workload = get_workload(wfilename);
 	args.threads = get_threads(afilename);
+	args.kernel = get_kernel(kernelname);
 }
 
 /*============================================================================*
@@ -190,6 +279,8 @@ static void readargs(int argc, const char **argv)
 int main(int argc, const const char **argv)
 {
 	readargs(argc, argv);
+
+	args.kernel(args.workload);
 
 	simshed(args.workload, args.threads, args.scheduler);
 
