@@ -65,6 +65,7 @@ static void usage(void)
 	printf("  --skewness <type>      Workload skewness.\n");
 	printf("             left           Left\n");
 	printf("             right          Right\n");
+	printf("  --seed <number>        Seed value\n");
 	printf("  --sort <type>          Tasks sorting,\n");
 	printf("         ascending           Ascending order\n");
 	printf("         descending          Descending order\n");
@@ -186,6 +187,8 @@ static void readargs(int argc, const char **argv)
 			args.ntasks = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--skewness"))
 			skewnessname = argv[++i];
+		else if (!strcmp(argv[i], "--seed"))
+			srand(atoi(argv[++i]));
 		else if (!strcmp(argv[i], "--sort"))
 			sortname = argv[++i];
 		else

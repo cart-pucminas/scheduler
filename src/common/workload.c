@@ -191,12 +191,8 @@ static void workload_descending(struct workload *w)
  */
 static void workload_shuffle(struct workload *w)
 {
-	static unsigned seed;
-
 	/* Sanity check. */
 	assert(w != NULL);
-
-	seed = time(NULL);
 
 	/* Shuffle array. */
 	for (int i = 0; i < w->ntasks - 1; i++)
@@ -204,7 +200,7 @@ static void workload_shuffle(struct workload *w)
 		int j;      /* Shuffle index.  */
 		double tmp; /* Temporary data. */
 
-		j = rand_r(&seed)%w->ntasks;
+		j = rand()%w->ntasks;
 
 		tmp = w->tasks[i];
 		w->tasks[i] = w->tasks[j];
