@@ -105,13 +105,14 @@ static void usage(void)
 	printf("Usage: simsched [options] <scheduler>\n");
 	printf("Brief: loop scheduler simulator\n");
 	printf("Options:\n");
-	printf("  --arch <filename>     Architecture file\n");
+	printf("  --arch <filename>     Architecture file.\n");
 	printf("  --kernel <name>       Kernel complexity.\n");
-	printf("           linear          Linear kerneli\n");
+	printf("           linear          Linear kernel\n");
 	printf("           logarithmic     Logarithm kernel\n");
 	printf("           quadratic       Quadratic kernel\n");
 	printf("  --input <filename>    Input workload file\n");
-	printf("  --help                Display this message\n");
+	printf("  --nthreads <number>   Number of working threads.\n");
+	printf("  --help                Display this message.\n");
 	printf("Loop Schedulers:\n");
 	printf("  dynamic  Dynamic Scheduling\n");
 	printf("  lpt      Longest Processing Time First Scheduling\n");
@@ -148,21 +149,27 @@ static workload_tt get_workload(const char *filename)
  * @brief Gets threads.
  *
  * @param filename Architecture filename.
+ * @param nthreads Number of working threads.
  *
  * @returns Working threads.
  */
-static array_tt get_threads(const char *filename)
+static array_tt get_threads(const char *filename, int nthreads)
 {
-	FILE *file;       /* Architecture file.         */
-	int nthreads;     /* Number of working threads. */
-	array_tt threads; /* Working threads.           */
+	FILE *file;       /* Architecture file. */
+	int ncores;       /* Number of cores.   */
+	array_tt threads; /* Working threads.   */
+
+	assert(nthreads > 0);
 
 	if ((file = fopen(filename, "r")) == NULL)
 		error("failed to open architecture file");
 
-	assert(fscanf(file, "%d", &nthreads) == 1);
+	assert(fscanf(file, "%d", &ncores) == 1);
 	if (nthreads < 1)
 		error("bad architecture file");
+
+	if (nthreads > ncores)
+		error("too many threads for target architecture");
 
 	threads = array_create(nthreads);
 
@@ -211,8 +218,9 @@ static void (*get_kernel(const char *kernelname))(workload_tt)
  * @param wfilename  Input workload filename.
  * @param afilename  Input architecture filename.
  * @param kernelname Application kernel name.
+ * @param nthreads   Number of workin threads.
  */
-static void checkargs(const char *wfilename, const char *afilename, const char *kernelname)
+static void checkargs(const char *wfilename, const char *afilename, const char *kernelname, int nthreads)
 {
 	if (afilename == NULL)
 		error("missing architecture file");
@@ -220,6 +228,8 @@ static void checkargs(const char *wfilename, const char *afilename, const char *
 		error("missing input workload file");
 	if (kernelname == NULL)
 		error("missing kernel name");
+	if (nthreads == 0)
+		error("missing number of working threads");
 	if (args.scheduler == NULL)
 		error("missing loop scheduling strategy");
 }
@@ -235,6 +245,7 @@ static void readargs(int argc, const char **argv)
 	const char *wfilename = NULL;
 	const char *afilename = NULL;
 	const char *kernelname = NULL;
+	int nthreads = 0;
 
 	/* Parse command line arguments. */
 	for (int i = 1; i < argc; i++)
@@ -245,6 +256,8 @@ static void readargs(int argc, const char **argv)
 			wfilename = argv[++i];
 		else if (!strcmp(argv[i], "--kernel"))
 			kernelname = argv[++i];
+		else if (!strcmp(argv[i], "--nthreads"))
+			nthreads = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--help"))
 			usage();
 		else
@@ -262,10 +275,10 @@ static void readargs(int argc, const char **argv)
 		}
 	}
 
-	checkargs(wfilename, afilename, kernelname);
+	checkargs(wfilename, afilename, kernelname, nthreads);
 
 	args.workload = get_workload(wfilename);
-	args.threads = get_threads(afilename);
+	args.threads = get_threads(afilename, nthreads);
 	args.kernel = get_kernel(kernelname);
 }
 
