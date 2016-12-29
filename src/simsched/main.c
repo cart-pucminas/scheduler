@@ -37,7 +37,7 @@ static struct
 	array_tt  threads;                 /**< Working threads.          */
 	const struct scheduler *scheduler; /**< Loop scheduling strategy. */
 	void (*kernel)(workload_tt);       /**< Application kernel.       */
-} args = { NULL, 0, NULL, NULL, NULL };
+} args = { NULL, 0, NULL, NULL };
 
 /*============================================================================*
  * KERNELS                                                                    *
