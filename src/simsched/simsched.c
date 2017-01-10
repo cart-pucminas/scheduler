@@ -75,7 +75,7 @@ static void threads_join(void)
  */
 static void simsched_dump(array_tt threads)
 {
-	int min, max, total;
+	double min, max, total;
 	double mean, stddev;
 
 	min = INT_MAX; max = INT_MIN;
@@ -84,8 +84,8 @@ static void simsched_dump(array_tt threads)
 	/* Compute min, max, total. */
 	for (int i = 0; i < array_size(threads); i++)
 	{
-		thread_tt t; /* Working thread.         */
-		int wtotal;  /* Workload assigned to t. */
+		thread_tt t;   /* Working thread.         */
+		double wtotal; /* Workload assigned to t. */
 
 		t = array_get(threads, i);
 		wtotal = thread_wtotal(t);
@@ -113,8 +113,8 @@ static void simsched_dump(array_tt threads)
 	stddev = sqrt(stddev/(array_size(threads)));
 
 	/* Print statistics. */
-	printf("min: %d\n", min);
-	printf("max: %d\n", max);
+	printf("min: %lf\n", min);
+	printf("max: %lf\n", max);
 	printf("mean: %lf\n", mean);
 	printf("stddev: %lf\n", 100*stddev/mean);
 	printf("imbalance: %lf\n", 100*(max - min)/((double) total));

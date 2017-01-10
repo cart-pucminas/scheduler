@@ -96,12 +96,12 @@ int thread_gettid(const struct thread *t)
  *
  * @returns The total workload assigned to a thread.
  */
-int thread_wtotal(const struct thread *t)
+double thread_wtotal(const struct thread *t)
 {
 	/* Sanity check. */
 	assert(t != NULL);
 
-	return (t->wtotal);
+	return (((double)t->wtotal)/t->capacity);
 }
 
 /**
