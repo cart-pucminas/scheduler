@@ -101,7 +101,7 @@ double thread_wtotal(const struct thread *t)
 	/* Sanity check. */
 	assert(t != NULL);
 
-	return (((double)t->wtotal)/t->capacity);
+	return (((double)t->wtotal)*t->capacity);
 }
 
 /**
