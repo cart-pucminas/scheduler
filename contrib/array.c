@@ -112,3 +112,27 @@ void *array_get(const struct array *a, int idx)
 
 	return (a->elements[idx]);
 }
+
+/**
+ * @brief Shuffles an array.
+ *
+ * @param a Target array.
+ */
+void array_shuffle(struct array *a)
+{
+	/* Sanity check. */
+	assert(a != NULL);
+
+	/* Shuffle array. */
+	for (int i = 0; i < a->size - 1; i++)
+	{
+		int j;     /* Shuffle index.  */
+		void *tmp; /* Temporary data. */
+
+		j = rand()%a->size;
+
+		tmp = a->elements[i];
+		a->elements[i] = a->elements[j];
+		a->elements[j] = tmp;
+	}
+}

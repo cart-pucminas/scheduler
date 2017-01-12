@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <mylib/util.h>
 
@@ -294,6 +296,8 @@ int main(int argc, const const char **argv)
 	readargs(argc, argv);
 
 	args.kernel(args.workload);
+
+	srand(time(NULL)^getpid());
 
 	simshed(args.workload, args.threads, args.scheduler);
 

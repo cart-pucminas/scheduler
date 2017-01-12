@@ -41,6 +41,7 @@
 	extern int array_size(const_array_tt);
 	extern void array_set(array_tt, int, const void *);
 	extern void *array_get(const_array_tt, int);
+	extern void array_shuffle(array_tt);
 	/**@}*/
 
 #endif /* ARRAY_H_ */

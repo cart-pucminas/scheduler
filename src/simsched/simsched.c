@@ -52,6 +52,8 @@ static void threads_spawn(array_tt threads)
 	ready = queue_create();	
 	running = dqueue_create();
 
+	array_shuffle(threads);
+
 	for (int i = 0; i < array_size(threads); i++)
 	{
 		thread_tt t = array_get(threads, i);
@@ -122,6 +124,34 @@ static void simsched_dump(array_tt threads)
 }
 
 /**
+ * @brief Chooses a thread to run next.
+ *
+ * @param Target thread queue.
+ *
+ * @returns The next thread to run.
+ */
+static thread_tt choose_thread(queue_tt q)
+{
+	thread_tt t;
+
+	/* Sanity check. */
+	assert(q != NULL);
+	assert(!queue_empty(q));
+
+	do
+	{
+		t = queue_remove(q);
+
+		if (rand()%2)
+			break;
+
+		queue_insert(q, t);
+	} while (!queue_empty(q));
+
+	return (t);
+}
+
+/**
  * @brief Simulates a parallel loop.
  *
  * @param w        Workload.
@@ -147,7 +177,7 @@ void simshed(const_workload_tt w, array_tt threads, const struct scheduler *stra
 		{
 			thread_tt t;
 
-			t = queue_remove(ready);
+			t = choose_thread(ready);
 			i += strategy->sched(running, t);
 		}
 
