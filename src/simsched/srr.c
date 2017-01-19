@@ -71,7 +71,7 @@ void scheduler_srr_init(const_workload_tt workload, array_tt threads)
 
 	/* Assign tasks to threads. */
 	tidx = 0;
-	if (ntasks%1)
+	if (ntasks%2)
 	{
 		scheddata.taskmap[map[0]] = array_get(threads, tidx);
 		
