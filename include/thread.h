@@ -41,6 +41,7 @@
 	extern int thread_gettid(const_thread_tt);
 	extern double thread_wtotal(const_thread_tt);
 	extern int thread_assign(thread_tt, int);
+	extern int thread_capacity(const_thread_tt);
 	/**@}*/
 
 #endif /* THREAD_H_ */

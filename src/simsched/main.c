@@ -120,6 +120,7 @@ static void usage(void)
 	printf("  lpt      Longest Processing Time First Scheduling\n");
 	printf("  srr      Smart Round-Robin Scheduling\n");
 	printf("  static   Static Scheduling\n");
+	printf("  was      Workloadaware Scheduling\n");
 
 	exit(EXIT_SUCCESS);
 }
@@ -270,6 +271,8 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = sched_lpt;
 			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = sched_srr;
+			else if (!strcmp(argv[i], "was"))
+				args.scheduler = sched_was;
 			else if (!strcmp(argv[i], "static"))
 				args.scheduler = sched_static;
 			else

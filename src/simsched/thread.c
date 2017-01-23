@@ -122,3 +122,17 @@ int thread_assign(struct thread *t, int wsize)
 	return (t->capacity*wsize);
 }
 
+/**
+ * @brief Returns the capacity of a thread.
+ *
+ * @param t target thread.
+ *
+ * @returns The capacity of the target thread.
+ */
+int thread_capacity(const struct thread *t)
+{
+	/* Sanity check. */
+	assert(t != NULL);
+
+	return (t->capacity);
+}
