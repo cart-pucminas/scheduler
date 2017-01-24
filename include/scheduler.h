@@ -22,6 +22,8 @@
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
 
+	#include <stdbool.h>
+
 	#include <mylib/array.h>
 	#include <mylib/dqueue.h>
 
@@ -33,9 +35,10 @@
 	 */
 	struct scheduler
 	{
-		void (*init)(const_workload_tt, array_tt); /**< Initialize. */
-		int (*sched)(dqueue_tt, thread_tt);        /**< Schedule.   */
-		void (*end)(void);                         /**< End.        */
+		bool pinthreads;                           /**< Pin threads? */
+		void (*init)(const_workload_tt, array_tt); /**< Initialize.  */
+		int (*sched)(dqueue_tt, thread_tt);        /**< Schedule.    */
+		void (*end)(void);                         /**< End.         */
 	};
 
 	/**

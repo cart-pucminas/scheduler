@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <mylib/util.h>
 #include <mylib/dqueue.h>
@@ -121,6 +122,7 @@ int scheduler_static_sched(dqueue_tt running, thread_tt t)
  * @brief Static scheduler.
  */
 static struct scheduler _sched_static = {
+	false,
 	scheduler_static_init,
 	scheduler_static_sched,
 	scheduler_static_end

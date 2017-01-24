@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <mylib/util.h>
 #include <mylib/dqueue.h>
@@ -145,6 +146,7 @@ int scheduler_srr_sched(dqueue_tt running, thread_tt t)
  * @brief SRR scheduler.
  */
 static struct scheduler _sched_srr = {
+	false,
 	scheduler_srr_init,
 	scheduler_srr_sched,
 	scheduler_srr_end

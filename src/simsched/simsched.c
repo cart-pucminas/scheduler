@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include <mylib/util.h>
 #include <mylib/array.h>
@@ -46,13 +47,15 @@ static dqueue_tt running;
  * @brief Spawns threads.
  *
  * @param threads Working threads.
+ * @param pin     Pin threads?
  */
-static void threads_spawn(array_tt threads)
+static void threads_spawn(array_tt threads, bool pinthreads)
 {
 	ready = queue_create();	
 	running = dqueue_create();
 
-	array_shuffle(threads);
+	if (!pinthreads)
+		array_shuffle(threads);
 
 	for (int i = 0; i < array_size(threads); i++)
 	{
@@ -165,7 +168,7 @@ void simshed(const_workload_tt w, array_tt threads, const struct scheduler *stra
 	assert(threads != NULL);
 	assert(strategy != NULL);
 
-	threads_spawn(threads);
+	threads_spawn(threads, strategy->pinthreads);
 
 	strategy->init(w, threads);
 

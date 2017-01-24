@@ -59,13 +59,13 @@ static void was_quota_correct(const_array_tt threads, int nrounds, int *quota)
 	/* Missing rounds. */
 	if (nrounds > 0)
 	{
-		int tidx = 0;
+		int tidx = nthreads - 1;
 
 		while (nrounds > 0)
 		{
 			quota[tidx]++;
 
-			tidx = (tidx + 1)%nthreads;
+			tidx = (tidx - 1)%nthreads;
 			nrounds--;
 		}
 	}
@@ -73,13 +73,13 @@ static void was_quota_correct(const_array_tt threads, int nrounds, int *quota)
 	/* Too much rounds. */
 	else if (nrounds < 0)
 	{
-		int tidx = nthreads - 1;
+		int tidx = 0;
 
 		while (nrounds < 0)
 		{
 			quota[tidx]--;
 
-			tidx = (tidx - 1)%nthreads;
+			tidx = (tidx + 1)%nthreads;
 			nrounds++;
 		}
 	}
@@ -117,7 +117,7 @@ static int *was_quota_compute(const_array_tt threads, int nrounds)
 
 	/* Compute quota. */
 	for (int i = 0; i < nthreads; i++)
-		quota[i] = round(nrounds*((1.0/thread_capacity(array_get(threads, i)))/total));
+		quota[i] = ceil(nrounds*((1.0/thread_capacity(array_get(threads, i)))/total));
 
 	was_quota_correct(threads, nrounds, quota);
 
@@ -200,7 +200,12 @@ void scheduler_was_init(const_workload_tt workload, array_tt threads)
 		/* Find least overload thread. */
 		for (int j = 1; j < nthreads; j++)
 		{
-			if (load[j] < load[leastoverload])
+			const_thread_tt t1, t2;
+
+			t1 = array_get(threads, j);
+			t2 = array_get(threads, leastoverload);
+
+			if (thread_capacity(t1)*load[j] < thread_capacity(t2)*load[leastoverload])
 				leastoverload = j;
 		}
 
@@ -257,6 +262,7 @@ int scheduler_was_sched(dqueue_tt running, thread_tt t)
  * @brief WAS scheduler.
  */
 static struct scheduler _sched_was = {
+	true,
 	scheduler_was_init,
 	scheduler_was_sched,
 	scheduler_was_end

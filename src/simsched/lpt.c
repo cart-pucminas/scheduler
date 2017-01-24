@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <mylib/util.h>
 #include <mylib/dqueue.h>
@@ -133,6 +134,7 @@ int scheduler_lpt_sched(dqueue_tt running, thread_tt t)
  * @brief LPT scheduler.
  */
 static struct scheduler _sched_lpt = {
+	false,
 	scheduler_lpt_init,
 	scheduler_lpt_sched,
 	scheduler_lpt_end
