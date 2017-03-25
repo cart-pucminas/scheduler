@@ -154,10 +154,11 @@ static int *binlpt_compute_chunkweights(const_workload_tt workload, const int *c
 /**
  * @brief Initializes the binlpt scheduler.
  * 
- * @param workload Target workload.
- * @param threads  Target threads.
+ * @param workload  Target workload.
+ * @param threads   Target threads.
+ * @param chunksize Chunk size.
  */
-void scheduler_binlpt_init(const_workload_tt workload, array_tt threads)
+void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
 	int ntasks;      /* Number of tasks.              */
 	int nthreads;    /* Number of threads.            */
@@ -171,13 +172,14 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads)
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);
+	assert(chunksize > 0);
 
 	/* Already initialized. */
 	if (scheddata.taskmap != NULL)
 		return;
 	
 	ntasks = workload_ntasks(workload);
-	nchunks = ntasks;
+	nchunks = chunksize;
 	nthreads = array_size(threads);
 
 	/* Initialize scheduler data. */

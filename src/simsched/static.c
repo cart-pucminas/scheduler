@@ -36,23 +36,25 @@ static struct
 	const_workload_tt workload; /**< Workload.   */
 	array_tt threads;           /**< Threads.    */
 	thread_tt *taskmap;         /**< Scheduling. */
-} scheddata = { NULL, NULL, NULL };
+	int chunksize;              /**< Chunksize.  */
+} scheddata = { NULL, NULL, NULL, 1 };
 
 /**
  * @brief Initializes the static scheduler.
  * 
- * @param workload Target workload.
- * @param threads  Target threads.
+ * @param workload  Target workload.
+ * @param threads   Target threads.
+ * @param chunksize Chunk size.
  */
-void scheduler_static_init(const_workload_tt workload, array_tt threads)
+void scheduler_static_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
 	int tidx;      /* Index of working thread. */
 	int ntasks;    /* Workload size.           */
-	int chunksize; /* Chunk size.              */
 	
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);
+	assert(chunksize > 0);
 
 	/* Already initialized. */
 	if (scheddata.taskmap != NULL)
@@ -67,16 +69,18 @@ void scheduler_static_init(const_workload_tt workload, array_tt threads)
 		
 	/* Assign tasks to threads. */
 	tidx = 0;
-	chunksize = ntasks/array_size(threads);
-	for (int i = 0; i < ntasks; i++)
+	for (int i = 0; i < ntasks; i += chunksize)
 	{
-		scheddata.taskmap[i] = array_get(threads, tidx);
-		
-		if (--chunksize == 0)
+	
+		for (int j = 0; j < chunksize; j++)
 		{
-			chunksize = ntasks/array_size(threads);
-			tidx = (tidx + 1)%array_size(threads);
+			if (i + j >= ntasks)
+				break;
+
+			scheddata.taskmap[i + j] = array_get(threads, tidx);
 		}
+
+		tidx = (tidx + 1)%array_size(threads);
 	}
 }
 
