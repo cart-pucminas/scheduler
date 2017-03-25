@@ -38,7 +38,7 @@ simsched:                   \
 		simsched/thread.o   \
 		simsched/static.o   \
 		simsched/dynamic.o  \
-		simsched/lpt.o      \
+		simsched/binlpt.o   \
 		simsched/srr.o      \
 		simsched/was.o      \
 		simsched/main.o

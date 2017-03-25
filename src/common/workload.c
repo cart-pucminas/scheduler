@@ -375,3 +375,32 @@ void workload_set_task(struct workload *w, int idx, int load)
 
 	w->tasks[idx] = load;
 }
+
+/**
+ * @brief Computes the cummulative sum of a workload.
+ *
+ * @param w Target Workload.
+ *
+ * @returns The cummulative sum array.
+ */
+int *workload_cummulative_sum(const struct workload *w)
+{
+	int *sum;   /* Cummulative sum.     */
+	int ntasks; /* Alias for w->ntasks. */
+
+	/* Sanity check. */
+	assert(w != NULL);
+
+	ntasks = w->ntasks;
+
+	sum = malloc(ntasks*sizeof(int));
+	assert(sum != NULL);
+
+	/* Compute cummulative sum. */
+	sum[0] = 0;
+	for (int i = 1; i < ntasks; i++)
+		sum[i] = sum[i - 1] + w->tasks[i - 1];
+
+	return (sum);
+
+}

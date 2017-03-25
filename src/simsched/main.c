@@ -117,7 +117,7 @@ static void usage(void)
 	printf("  --help                Display this message.\n");
 	printf("Loop Schedulers:\n");
 	printf("  dynamic  Dynamic Scheduling\n");
-	printf("  lpt      Longest Processing Time First Scheduling\n");
+	printf("  binlpt   Bin Packing LPT Scheduling\n");
 	printf("  srr      Smart Round-Robin Scheduling\n");
 	printf("  static   Static Scheduling\n");
 	printf("  was      Workloadaware Scheduling\n");
@@ -267,8 +267,8 @@ static void readargs(int argc, const char **argv)
 		{
 			if (!strcmp(argv[i], "dynamic"))
 				args.scheduler = sched_dynamic;
-			else if (!strcmp(argv[i], "lpt"))
-				args.scheduler = sched_lpt;
+			else if (!strcmp(argv[i], "binlpt"))
+				args.scheduler = sched_binlpt;
 			else if (!strcmp(argv[i], "srr"))
 				args.scheduler = sched_srr;
 			else if (!strcmp(argv[i], "was"))
