@@ -35,10 +35,10 @@
 	 */
 	struct scheduler
 	{
-		bool pinthreads;                           /**< Pin threads? */
-		void (*init)(const_workload_tt, array_tt); /**< Initialize.  */
-		int (*sched)(dqueue_tt, thread_tt);        /**< Schedule.    */
-		void (*end)(void);                         /**< End.         */
+		bool pinthreads;                                /**< Pin threads? */
+		void (*init)(const_workload_tt, array_tt, int); /**< Initialize.  */
+		int (*sched)(dqueue_tt, thread_tt);             /**< Schedule.    */
+		void (*end)(void);                              /**< End.         */
 	};
 
 	/**
@@ -51,6 +51,6 @@
 	extern const struct scheduler *sched_static;
 	/**@}*/
 
-	extern void simshed(const_workload_tt, array_tt, const struct scheduler*);
+	extern void simshed(const_workload_tt, array_tt, const struct scheduler*, int);
 
 #endif /* SCHEDULER_H_ */

@@ -38,8 +38,9 @@ static struct
 	workload_tt workload;              /**< Input workload.           */
 	array_tt  threads;                 /**< Working threads.          */
 	const struct scheduler *scheduler; /**< Loop scheduling strategy. */
+	int chunksize;                     /**< Chunk size.               */
 	void (*kernel)(workload_tt);       /**< Application kernel.       */
-} args = { NULL, 0, NULL, NULL };
+} args = { NULL, NULL, NULL, 1, NULL };
 
 /*============================================================================*
  * KERNELS                                                                    *
@@ -108,6 +109,7 @@ static void usage(void)
 	printf("Brief: loop scheduler simulator\n");
 	printf("Options:\n");
 	printf("  --arch <filename>     Architecture file.\n");
+	printf("  --chunksize <number>  Chunk size.\n");
 	printf("  --kernel <name>       Kernel complexity.\n");
 	printf("           linear          Linear kernel\n");
 	printf("           logarithmic     Logarithm kernel\n");
@@ -254,6 +256,8 @@ static void readargs(int argc, const char **argv)
 	{	
 		if (!strcmp(argv[i], "--arch"))
 			afilename = argv[++i];
+		else if (!strcmp(argv[i], "--chunksize"))
+			args.chunksize = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "--input"))
 			wfilename = argv[++i];
 		else if (!strcmp(argv[i], "--kernel"))
@@ -299,7 +303,7 @@ int main(int argc, const const char **argv)
 
 	srand(time(NULL)^getpid());
 
-	simshed(args.workload, args.threads, args.scheduler);
+	simshed(args.workload, args.threads, args.scheduler, args.chunksize);
 
 	/* House keeping, */
 	for (int i = 0; i < array_size(args.threads); i++)

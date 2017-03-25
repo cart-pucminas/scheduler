@@ -42,16 +42,19 @@ static struct
 /**
  * @brief Initializes the srr scheduler.
  * 
- * @param workload Target workload.
- * @param threads  Target threads.
+ * @param workload  Target workload.
+ * @param threads   Target threads.
+ * @param chunksize Chunk size.
  */
-void scheduler_srr_init(const_workload_tt workload, array_tt threads)
+void scheduler_srr_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
 	int ntasks;   /* Number of tasks.      */
 	int nthreads; /* Number of threads.    */
 	int *map;     /* Task sorting map.     */
 	int tidx;     /* Current thread index. */
-	
+
+	((void) chunksize);
+
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);

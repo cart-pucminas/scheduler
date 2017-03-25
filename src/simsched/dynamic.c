@@ -37,21 +37,24 @@ static struct
 	const_workload_tt workload; /**< Workload.                 */
 	array_tt threads;           /**< Threads.                  */
 	thread_tt *taskmap;         /**< Scheduling.               */
-} scheddata = { 0, NULL, NULL, NULL };
+	int chunksize;              /**< Chunksize.                */
+} scheddata = { 0, NULL, NULL, NULL, 1 };
 
 /**
  * @brief Initializes the dynamic scheduler.
  * 
- * @param workload Target workload.
- * @param threads  Target threads.
+ * @param workload  Target workload.
+ * @param threads   Target threads.
+ * @param chunksize Chunk size.
  */
-void scheduler_dynamic_init(const_workload_tt workload, array_tt threads)
+void scheduler_dynamic_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
 	int ntasks;
 	
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);
+	assert(chunksize > 0);
 
 	/* Already initialized. */
 	if (scheddata.taskmap != NULL)
@@ -64,6 +67,7 @@ void scheduler_dynamic_init(const_workload_tt workload, array_tt threads)
 	scheddata.workload = workload;
 	scheddata.threads = threads;
 	scheddata.taskmap = smalloc(ntasks*sizeof(thread_tt));
+	scheddata.chunksize = chunksize;
 		
 	/* Assign tasks to threads. */
 	for (int i = 0; i < ntasks; i++)
@@ -91,7 +95,6 @@ int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 {
 	int n = 0;         /* Number of tasks scheduled. */
 	int wsize = 0;     /* Size of assigned work.     */
-	int chunksize = 1; /* Chunk size.                */
 
 	/* Get next tasks. */
 	for (int i = 0; i < workload_ntasks(scheddata.workload); i++)
@@ -105,7 +108,7 @@ int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 		scheddata.taskmap[i] = t;
 
 		/* We have already scheduled enough. */
-		if (n >= chunksize)
+		if (n >= scheddata.chunksize)
 		{
 			scheddata.i0 = i + 1;
 			break;
