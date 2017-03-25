@@ -118,6 +118,7 @@ static void usage(void)
 	printf("  --nthreads <number>   Number of working threads.\n");
 	printf("  --help                Display this message.\n");
 	printf("Loop Schedulers:\n");
+	printf("  guided   Guided Scheduling\n");
 	printf("  dynamic  Dynamic Scheduling\n");
 	printf("  binlpt   Bin Packing LPT Scheduling\n");
 	printf("  srr      Smart Round-Robin Scheduling\n");
@@ -268,7 +269,9 @@ static void readargs(int argc, const char **argv)
 			usage();
 		else
 		{
-			if (!strcmp(argv[i], "dynamic"))
+			if (!strcmp(argv[i], "guided"))
+				args.scheduler = sched_guided;
+			else if (!strcmp(argv[i], "dynamic"))
 				args.scheduler = sched_dynamic;
 			else if (!strcmp(argv[i], "binlpt"))
 				args.scheduler = sched_binlpt;

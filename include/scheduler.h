@@ -45,6 +45,7 @@
 	 * @brief Supported Loop Scheduling Strategies.
 	 */
 	/**@{*/
+	extern const struct scheduler *sched_guided;
 	extern const struct scheduler *sched_dynamic;
 	extern const struct scheduler *sched_binlpt;
 	extern const struct scheduler *sched_srr;

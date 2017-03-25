@@ -120,10 +120,10 @@ static void simsched_dump(array_tt threads)
 	/* Print statistics. */
 	printf("min: %lf\n", min);
 	printf("max: %lf\n", max);
+	printf("total: %lf\n", total);
 	printf("mean: %lf\n", mean);
-	printf("stddev: %lf\n", 100*stddev/mean);
-	printf("imbalance: %lf\n", 100*(max - min)/((double) total));
-	printf("speeddown: %lf\n", max/((double) min));
+	printf("cov: %lf\n", 100*stddev/mean);
+	printf("slowdown: %lf\n", max/((double) min));
 }
 
 /**
