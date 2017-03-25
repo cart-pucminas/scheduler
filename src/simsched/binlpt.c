@@ -40,6 +40,52 @@ static struct
 	thread_tt *taskmap;         /**< Scheduling. */
 } scheddata = { NULL, NULL, NULL };
 
+/*
+ * Exchange two numbers.
+ */
+#define exch(a, b, t) \
+	{ (t) = (a); (a) = (b); (b) = (t); }
+
+/*
+ * Insertion sort.
+ */
+static void insertion(int *map, int *a, int n)
+{
+	int t;    /* Temporary value. */
+	
+	/* Sort. */
+	for (int i = 0; i < (n - 1); i++)
+	{
+		for (int j = i + 1; j < n; j++)
+		{
+			/* Swap. */
+			if (a[j] < a[i])
+			{
+				exch(a[i], a[j], t);
+				exch(map[i], map[j], t);
+			}
+		}
+	}
+}
+ 
+/*
+ * Sorts an array of numbers.
+ */
+static int *binlpt_chunk_sortmap(int *a, int n)
+{
+	int *map;
+
+	map = smalloc(n*sizeof(int));
+
+	/* Create map. */
+	for (int i = 0; i < n; i++)
+		map[i] = i;
+
+	insertion(map, a, n);
+
+	return (map);
+} 
+
 /**
  * @brief Computes the cummulative sum of an array.
  *
@@ -101,6 +147,7 @@ static int *binlpt_compute_chunksizes(const_workload_tt workload, int nchunks)
 					break;
 			}
 		}
+
 
 		chunksizes[k] = j - i;
 		i = j;
@@ -191,7 +238,7 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chu
 	chunks = binlpt_compute_chunkweights(workload, chunksizes, nchunks);
 	chunkoff = binlpt_compute_commulative_sum(chunksizes, nchunks);
 
-	map = workload_sortmap(workload);
+	map = binlpt_chunk_sortmap(chunks, nchunks);
 	wsize = smalloc(nthreads*sizeof(int));
 	memset(wsize, 0, nthreads*sizeof(int));
 
