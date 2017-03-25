@@ -127,10 +127,11 @@ static int *was_quota_compute(const_array_tt threads, int nrounds)
 /**
  * @brief Initializes the was scheduler.
  * 
- * @param workload Target workload.
- * @param threads  Target threads.
+ * @param workload  Target workload.
+ * @param threads   Target threads.
+ * @param chunksize Chunk size.
  */
-void scheduler_was_init(const_workload_tt workload, array_tt threads)
+void scheduler_was_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
 	int k;        /* Scheduling offset.      */
 	int ntasks;   /* Number of tasks.        */
@@ -139,7 +140,9 @@ void scheduler_was_init(const_workload_tt workload, array_tt threads)
 	int tidx;     /* Current thread index.   */
 	double *load; /* Current thread load.    */
 	int *quota;   /* Task quota for threads. */
-	
+
+	((void) chunksize);
+
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);

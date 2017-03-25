@@ -157,11 +157,12 @@ static thread_tt choose_thread(queue_tt q)
 /**
  * @brief Simulates a parallel loop.
  *
- * @param w        Workload.
- * @param threads  Working threads.
- * @param strategy Scheduling strategy.
+ * @param w         Workload.
+ * @param threads   Working threads.
+ * @param strategy  Scheduling strategy.
+ * @param chunksize Chunksize;
  */
-void simshed(const_workload_tt w, array_tt threads, const struct scheduler *strategy)
+void simshed(const_workload_tt w, array_tt threads, const struct scheduler *strategy, int chunksize)
 {
 	/* Sanity check. */
 	assert(w != NULL);
@@ -170,7 +171,7 @@ void simshed(const_workload_tt w, array_tt threads, const struct scheduler *stra
 
 	threads_spawn(threads, strategy->pinthreads);
 
-	strategy->init(w, threads);
+	strategy->init(w, threads, chunksize);
 
 	/* Simulate. */
 	for (int i = 0; i < workload_ntasks(w); /* noop */)
