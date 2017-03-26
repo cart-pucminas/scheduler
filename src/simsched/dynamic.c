@@ -36,9 +36,8 @@ static struct
 	int i0;                     /**< Last iteration scheduled. */
 	const_workload_tt workload; /**< Workload.                 */
 	array_tt threads;           /**< Threads.                  */
-	thread_tt *taskmap;         /**< Scheduling.               */
 	int chunksize;              /**< Chunksize.                */
-} scheddata = { 0, NULL, NULL, NULL, 1 };
+} scheddata = { 0, NULL, NULL, 1 };
 
 /**
  * @brief Initializes the dynamic scheduler.
@@ -49,29 +48,16 @@ static struct
  */
 void scheduler_dynamic_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
-	int ntasks;
-	
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);
 	assert(chunksize > 0);
 
-	/* Already initialized. */
-	if (scheddata.taskmap != NULL)
-		return;
-	
-	ntasks = workload_ntasks(workload);
-
 	/* Initialize scheduler data. */
 	scheddata.i0 = 0;
 	scheddata.workload = workload;
 	scheddata.threads = threads;
-	scheddata.taskmap = smalloc(ntasks*sizeof(thread_tt));
 	scheddata.chunksize = chunksize;
-		
-	/* Assign tasks to threads. */
-	for (int i = 0; i < ntasks; i++)
-		scheddata.taskmap[i] = NULL;
 }
 
 /**
@@ -79,8 +65,6 @@ void scheduler_dynamic_init(const_workload_tt workload, array_tt threads, int ch
  */
 void scheduler_dynamic_end(void)
 {
-	free(scheddata.taskmap);
-	scheddata.taskmap = NULL;
 }
 
 /**
@@ -93,31 +77,28 @@ void scheduler_dynamic_end(void)
  */
 int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 {
-	int n = 0;         /* Number of tasks scheduled. */
-	int wsize = 0;     /* Size of assigned work.     */
+	int chunksize; /* Number of tasks scheduled. */
+	int wsize;     /* Size of assigned work.     */
+	int ntasks;    /* Number of tasks.           */
 
-	/* Get next tasks. */
-	for (int i = 0; i < workload_ntasks(scheddata.workload); i++)
-	{
-		/* Skip tasks from other threads. */
-		if (scheddata.taskmap[i] != NULL)
-			continue;
+	ntasks = workload_ntasks(scheddata.workload);
 
-		n++;
+	/* Comput chunksize. */
+	chunksize = scheddata.chunksize;
+	if (chunksize > (ntasks - scheddata.i0))
+		chunksize = ntasks - scheddata.i0;
+
+	/* Schedule tasks. */
+	wsize = 0;
+	for (int i = scheddata.i0; i < scheddata.i0 + chunksize; i++)
 		wsize += thread_assign(t, workload_task(scheddata.workload, i));
-		scheddata.taskmap[i] = t;
-
-		/* We have already scheduled enough. */
-		if (n >= scheddata.chunksize)
-		{
-			scheddata.i0 = i + 1;
-			break;
-		}
-	}
 	
+	/* Update scheduler data. */
+	scheddata.i0 += chunksize;
+
 	dqueue_insert(running, t, wsize);
 
-	return (n);
+	return (chunksize);
 }
 
 /**
