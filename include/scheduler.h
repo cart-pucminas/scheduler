@@ -47,6 +47,7 @@
 	/**@{*/
 	extern const struct scheduler *sched_guided;
 	extern const struct scheduler *sched_dynamic;
+	extern const struct scheduler *sched_hss;
 	extern const struct scheduler *sched_binlpt;
 	extern const struct scheduler *sched_srr;
 	extern const struct scheduler *sched_static;

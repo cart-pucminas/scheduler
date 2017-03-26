@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <mylib/util.h>
 #include <mylib/dqueue.h>
@@ -29,7 +30,7 @@
 #include <scheduler.h>
 
 /**
- * @brief Guided scheduler data.
+ * @brief HSS scheduler data.
  */
 static struct
 {
@@ -37,73 +38,100 @@ static struct
 	const_workload_tt workload; /**< Workload.                 */
 	array_tt threads;           /**< Threads.                  */
 	int chunksize;              /**< Chunksize.                */
-} scheddata = { 0, NULL, NULL, 1 };
+	int wremaining;             /**< Remaining workload.       */
+} scheddata = { 0, NULL, NULL, 1, 0 };
 
 /**
- * @brief Initializes the guided scheduler.
+ * @brief Initializes the hss scheduler.
  * 
  * @param workload  Target workload.
  * @param threads   Target threads.
  * @param chunksize Chunk size.
  */
-void scheduler_guided_init(const_workload_tt workload, array_tt threads, int chunksize)
+void scheduler_hss_init(const_workload_tt workload, array_tt threads, int chunksize)
 {
+	int ntasks;     /* Number of tasks. */
+	int wremaining; /* Total workload.  */
+
 	/* Sanity check. */
 	assert(workload != NULL);
 	assert(threads != NULL);
 	assert(chunksize > 0);
+
+	/* Compute remaining workload. */
+	ntasks = workload_ntasks(workload);
+	wremaining = 0;
+	for (int i = 0; i < ntasks; i++)
+		wremaining += workload_task(workload, i);
 
 	/* Initialize scheduler data. */
 	scheddata.i0 = 0;
 	scheddata.workload = workload;
 	scheddata.threads = threads;
 	scheddata.chunksize = chunksize;
+	scheddata.wremaining = wremaining;
 }
 
 /**
- * @brief Finalizes the guided scheduler.
+ * @brief Finalizes the hss scheduler.
  */
-void scheduler_guided_end(void)
+void scheduler_hss_end(void)
 {
 }
 
 /**
- * @brief Guided scheduler.
+ * @brief HSS scheduler.
  * 
  * @param running Target queue of running threads.
  * @param t       Target thread
  * 
  * @returns Number scheduled tasks,
  */
-int scheduler_guided_sched(dqueue_tt running, thread_tt t)
+int scheduler_hss_sched(dqueue_tt running, thread_tt t)
 {
-	int n;        /* Number of tasks scheduled. */
-	int wsize;    /* Size of assigned work.     */
-	int ntasks;   /* Number of tasks.           */
-	int nthreads; /* Number of hteads.          */
+	int n;        /* Number of tasks scheduled.      */
+	int k;        /* Number of scheduled iterations. */
+	int wsize;    /* Size of assigned work.          */
+	int ntasks;   /* Number of tasks.                */
+	int nthreads; /* Number of hteads.               */
 
 	ntasks = workload_ntasks(scheddata.workload);
 	nthreads = array_size(scheddata.threads);
 
 	/* Comput chunksize. */
-	n = (ntasks - scheddata.i0)/(2*nthreads);
+	n = ceil(scheddata.wremaining/(1.5*nthreads));
 	if (n < scheddata.chunksize)
 		n = scheddata.chunksize;
 
 	/* Schedule iterations. */
-	wsize = 0;
-	for (int i = scheddata.i0; i < (scheddata.i0 + n); i++)
+	wsize = 0; k = 0;
+	for (int i = scheddata.i0; i < ntasks; i++)
 	{
-		if (i >= ntasks)
-		{
-			n = i;
-			break;
-		}
+		int w1;
+		int w2;
 
+		k++;
 		wsize += thread_assign(t, workload_task(scheddata.workload, i));
+
+		w1 = wsize;
+		w2 = wsize + workload_task(scheddata.workload, i + 1);
+
+		/* Keep scheduling. */
+		if (w2 < n)
+			continue;
+
+		/* Best fit. */
+		if (w1 >= n)
+			break;
+
+		/* Best range approximation. */
+		if ((w2 - n) > (n - w1))
+			break;
 	}
 
-	scheddata.i0 += n;	
+	/* Update scheduler data. */
+	scheddata.i0 += k;
+	scheddata.wremaining -= wsize;
 	
 	dqueue_insert(running, t, wsize);
 
@@ -111,14 +139,15 @@ int scheduler_guided_sched(dqueue_tt running, thread_tt t)
 }
 
 /**
- * @brief Guided scheduler.
+ * @brief HSS scheduler.
  */
-static struct scheduler _sched_guided = {
+static struct scheduler _sched_hss = {
 	false,
-	scheduler_guided_init,
-	scheduler_guided_sched,
-	scheduler_guided_end
+	scheduler_hss_init,
+	scheduler_hss_sched,
+	scheduler_hss_end
 };
 
-const struct scheduler *sched_guided = &_sched_guided;
+const struct scheduler *sched_hss = &_sched_hss;
+
 
