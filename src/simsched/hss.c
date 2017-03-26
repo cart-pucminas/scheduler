@@ -114,10 +114,11 @@ int scheduler_hss_sched(dqueue_tt running, thread_tt t)
 		wsize += thread_assign(t, workload_task(scheddata.workload, i));
 
 		w1 = wsize;
-		w2 = wsize + workload_task(scheddata.workload, i + 1);
+		w2 = (i + 1 < ntasks) ? 
+			wsize + workload_task(scheddata.workload, i + 1) : 0;
 
 		/* Keep scheduling. */
-		if (w2 < n)
+		if (w2 <= n)
 			continue;
 
 		/* Best fit. */
@@ -135,7 +136,7 @@ int scheduler_hss_sched(dqueue_tt running, thread_tt t)
 	
 	dqueue_insert(running, t, wsize);
 
-	return (n);
+	return (k);
 }
 
 /**
