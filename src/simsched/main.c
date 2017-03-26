@@ -273,9 +273,9 @@ static void readargs(int argc, const char **argv)
 			if (!strcmp(argv[i], "guided"))
 				args.scheduler = sched_guided;
 			else if (!strcmp(argv[i], "dynamic"))
-				args.scheduler = sched_hss;
-			else if (!strcmp(argv[i], "hss"))
 				args.scheduler = sched_dynamic;
+			else if (!strcmp(argv[i], "hss"))
+				args.scheduler = sched_hss;
 			else if (!strcmp(argv[i], "binlpt"))
 				args.scheduler = sched_binlpt;
 			else if (!strcmp(argv[i], "srr"))
