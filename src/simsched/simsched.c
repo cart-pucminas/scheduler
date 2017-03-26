@@ -34,6 +34,11 @@
 #include <thread.h>
 
 /**
+ * @brief Number of chunks.
+ */
+int nchunks = 0;
+
+/**
  * @brief Ready threads.
  */
 static queue_tt ready;
@@ -118,6 +123,7 @@ static void simsched_dump(array_tt threads)
 	stddev = sqrt(stddev/(array_size(threads)));
 
 	/* Print statistics. */
+	printf("nchunks: %d\n", nchunks);
 	printf("min: %lf\n", min);
 	printf("max: %lf\n", max);
 	printf("total: %lf\n", total);

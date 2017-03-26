@@ -81,6 +81,8 @@ int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 	int wsize;     /* Size of assigned work.     */
 	int ntasks;    /* Number of tasks.           */
 
+	nchunks++;
+
 	ntasks = workload_ntasks(scheddata.workload);
 
 	/* Comput chunksize. */

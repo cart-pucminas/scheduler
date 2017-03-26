@@ -71,7 +71,6 @@ void scheduler_static_init(const_workload_tt workload, array_tt threads, int chu
 	tidx = 0;
 	for (int i = 0; i < ntasks; i += chunksize)
 	{
-	
 		for (int j = 0; j < chunksize; j++)
 		{
 			if (i + j >= ntasks)
@@ -80,6 +79,7 @@ void scheduler_static_init(const_workload_tt workload, array_tt threads, int chu
 			scheddata.taskmap[i + j] = array_get(threads, tidx);
 		}
 
+		nchunks++;
 		tidx = (tidx + 1)%array_size(threads);
 	}
 }

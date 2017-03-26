@@ -66,6 +66,8 @@ void scheduler_srr_init(const_workload_tt workload, array_tt threads, int chunks
 	ntasks = workload_ntasks(workload);
 	nthreads = array_size(threads);
 
+	nchunks = ntasks/2;
+
 	/* Initialize scheduler data. */
 	scheddata.workload = workload;
 	scheddata.threads = threads;

@@ -82,6 +82,8 @@ int scheduler_guided_sched(dqueue_tt running, thread_tt t)
 	int ntasks;   /* Number of tasks.           */
 	int nthreads; /* Number of hteads.          */
 
+	nchunks++;
+
 	ntasks = workload_ntasks(scheddata.workload);
 	nthreads = array_size(scheddata.threads);
 

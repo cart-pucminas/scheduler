@@ -53,6 +53,9 @@
 	extern const struct scheduler *sched_static;
 	/**@}*/
 
+	/* Fordward definitions. */
+	extern int nchunks;
+
 	extern void simshed(const_workload_tt, array_tt, const struct scheduler*, int);
 
 #endif /* SCHEDULER_H_ */

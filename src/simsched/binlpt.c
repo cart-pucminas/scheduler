@@ -214,7 +214,7 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chu
 	int *chunksizes; /* Chunks sizes.                 */
 	int *chunks;     /* Chunks.                       */
 	int *chunkoff;   /* Offset to chunks.             */
-	int nchunks;     /* Number of chunks.             */
+	int maxnchunks;  /* Number of chunks.             */
 	
 	/* Sanity check. */
 	assert(workload != NULL);
@@ -226,7 +226,7 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chu
 		return;
 	
 	ntasks = workload_ntasks(workload);
-	nchunks = chunksize;
+	maxnchunks = chunksize;
 	nthreads = array_size(threads);
 
 	/* Initialize scheduler data. */
@@ -234,22 +234,24 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chu
 	scheddata.threads = threads;
 	scheddata.taskmap = smalloc(ntasks*sizeof(thread_tt));
 
-	chunksizes = binlpt_compute_chunksizes(workload, nchunks);
-	chunks = binlpt_compute_chunkweights(workload, chunksizes, nchunks);
-	chunkoff = binlpt_compute_commulative_sum(chunksizes, nchunks);
+	chunksizes = binlpt_compute_chunksizes(workload, maxnchunks);
+	chunks = binlpt_compute_chunkweights(workload, chunksizes, maxnchunks);
+	chunkoff = binlpt_compute_commulative_sum(chunksizes, maxnchunks);
 
-	map = binlpt_chunk_sortmap(chunks, nchunks);
+	map = binlpt_chunk_sortmap(chunks, maxnchunks);
 	wsize = smalloc(nthreads*sizeof(int));
 	memset(wsize, 0, nthreads*sizeof(int));
 
 	/* Assign tasks to threads. */
-	for (int i = nchunks; i > 0; i--)
+	for (int i = maxnchunks; i > 0; i--)
 	{
 		int k;    /* Alias for current chunk. */
 		int tidx; /* Least overloaded thread. */
 
 		if (chunks[i - 1] == 0)
 			continue;
+
+		nchunks++;
 
 		/* Search for least overloaded thread. */
 		tidx = 0;
