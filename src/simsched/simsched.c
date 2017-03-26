@@ -87,12 +87,15 @@ static void simsched_dump(array_tt threads)
 {
 	double min, max, total;
 	double mean, stddev;
+	int nthreads;
+
+	nthreads = array_size(threads);
 
 	min = INT_MAX; max = INT_MIN;
 	total = 0; mean = 0.0; stddev = 0.0;
 
 	/* Compute min, max, total. */
-	for (int i = 0; i < array_size(threads); i++)
+	for (int i = 0; i < nthreads; i++)
 	{
 		thread_tt t;   /* Working thread.         */
 		double wtotal; /* Workload assigned to t. */
@@ -109,10 +112,10 @@ static void simsched_dump(array_tt threads)
 	}
 
 	/* Compute mean. */
-	mean = ((double) total)/array_size(threads);
+	mean = ((double) total)/nthreads;
 
 	/* Compute stddev. */
-	for (int i = 0; i < array_size(threads); i++)
+	for (int i = 0; i < nthreads; i++)
 	{
 		thread_tt t;
 
@@ -120,15 +123,14 @@ static void simsched_dump(array_tt threads)
 
 		stddev += pow(thread_wtotal(t) - mean, 2);
 	}
-	stddev = sqrt(stddev/(array_size(threads)));
+	stddev = sqrt(stddev/(nthreads));
 
 	/* Print statistics. */
 	printf("nchunks: %d\n", nchunks);
-	printf("min: %lf\n", min);
-	printf("max: %lf\n", max);
-	printf("total: %lf\n", total);
-	printf("mean: %lf\n", mean);
-	printf("cov: %lf\n", 100*stddev/mean);
+	printf("time: %lf\n", max);
+	printf("cost: %lf\n", max*nthreads);
+	printf("performance: %lf\n", total/max);
+	printf("cov: %lf\n", stddev/mean);
 	printf("slowdown: %lf\n", max/((double) min));
 }
 
