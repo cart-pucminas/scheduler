@@ -114,7 +114,8 @@ int scheduler_static_sched(dqueue_tt running, thread_tt t)
 			continue;
 
 		n++;
-		wsize += thread_assign(t, workload_task(scheddata.workload, i));
+		wsize += workload_task(scheddata.workload, i);
+		thread_assign(t, workload_task(scheddata.workload, i));
 	}
 	
 	dqueue_insert(running, t, wsize);

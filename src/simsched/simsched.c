@@ -130,6 +130,7 @@ static void simsched_dump(array_tt threads)
 	printf("time: %lf\n", max);
 	printf("cost: %lf\n", max*nthreads);
 	printf("performance: %lf\n", total/max);
+	printf("total: %lf\n", total);
 	printf("cov: %lf\n", stddev/mean);
 	printf("slowdown: %lf\n", max/((double) min));
 }

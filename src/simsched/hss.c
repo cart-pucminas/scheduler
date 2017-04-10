@@ -113,7 +113,8 @@ int scheduler_hss_sched(dqueue_tt running, thread_tt t)
 		int w2;
 
 		k++;
-		wsize += thread_assign(t, workload_task(scheddata.workload, i));
+		wsize += workload_task(scheddata.workload, i);
+		thread_assign(t, workload_task(scheddata.workload, i));
 
 		w1 = wsize;
 		w2 = (i + 1 < ntasks) ? 

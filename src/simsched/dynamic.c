@@ -81,9 +81,13 @@ int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 	int wsize;     /* Size of assigned work.     */
 	int ntasks;    /* Number of tasks.           */
 
-	nchunks++;
-
 	ntasks = workload_ntasks(scheddata.workload);
+
+	/* Done. */
+	if (scheddata.i0 == ntasks)
+		return (0);
+
+	nchunks++;
 
 	/* Comput chunksize. */
 	chunksize = scheddata.chunksize;
@@ -93,7 +97,10 @@ int scheduler_dynamic_sched(dqueue_tt running, thread_tt t)
 	/* Schedule tasks. */
 	wsize = 0;
 	for (int i = scheddata.i0; i < scheddata.i0 + chunksize; i++)
-		wsize += thread_assign(t, workload_task(scheddata.workload, i));
+	{
+		wsize += workload_task(scheddata.workload, i);
+		thread_assign(t, workload_task(scheddata.workload, i));
+	}
 	
 	/* Update scheduler data. */
 	scheddata.i0 += chunksize;

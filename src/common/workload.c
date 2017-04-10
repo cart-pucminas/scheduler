@@ -393,12 +393,12 @@ int *workload_cummulative_sum(const struct workload *w)
 
 	ntasks = w->ntasks;
 
-	sum = malloc(ntasks*sizeof(int));
+	sum = malloc((ntasks + 1)*sizeof(int));
 	assert(sum != NULL);
 
 	/* Compute cummulative sum. */
 	sum[0] = 0;
-	for (int i = 1; i < ntasks; i++)
+	for (int i = 1; i <= ntasks; i++)
 		sum[i] = sum[i - 1] + w->tasks[i - 1];
 
 	return (sum);

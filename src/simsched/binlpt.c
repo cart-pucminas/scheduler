@@ -131,7 +131,7 @@ static int *binlpt_compute_chunksizes(const_workload_tt workload, int nchunks)
 
 	/* Compute verage chunk weight. */
 	off = workload_cummulative_sum(workload);
-	chunkweight = (off[ntasks - 1] + workload_task(workload, ntasks - 1))/nchunks;
+	chunkweight = off[ntasks]/nchunks;
 
 	/* Compute chunksizes. */
 	for (int k = 0, i = 0; i < ntasks; /* noop */)
@@ -264,7 +264,7 @@ void scheduler_binlpt_init(const_workload_tt workload, array_tt threads, int chu
 		k = map[i - 1];
 		for (int j = 0; j < chunksizes[k]; j++)
 			scheddata.taskmap[chunkoff[k] + j] = array_get(threads, tidx);
-		wsize[tidx] += chunks[k];
+		wsize[tidx] += chunks[i - 1];
 	}
 	
 	/* House keeping. */
@@ -305,7 +305,8 @@ int scheduler_binlpt_sched(dqueue_tt running, thread_tt t)
 			continue;
 
 		n++;
-		wsize += thread_assign(t, workload_task(scheddata.workload, i));
+		wsize += workload_task(scheddata.workload, i);
+		thread_assign(t, workload_task(scheddata.workload, i));
 	}
 	
 	dqueue_insert(running, t, wsize);
