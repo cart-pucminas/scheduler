@@ -42,7 +42,6 @@ struct dqueue
 {
 	int size;            /**< Current delta queue size. */
 	struct dqnode head;  /**< Dummy head node.          */
-	struct dqnode *tail; /**< Tail node.                */
 };
 
 /*====================================================================*
@@ -98,7 +97,6 @@ struct dqueue *dqueue_create(void)
 	/* Initialize delta queue. */
 	q->size = 0;
 	q->head.next = NULL;
-	q->tail = &q->head;
 	
 	return (q);
 }
@@ -203,10 +201,13 @@ void dqueue_insert(struct dqueue *q, void *obj, int counter)
 	/* Update counter. */
 	for (node = tmp->next; node != NULL; node = node->next)
 	{
+		assert(node->counter >= 0);
+
 		if (node->counter == 0)
 			continue;
 
 		node->counter -= counter;
+		break;
 	}
 
 	q->size++;
@@ -232,10 +233,6 @@ void *dqueue_remove(struct dqueue *q)
 	node = q->head.next;
 	q->head.next = node->next;
 	q->size--;
-	
-	/* Update tail node. */
-	if (q->size == 0)
-		q->tail = &q->head;
 	
 	/* Get object. */
 	obj = node->obj;
