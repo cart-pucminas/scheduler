@@ -209,7 +209,7 @@ static void readargs(int argc, const char **argv)
 /**
  * @brief A synthetic workload generator.
  */
-int main(int argc, const const char **argv)
+int main(int argc, const char **argv)
 {
 	distribution_tt dist; /* Underlying probability distribution.   */
 	histogram_tt hist;    /* Histogram of probability distribution. */

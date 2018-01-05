@@ -40,9 +40,9 @@ export CFLAGS  += -O3
 
 # Libraries.
 export LIBS = $(LIBDIR)/libmy.a
-export LIBS += -lm
 export LIBS += $(CONTRIB)/lib/libgsl.a
 export LIBS += $(CONTRIB)/lib/libgslcblas.a
+export LIBS += -lm
 
 # Builds everything
 all: workloadgen simsched

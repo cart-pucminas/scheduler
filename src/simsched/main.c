@@ -301,7 +301,7 @@ static void readargs(int argc, const char **argv)
 /**
  * @brief A loop scheduler simulator
  */
-int main(int argc, const const char **argv)
+int main(int argc, const char **argv)
 {
 	readargs(argc, argv);
 
