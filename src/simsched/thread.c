@@ -19,6 +19,9 @@
  * 02110-1301, USA.
  */
 
+#include <assert.h>
+#include <stdlib.h>
+
 #include <mylib/util.h>
 
 #include <thread.h>

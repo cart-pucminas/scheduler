@@ -19,6 +19,7 @@
  * 02110-1301, USA.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>

@@ -22,37 +22,10 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-	#include <assert.h>
-	#include <stdlib.h>
-	#include <stdio.h>
+	#include <stddef.h>
 
-	/**
-	 * @brief Safe malloc().
-	 *
-	 * @param size Number of bytes to allocate.
-	 *
-	 * @returns Allocated block of memory.
-	 */
-	inline void *smalloc(size_t size)
-	{
-		void *p;
-
-		p = malloc(size);
-		assert(p != NULL);
-
-		return (p);
-	}
-	
-	/**
-	 * @brief Prints an error message and terminates.
-	 *
-	 * @param msg Error message.
-	 */
-	inline void error(const char *msg)
-	{
-		fprintf(stderr, "error %s\n", msg);
-
-		exit(EXIT_FAILURE);
-	}
+	/* Forward definitions. */
+	extern void *smalloc(size_t);
+	extern void error(const char *);
 
 #endif /* UTIL_H_ */

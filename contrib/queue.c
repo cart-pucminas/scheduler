@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <mylib/util.h>
 #include <mylib/queue.h>

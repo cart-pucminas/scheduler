@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <mylib/util.h>
 #include <mylib/array.h>
