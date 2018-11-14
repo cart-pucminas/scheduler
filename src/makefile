@@ -40,6 +40,7 @@ simsched:                   \
 		simsched/guided.o   \
 		simsched/dynamic.o  \
 		simsched/hss.o      \
+		simsched/kass.o     \
 		simsched/binlpt.o   \
 		simsched/srr.o      \
 		simsched/main.o

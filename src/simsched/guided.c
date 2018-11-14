@@ -78,10 +78,10 @@ void scheduler_guided_end(void)
  */
 int scheduler_guided_sched(dqueue_tt running, thread_tt t)
 {
-	int chunksize;        /* Number of tasks scheduled. */
-	int wsize;    /* Size of assigned work.     */
-	int ntasks;   /* Number of tasks.           */
-	int nthreads; /* Number of hteads.          */
+	int chunksize; /* Number of tasks scheduled. */
+	int wsize;     /* Size of assigned work.     */
+	int ntasks;    /* Number of tasks.           */
+	int nthreads;  /* Number of hteads.          */
 
 	ntasks = workload_ntasks(scheddata.workload);
 
@@ -93,7 +93,7 @@ int scheduler_guided_sched(dqueue_tt running, thread_tt t)
 
 	nthreads = array_size(scheddata.threads);
 
-	/* Comput chunksize. */
+	/* Compute chunksize. */
 	chunksize = (ntasks - scheddata.i0)/(2*nthreads);
 	if (chunksize < scheddata.chunksize)
 		chunksize = scheddata.chunksize;

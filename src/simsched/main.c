@@ -122,6 +122,7 @@ static void usage(void)
 	printf("  guided   Guided Scheduling\n");
 	printf("  dynamic  Dynamic Scheduling\n");
 	printf("  hss      History-Aware Scheduling\n");
+	printf("  kass     Knowledge-Based Scheduling\n");
 	printf("  binlpt   Bin Packing LPT Scheduling\n");
 	printf("  srr      Smart Round-Robin Scheduling\n");
 	printf("  static   Static Scheduling\n");
@@ -277,6 +278,8 @@ static void readargs(int argc, const char **argv)
 				args.scheduler = sched_dynamic;
 			else if (!strcmp(argv[i], "hss"))
 				args.scheduler = sched_hss;
+			else if (!strcmp(argv[i], "kass"))
+				args.scheduler = sched_kass;
 			else if (!strcmp(argv[i], "binlpt"))
 				args.scheduler = sched_binlpt;
 			else if (!strcmp(argv[i], "srr"))
